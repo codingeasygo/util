@@ -18,11 +18,13 @@ var ErrFrameTooLarge = fmt.Errorf("%v", "farme is too large")
 
 //Reader is interface for read the raw io as frame mode
 type Reader interface {
+	io.Reader
 	ReadFrame() (frame []byte, err error)
 }
 
 //Writer is interface for write the raw io as frame mode
 type Writer interface {
+	io.Writer
 	//WriteCmd will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
 	//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 	WriteFrame(buffer []byte) (n int, err error)
