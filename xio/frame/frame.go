@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"sync"
+	"time"
 )
 
 const (
@@ -16,15 +17,30 @@ const (
 //ErrFrameTooLarge is the error when the frame head lenght > buffer length
 var ErrFrameTooLarge = fmt.Errorf("%v", "farme is too large")
 
+type readDeadlinable interface {
+	SetReadDeadline(t time.Time) error
+}
+
+type writeDeadlinable interface {
+	SetWriteDeadline(t time.Time) error
+}
+
+//Timeouter is interface for timeout setter
+type Timeouter interface {
+	SetTimeout(timeout time.Duration)
+}
+
 //Reader is interface for read the raw io as frame mode
 type Reader interface {
 	io.Reader
+	Timeouter
 	ReadFrame() (frame []byte, err error)
 }
 
 //Writer is interface for write the raw io as frame mode
 type Writer interface {
 	io.Writer
+	Timeouter
 	//WriteCmd will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
 	//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 	WriteFrame(buffer []byte) (n int, err error)
@@ -55,23 +71,31 @@ func NewWriter(raw io.Writer) (writer *BaseWriter) {
 	return
 }
 
-type baseReadWriteCloser struct {
+//BaseReadWriteCloser is frame reader/writer combiner
+type BaseReadWriteCloser struct {
 	io.Closer
 	*BaseReader
 	*BaseWriter
 }
 
-func (b *baseReadWriteCloser) Close() (err error) {
+//Close will call the closer
+func (b *BaseReadWriteCloser) Close() (err error) {
 	if b.Closer != nil {
 		err = b.Closer.Close()
 	}
 	return
 }
 
+//SetTimeout will record the timout
+func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
+	b.BaseReader.SetTimeout(timeout)
+	b.BaseWriter.SetTimeout(timeout)
+}
+
 //NewReadWriter will return new ReadWriteCloser
 func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame ReadWriteCloser) {
 	closer, _ := raw.(io.Closer)
-	frame = &baseReadWriteCloser{
+	frame = &BaseReadWriteCloser{
 		Closer:     closer,
 		BaseReader: NewBaseReader(raw, bufferSize),
 		BaseWriter: NewBaseWriter(raw),
@@ -81,7 +105,7 @@ func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame ReadWriteCloser) {
 
 //NewReadWriteCloser will return new ReadWriteCloser
 func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame ReadWriteCloser) {
-	frame = &baseReadWriteCloser{
+	frame = &BaseReadWriteCloser{
 		Closer:     raw,
 		BaseReader: NewBaseReader(raw, bufferSize),
 		BaseWriter: NewBaseWriter(raw),
@@ -91,11 +115,12 @@ func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame ReadWrite
 
 //BaseReader imple read raw connection by frame mode
 type BaseReader struct {
-	Buffer []byte
-	Raw    io.Reader
-	offset uint32
-	length uint32
-	locker sync.RWMutex
+	Buffer  []byte
+	Raw     io.Reader
+	Timeout time.Duration
+	offset  uint32
+	length  uint32
+	locker  sync.RWMutex
 }
 
 //NewBaseReader will create new Reader by raw reader and buffer size
@@ -110,6 +135,9 @@ func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 
 //readMore will read more data to buffer
 func (b *BaseReader) readMore() (err error) {
+	if r, ok := b.Raw.(readDeadlinable); b.Timeout > 0 && ok {
+		r.SetReadDeadline(time.Now().Add(b.Timeout))
+	}
 	readed, err := b.Raw.Read(b.Buffer[b.offset+b.length:])
 	if err == nil {
 		b.length += uint32(readed)
@@ -170,6 +198,11 @@ func (b *BaseReader) Read(p []byte) (n int, err error) {
 	return
 }
 
+//SetTimeout will record the timout
+func (b *BaseReader) SetTimeout(timeout time.Duration) {
+	b.Timeout = timeout
+}
+
 func (b *BaseReader) String() string {
 	return fmt.Sprintf("%v", b.Raw)
 }
@@ -177,8 +210,9 @@ func (b *BaseReader) String() string {
 //BaseWriter implment the frame Writer
 type BaseWriter struct {
 	//the raw io writer
-	Raw    io.Writer
-	locker sync.RWMutex
+	Raw     io.Writer
+	Timeout time.Duration
+	locker  sync.RWMutex
 }
 
 //NewBaseWriter will return new BaseWriter
@@ -194,6 +228,9 @@ func (b *BaseWriter) WriteFrame(buffer []byte) (w int, err error) {
 	defer b.locker.Unlock()
 	binary.BigEndian.PutUint32(buffer, uint32(len(buffer)))
 	buffer[0] = byte(rand.Intn(255))
+	if w, ok := b.Raw.(writeDeadlinable); b.Timeout > 0 && ok {
+		w.SetWriteDeadline(time.Now().Add(b.Timeout))
+	}
 	w, err = b.Raw.Write(buffer)
 	return
 }
@@ -206,6 +243,11 @@ func (b *BaseWriter) Write(p []byte) (n int, err error) {
 	n = len(buf)
 	_, err = b.WriteFrame(buf)
 	return
+}
+
+//SetTimeout will record the timout
+func (b *BaseWriter) SetTimeout(timeout time.Duration) {
+	b.Timeout = timeout
 }
 
 func (b *BaseWriter) String() string {

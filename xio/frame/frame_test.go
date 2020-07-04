@@ -13,6 +13,25 @@ import (
 	"time"
 )
 
+type deadlineRWC struct {
+	io.ReadWriter
+}
+
+func (d *deadlineRWC) SetReadDeadline(t time.Time) error {
+	return nil
+}
+
+func (d *deadlineRWC) SetWriteDeadline(t time.Time) error {
+	return nil
+}
+
+func (d *deadlineRWC) Close() (err error) {
+	if c, ok := d.ReadWriter.(io.Closer); ok {
+		err = c.Close()
+	}
+	return
+}
+
 func TestReadWrite(t *testing.T) {
 	//
 	{ //one f
@@ -21,7 +40,8 @@ func TestReadWrite(t *testing.T) {
 		binary.BigEndian.PutUint32(buf, uint32(4+len(data1)))
 		copy(buf[4:], data1)
 		raw := bytes.NewBuffer(buf)
-		proc := NewReadWriter(raw, 256*1024)
+		proc := NewReadWriter(&deadlineRWC{ReadWriter: raw}, 256*1024)
+		proc.SetTimeout(time.Second)
 		f, err := proc.ReadFrame()
 		if err != nil || !bytes.Equal(f[4:], data1) {
 			t.Error(err)
@@ -39,7 +59,8 @@ func TestReadWrite(t *testing.T) {
 		wait := sync.WaitGroup{}
 		wait.Add(1)
 		go func() {
-			proc := NewReadWriteCloser(r, 256*1024)
+			proc := NewReadWriteCloser(&deadlineRWC{ReadWriter: r}, 256*1024)
+			proc.SetTimeout(time.Second)
 			f, err := proc.ReadFrame()
 			if err != nil || !bytes.Equal(f[4:], data1) {
 				t.Error(err)
@@ -74,7 +95,8 @@ func TestReadWrite(t *testing.T) {
 		copy(buf[8+len(data1):], data2)
 		raw := bytes.NewBuffer(buf)
 		//
-		proc := NewReadWriter(raw, 256*1024)
+		proc := NewReadWriter(&deadlineRWC{ReadWriter: raw}, 256*1024)
+		proc.SetTimeout(time.Second)
 		f, err := proc.ReadFrame()
 		if err != nil || !bytes.Equal(f[4:], data1) {
 			t.Error(err)
@@ -99,7 +121,8 @@ func TestReadWrite(t *testing.T) {
 		wait := sync.WaitGroup{}
 		wait.Add(1)
 		go func() {
-			proc := NewReadWriter(r, 256*1024)
+			proc := NewReadWriter(&deadlineRWC{ReadWriter: r}, 256*1024)
+			proc.SetTimeout(time.Second)
 			f, err := proc.ReadFrame()
 			if err != nil || !bytes.Equal(f[4:], data1) {
 				t.Error(err)
@@ -133,7 +156,8 @@ func TestReadWrite(t *testing.T) {
 	{ //test frame read write
 		r, w, _ := os.Pipe()
 		reader := NewReader(r, 1024)
-		writer := NewWriter(w)
+		writer := NewWriter(&deadlineRWC{ReadWriter: w})
+		writer.SetTimeout(time.Second)
 		readed := bytes.NewBuffer(nil)
 		waiter := make(chan int, 1)
 		go func() {
