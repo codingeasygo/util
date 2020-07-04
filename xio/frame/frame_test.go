@@ -196,4 +196,26 @@ func TestReadWrite(t *testing.T) {
 		fmt.Printf("%v\n", NewReader(bytes.NewBuffer(nil), 1024))
 		fmt.Printf("%v\n", NewWriter(bytes.NewBuffer(nil)))
 	}
+	{ //wrap
+		buf := Wrap([]byte("123"))
+		if len(buf) != 7 {
+			t.Error("error")
+			return
+		}
+	}
+}
+
+func TestError(t *testing.T) {
+	func() {
+		defer func() {
+			recover()
+		}()
+		NewBaseReader(nil, -1)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		NewReadWriteCloser(nil, -1)
+	}()
 }

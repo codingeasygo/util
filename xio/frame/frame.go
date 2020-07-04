@@ -105,6 +105,9 @@ func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame ReadWriteCloser) {
 
 //NewReadWriteCloser will return new ReadWriteCloser
 func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame ReadWriteCloser) {
+	if bufferSize < 1 {
+		panic("buffer size is < 1")
+	}
 	frame = &BaseReadWriteCloser{
 		Closer:     raw,
 		BaseReader: NewBaseReader(raw, bufferSize),
@@ -125,6 +128,9 @@ type BaseReader struct {
 
 //NewBaseReader will create new Reader by raw reader and buffer size
 func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
+	if bufferSize < 1 {
+		panic("buffer size is < 1")
+	}
 	reader = &BaseReader{
 		Buffer: make([]byte, bufferSize),
 		Raw:    raw,
@@ -252,4 +258,12 @@ func (b *BaseWriter) SetTimeout(timeout time.Duration) {
 
 func (b *BaseWriter) String() string {
 	return fmt.Sprintf("%v", b.Raw)
+}
+
+func Wrap(p []byte) (buffer []byte) {
+	buffer = make([]byte, len(p)+4)
+	copy(buffer[4:], p)
+	binary.BigEndian.PutUint32(buffer, uint32(len(buffer)))
+	buffer[0] = byte(rand.Intn(255))
+	return
 }
