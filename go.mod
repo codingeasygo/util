@@ -1,3 +1,3 @@
 module github.com/codingeasygo/util
 
-go 1.14
+go 1.0

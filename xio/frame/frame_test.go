@@ -157,7 +157,7 @@ func TestReadWrite(t *testing.T) {
 		r, w, _ := os.Pipe()
 		reader := NewReader(r, 1024)
 		writer := NewWriter(&deadlineRWC{ReadWriter: w})
-		writer.SetTimeout(time.Second)
+		writer.SetWriteTimeout(time.Second)
 		readed := bytes.NewBuffer(nil)
 		waiter := make(chan int, 1)
 		go func() {

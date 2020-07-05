@@ -25,37 +25,32 @@ type writeDeadlinable interface {
 	SetWriteDeadline(t time.Time) error
 }
 
-//Timeouter is interface for timeout setter
-type Timeouter interface {
-	SetTimeout(timeout time.Duration)
-}
-
 //Reader is interface for read the raw io as frame mode
 type Reader interface {
 	io.Reader
-	Timeouter
 	ReadFrame() (frame []byte, err error)
+	SetReadTimeout(timeout time.Duration)
 }
 
 //Writer is interface for write the raw io as frame mode
 type Writer interface {
 	io.Writer
-	Timeouter
 	//WriteCmd will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
 	//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 	WriteFrame(buffer []byte) (n int, err error)
+	SetWriteTimeout(timeout time.Duration)
 }
 
 //ReadWriter is interface for read/write the raw io as frame mode
 type ReadWriter interface {
 	Reader
 	Writer
+	SetTimeout(timeout time.Duration)
 }
 
 //ReadWriteCloser is interface for read/write the raw io as frame mode
 type ReadWriteCloser interface {
-	Reader
-	Writer
+	ReadWriter
 	io.Closer
 }
 
@@ -88,8 +83,8 @@ func (b *BaseReadWriteCloser) Close() (err error) {
 
 //SetTimeout will record the timout
 func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
-	b.BaseReader.SetTimeout(timeout)
-	b.BaseWriter.SetTimeout(timeout)
+	b.BaseReader.SetReadTimeout(timeout)
+	b.BaseWriter.SetWriteTimeout(timeout)
 }
 
 //NewReadWriter will return new ReadWriteCloser
@@ -204,8 +199,8 @@ func (b *BaseReader) Read(p []byte) (n int, err error) {
 	return
 }
 
-//SetTimeout will record the timout
-func (b *BaseReader) SetTimeout(timeout time.Duration) {
+//SetReadTimeout will record the timout
+func (b *BaseReader) SetReadTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }
 
@@ -251,8 +246,8 @@ func (b *BaseWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-//SetTimeout will record the timout
-func (b *BaseWriter) SetTimeout(timeout time.Duration) {
+//SetWriteTimeout will record the timout
+func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }
 
@@ -260,6 +255,7 @@ func (b *BaseWriter) String() string {
 	return fmt.Sprintf("%v", b.Raw)
 }
 
+//Wrap will create buffer and add frame header
 func Wrap(p []byte) (buffer []byte) {
 	buffer = make([]byte, len(p)+4)
 	copy(buffer[4:], p)
