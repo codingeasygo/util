@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -23,13 +24,25 @@ type M map[string]interface{}
 
 //Get will return value by key
 func (m M) Get(key string) (v interface{}, err error) {
-	fmt.Println(m[key], err)
 	return m[key], nil
 }
 
 //ValidFormat will valid args by format temple
 func (m M) ValidFormat(format string, args ...interface{}) error {
 	return ValidAttrFormat(format, m, true, args...)
+}
+
+//Values is an url.Values which can be valid by valid temple
+type Values url.Values
+
+//Get will return value by key
+func (v Values) Get(key string) (val interface{}, err error) {
+	return url.Values(v).Get(key), nil
+}
+
+//ValidFormat will valid args by format temple
+func (v Values) ValidFormat(format string, args ...interface{}) error {
+	return ValidAttrFormat(format, v, true, args...)
 }
 
 //QueryValidFormat will valid args by http request query
