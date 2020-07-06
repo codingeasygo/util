@@ -2,6 +2,7 @@ package xio
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -124,6 +125,109 @@ func TestCopyPacketToError(t *testing.T) {
 	packet1, _ := net.ListenPacket("udp", ":12332")
 	packet1.Close()
 	_, err := CopyPacketTo(packet1, packet1.LocalAddr(), bytes.NewBuffer([]byte("123")))
+	if err == nil {
+		t.Error(err)
+		return
+	}
+}
+
+type copyMultiTestReader struct {
+}
+
+func (c *copyMultiTestReader) Read(p []byte) (n int, err error) {
+	err = fmt.Errorf("test error")
+	return
+}
+
+type copyMultiTestWriter struct {
+	n int
+}
+
+func (c *copyMultiTestWriter) Write(p []byte) (n int, err error) {
+	switch c.n {
+	case 0:
+		n = len(p)
+	case 1:
+		n = len(p) - 1
+	case 2:
+		err = fmt.Errorf("test error")
+	}
+	return
+}
+
+func TestCopyMulti(t *testing.T) {
+	var err error
+	writer1 := &copyMultiTestWriter{}
+	writer2 := &copyMultiTestWriter{}
+	//
+	writer1.n, writer2.n = 0, 0
+	_, err = CopyMulti([]io.Writer{writer1, writer2}, bytes.NewBufferString("123"))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	//
+	writer1.n, writer2.n = 0, 0
+	_, err = CopyMulti([]io.Writer{writer1, writer2}, &copyMultiTestReader{})
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//
+	writer1.n, writer2.n = 1, 1
+	_, err = CopyMulti([]io.Writer{writer1, writer2}, bytes.NewBufferString("123"))
+	if err != io.ErrShortWrite {
+		t.Error(err)
+		return
+	}
+	//
+	writer1.n, writer2.n = 2, 2
+	_, err = CopyMulti([]io.Writer{writer1, writer2}, bytes.NewBufferString("123"))
+	if err == nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestCopyMax(t *testing.T) {
+	var err error
+	//
+	_, err = CopyMax(bytes.NewBuffer(nil), bytes.NewBufferString("abc"), 10)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	//
+	_, err = CopyMax(bytes.NewBuffer(nil), bytes.NewBufferString("abc"), 2)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//
+	_, err = CopyBufferMax(bytes.NewBuffer(nil), bytes.NewBufferString("abc"), 10, make([]byte, 2))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	//
+	writer1 := &copyMultiTestWriter{}
+	//
+	writer1.n = 1
+	_, err = CopyMax(writer1, bytes.NewBufferString("abc"), 1024)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//
+	writer1.n = 2
+	_, err = CopyMax(writer1, bytes.NewBufferString("abc"), 1024)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//
+	writer1.n = 0
+	_, err = CopyMax(ioutil.Discard, &copyMultiTestReader{}, 1024)
 	if err == nil {
 		t.Error(err)
 		return
