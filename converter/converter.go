@@ -2,7 +2,10 @@ package converter
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"reflect"
 	"strconv"
 	"strings"
@@ -225,6 +228,13 @@ func ArrayVal(v interface{}) ([]interface{}, error) {
 	if vals, ok := v.([]interface{}); ok {
 		return vals, nil
 	}
+	if sval, ok := v.(string); ok {
+		vals := []interface{}{}
+		for _, val := range strings.Split(sval, ",") {
+			vals = append(vals, val)
+		}
+		return vals, nil
+	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
 		return nil, fmt.Errorf("incompactable kind(%v)", vals.Kind())
@@ -249,6 +259,10 @@ func ArrayStringVal(v interface{}) (svals []string, err error) {
 			}
 			svals = append(svals, sval)
 		}
+		return
+	}
+	if sval, ok := v.(string); ok {
+		svals = strings.Split(sval, ",")
 		return
 	}
 	vals := reflect.ValueOf(v)
@@ -278,6 +292,16 @@ func ArrayIntVal(v interface{}) (ivals []int, err error) {
 	if vals, ok := v.([]interface{}); ok {
 		for _, v := range vals {
 			ival, err = IntVal(v)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
+	if sval, ok := v.(string); ok {
+		for _, val := range strings.Split(sval, ",") {
+			ival, err = IntVal(val)
 			if err != nil {
 				return
 			}
@@ -315,6 +339,16 @@ func ArrayInt64Val(v interface{}) (ivals []int64, err error) {
 		}
 		return
 	}
+	if sval, ok := v.(string); ok {
+		for _, val := range strings.Split(sval, ",") {
+			ival, err = Int64Val(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
 		err = fmt.Errorf("incompactable kind(%v)", vals.Kind())
@@ -345,6 +379,16 @@ func ArrayUint64Val(v interface{}) (ivals []uint64, err error) {
 		}
 		return
 	}
+	if sval, ok := v.(string); ok {
+		for _, val := range strings.Split(sval, ",") {
+			ival, err = Uint64Val(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
 		err = fmt.Errorf("incompactable kind(%v)", vals.Kind())
@@ -368,6 +412,16 @@ func ArrayFloat64Val(v interface{}) (ivals []float64, err error) {
 	if vals, ok := v.([]interface{}); ok {
 		for _, v := range vals {
 			ival, err = Float64Val(v)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
+	if sval, ok := v.(string); ok {
+		for _, val := range strings.Split(sval, ",") {
+			ival, err = Float64Val(val)
 			if err != nil {
 				return
 			}
@@ -414,4 +468,22 @@ func JSON(v interface{}) string {
 		return err.Error()
 	}
 	return string(data)
+}
+
+//UnmarshalJSON will read bytes from reader and unmarshal to object
+func UnmarshalJSON(r io.Reader, v interface{}) (data []byte, err error) {
+	data, err = ioutil.ReadAll(r)
+	if err == nil || err == io.EOF {
+		err = json.Unmarshal(data, v)
+	}
+	return
+}
+
+//UnmarshalXML will read bytes from reader and unmarshal to object
+func UnmarshalXML(r io.Reader, v interface{}) (data []byte, err error) {
+	data, err = ioutil.ReadAll(r)
+	if err == nil || err == io.EOF {
+		err = xml.Unmarshal(data, v)
+	}
+	return
 }

@@ -7,11 +7,18 @@ import (
 )
 
 func TestMap(t *testing.T) {
-	m := M{}
+	m := New()
+	testMap(t, m)
+	m2 := NewSafe()
+	testMap(t, m2)
+}
+
+func testMap(t *testing.T, m Valuable) {
 	m.SetValue("abc", "123")
 	m.SetValue("int", 123)
 	m.SetValue("x", M{"a": 123})
 	m.SetValue("/ary", []interface{}{1, 2, 3})
+	m.SetValue("/ary2", "1,2,3")
 	m.SetValue("/arm", []interface{}{M{}, M{}, M{}})
 	assert := func(v bool) {
 		if !v {
@@ -20,6 +27,7 @@ func TestMap(t *testing.T) {
 	}
 	assert(m.Exist("abc"))
 	//
+	assert(nil != m.Raw())
 	assert(nil != m.Map("x"))
 	assert(nil != m.MapDef(nil, "x"))
 	assert(nil == m.MapDef(nil, "not"))
@@ -47,6 +55,22 @@ func TestMap(t *testing.T) {
 	assert(0 == m.Uint64Def(0, "not"))
 	assert(0 == m.Float64Def(0, "not"))
 	//
+	assert(3 == len(m.ArrayDef(nil, "/ary")))
+	assert(3 == len(m.ArrayMapDef(nil, "/arm")))
+	assert(3 == len(m.ArrayIntDef(nil, "/ary")))
+	assert(3 == len(m.ArrayInt64Def(nil, "/ary")))
+	assert(3 == len(m.ArrayUint64Def(nil, "/ary")))
+	assert(3 == len(m.ArrayFloat64Def(nil, "/ary")))
+	assert(3 == len(m.ArrayStrDef(nil, "/ary")))
+	//
+	assert(0 == len(m.ArrayDef(nil, "/not")))
+	assert(0 == len(m.ArrayMapDef(nil, "/not")))
+	assert(0 == len(m.ArrayIntDef(nil, "/not")))
+	assert(0 == len(m.ArrayInt64Def(nil, "/not")))
+	assert(0 == len(m.ArrayUint64Def(nil, "/v")))
+	assert(0 == len(m.ArrayFloat64Def(nil, "/not")))
+	assert(0 == len(m.ArrayStrDef(nil, "/not")))
+	//
 	//
 	if v, err := m.StrVal("int"); true {
 		assert("123" == v && err == nil)
@@ -64,6 +88,9 @@ func TestMap(t *testing.T) {
 		assert(123 == v && err == nil)
 	}
 	if v, err := m.MapVal("x"); true {
+		assert(nil != v && err == nil)
+	}
+	if v, err := m.ValueVal("x"); true {
 		assert(nil != v && err == nil)
 	}
 	//
@@ -94,6 +121,11 @@ func TestMap(t *testing.T) {
 	assert(m.Value("having") != nil)
 	m.Delete("having")
 	assert(m.Value("having") == nil)
+	//
+	m.SetValue("having", "123")
+	assert(m.Length() > 0)
+	m.Clear()
+	assert(m.Length() == 0)
 }
 
 func TestArrayMap(t *testing.T) {
@@ -142,13 +174,17 @@ func TestPathValue(t *testing.T) {
 		"m":   m2,
 		"ary": []interface{}{m1, m2},
 	}
-	m4 := M{
+	m4 := Wrap(M{
 		"test": 1,
 		"ms":   []interface{}{m1, m2, m3},
 		"m3":   m3,
+		"m4":   "{}",
+		"m5":   []byte("{}"),
+		"m6":   "[{}]",
+		"m7":   []byte("[{}]"),
 		"ary2": []int{1, 3, 4},
 		"me":   map[string]string{"a": "b"},
-	}
+	})
 	var v interface{}
 	var err error
 	v, err = m4.ValueVal("/path")
@@ -158,6 +194,14 @@ func TestPathValue(t *testing.T) {
 	v, err = m4.ValueVal("/ms")
 	assertNotError(t, v, err)
 	v, err = m4.ValueVal("/m3")
+	assertNotError(t, v, err)
+	v, err = m4.MapVal("/m4")
+	assertNotError(t, v, err)
+	v, err = m4.MapVal("/m5")
+	assertNotError(t, v, err)
+	v, err = m4.ArrayMapVal("/m6")
+	assertNotError(t, v, err)
+	v, err = m4.ArrayMapVal("/m7")
 	assertNotError(t, v, err)
 	//
 	v, err = m4.ValueVal("/m3/b")
@@ -189,13 +233,13 @@ func TestPathValue(t *testing.T) {
 func TestSetValue(t *testing.T) {
 	var v interface{}
 	var err error
-	m := M{
+	m := Wrap(M{
 		"eary":  []string{},
 		"ary":   []interface{}{456},
 		"emap":  map[string]string{},
 		"map":   map[string]interface{}{},
 		"ntype": "kkkk",
-	}
+	})
 	m.SetValue("/abc", M{"a": 1})
 	v, err = m.ValueVal("/abc/a")
 	assertNotError(t, v, err)
@@ -222,13 +266,15 @@ func TestSetValue(t *testing.T) {
 	assertError(t, nil, err)
 	err = m.SetValue("", 123)
 	assertError(t, nil, err)
-	err = m.setPathValue("", 123)
-	assertError(t, nil, err)
 	//
 	mv, err := m.MapVal("/abc")
 	assertNotError(t, mv, err)
 	v, err = mv.ValueVal("/a")
 	assertNotError(t, v, err)
+	//
+	b := &M{}
+	err = b.setPathValue("", 123)
+	assertError(t, nil, err)
 }
 
 func assertNotError(t *testing.T, v interface{}, err error) {
@@ -257,13 +303,42 @@ func assertError(t *testing.T, v interface{}, err error) {
 // }
 
 func TestValidFormat(t *testing.T) {
-	m := M(map[string]interface{}{
+	m := Wrap(M(map[string]interface{}{
 		"ab1": 1,
 		"ab2": "xxx",
 		"map": map[string]interface{}{
 			"x1": 100,
 		},
-	})
+	}))
+	var v1 int64
+	var v2 string
+	var v3 int
+	var v4 int
+	err := m.ValidFormat(`
+		ab1,R|I,R:0;
+		ab2,R|S,L:0;
+		/map/x1,R|I,R:0;
+		not|ab1,R|I,R:0;
+		`, &v1, &v2, &v3, &v4)
+	if v1 != 1 || v2 != "xxx" || v3 != 100 || v4 != 1 {
+		t.Error("error")
+		return
+	}
+	fmt.Println(v1, v2, v3)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestSafeValidFormat(t *testing.T) {
+	m := WrapSafe(M(map[string]interface{}{
+		"ab1": 1,
+		"ab2": "xxx",
+		"map": map[string]interface{}{
+			"x1": 100,
+		},
+	}))
 	var v1 int64
 	var v2 string
 	var v3 int
@@ -286,31 +361,82 @@ func TestValidFormat(t *testing.T) {
 }
 
 func TestMSorter(t *testing.T) {
-	newall := func() []M {
-		return []M{
-			{
+	newall := func() []Valuable {
+		v := WrapArray([]BaseValuable{
+			M{
 				"s": "a",
 				"i": 1,
 				"f": 1.0,
 			},
-			{
+			M{
 				"s": "c",
 				"i": 3,
 				"f": 3.0,
 			},
-			{
+			M{
 				"s": "b",
 				"i": 2,
 				"f": 2.0,
 			},
-		}
+		})
+		return v
 	}
+	newall2 := func() []Valuable {
+		v := WrapSafeArray([]BaseValuable{
+			M{
+				"s": "a",
+				"i": 1,
+				"f": 1.0,
+			},
+			M{
+				"s": "c",
+				"i": 3,
+				"f": 3.0,
+			},
+			M{
+				"s": "b",
+				"i": 2,
+				"f": 2.0,
+			},
+		})
+		return v
+	}
+	testMSorter(t, newall)
+	testMSorter(t, newall2)
+}
+
+func testMSorter(t *testing.T, newall func() []Valuable) {
 	sort.Sort(NewMSorter(newall(), 0, false, "i"))
 	sort.Sort(NewMSorter(newall(), 0, true, "i"))
 	sort.Sort(NewMSorter(newall(), 1, false, "f"))
 	sort.Sort(NewMSorter(newall(), 1, true, "f"))
 	sort.Sort(NewMSorter(newall(), 2, false, "s"))
 	sort.Sort(NewMSorter(newall(), 2, true, "s"))
+}
+
+func TestParse(t *testing.T) {
+	var err error
+	//
+	_, err = Parse("{}")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = ParseArray("[{}]")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = ParseSafe("{}")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = ParseSafeArray("[{}]")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 // func TestAryMapVal(t *testing.T) {

@@ -3,7 +3,6 @@ package xprop
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,7 +23,8 @@ import (
 
 //Config is parser for properties file
 type Config struct {
-	xmap.M
+	xmap.Valuable
+	config  map[string]string
 	ShowLog bool
 	sec     string
 	Lines   []string
@@ -37,11 +37,12 @@ type Config struct {
 //NewConfig will return new config
 func NewConfig() (config *Config) {
 	config = &Config{
-		M:       xmap.M{},
+		config:  map[string]string{},
 		ShowLog: true,
 		SecLn:   map[string]int{},
 		Masks:   map[string]string{},
 	}
+	config.Valuable = xmap.Wrap(config)
 	return
 }
 
@@ -75,141 +76,52 @@ func (c *Config) autoPath(path ...string) (all []string) {
 	return
 }
 
+//ValueVal will get value by path
+func (c *Config) ValueVal(path ...string) (v interface{}, err error) {
+	ps := c.autoPath(path...)
+	for _, p := range ps {
+		val, ok := c.config[p]
+		if ok {
+			v = val
+			break
+		}
+	}
+	return
+}
+
+//SetValue will set value to path
 func (c *Config) SetValue(path string, val interface{}) (err error) {
-	c.M[path] = val
+	c.config[path] = converter.String(val)
 	return
 }
 
-func (c *Config) IntDef(def int, path ...string) int {
-	return c.M.IntDef(def, c.autoPath(path...)...)
+//Delete will delete value on path
+func (c *Config) Delete(path string) (err error) {
+	delete(c.config, path)
+	return
 }
 
-func (c *Config) Int64Def(def int64, path ...string) (v int64) {
-	return c.M.Int64Def(def, c.autoPath(path...)...)
-}
-
-func (c *Config) Uint64Def(def uint64, path ...string) (v uint64) {
-	return c.M.Uint64Def(def, c.autoPath(path...)...)
-}
-
-func (c *Config) Float64Def(def float64, path ...string) (v float64) {
-	return c.M.Float64Def(def, c.autoPath(path...)...)
-}
-
-func (c *Config) StrDef(def string, path ...string) (v string) {
-	return c.M.StrDef(def, c.autoPath(path...)...)
-}
-
-func (c *Config) MapDef(def xmap.M, path ...string) (v xmap.M) {
-	v, err := c.MapVal(path...)
-	if err != nil {
-		v = def
+//Clear will clear all key on map
+func (c *Config) Clear() (err error) {
+	for key := range c.config {
+		delete(c.config, key)
 	}
 	return
 }
 
-func (c *Config) MapVal(path ...string) (v xmap.M, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		v = xmap.M{}
-		err = json.Unmarshal([]byte(data), &v)
-	}
+//Length will return value count
+func (c *Config) Length() (l int) {
+	l = len(c.config)
 	return
 }
 
-func (c *Config) ArrayMapDef(def []xmap.M, path ...string) (v []xmap.M) {
-	v, err := c.ArrayMapVal(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayMapVal(path ...string) (v []xmap.M, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		err = json.Unmarshal([]byte(data), &v)
-	}
-	return
-}
-
-func (c *Config) ArrayStrDef(def []string, path ...string) (v []string) {
-	v, err := c.ArrayStrVal(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayStrVal(path ...string) (v []string, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		v = strings.Split(data, ",")
-	}
-	return
-}
-
-func (c *Config) ArrayIntDef(def []int, path ...string) (v []int) {
-	v, err := c.ArrayIntVal(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayIntVal(path ...string) (v []int, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		v, err = converter.ArrayIntVal(strings.Split(data, ","))
-	}
-	return
-}
-
-func (c *Config) ArrayInt64Def(def []int64, path ...string) (v []int64) {
-	v, err := c.ArrayInt64Val(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayInt64Val(path ...string) (v []int64, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		v, err = converter.ArrayInt64Val(strings.Split(data, ","))
-	}
-	return
-}
-
-func (c *Config) ArrayUint64Def(def []uint64, path ...string) (v []uint64) {
-	v, err := c.ArrayUint64Val(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayUint64Val(path ...string) (v []uint64, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		v, err = converter.ArrayUint64Val(strings.Split(data, ","))
-	}
-	return
-}
-
-func (c *Config) ArrayFloat64Def(def []float64, path ...string) (v []float64) {
-	v, err := c.ArrayFloat64Val(path...)
-	if err != nil {
-		v = def
-	}
-	return
-}
-
-func (c *Config) ArrayFloat64Val(path ...string) (v []float64, err error) {
-	data, err := c.M.StrVal(c.autoPath(path...)...)
-	if err == nil {
-		data = strings.TrimSpace(data)
-		v, err = converter.ArrayFloat64Val(strings.Split(data, ","))
+//Exist will check path whether exist
+func (c *Config) Exist(path ...string) (ok bool) {
+	for _, p := range path {
+		_, ok = c.config[p]
+		if ok {
+			break
+		}
 	}
 	return
 }
@@ -250,7 +162,7 @@ func (c *Config) PrintSection(section string) {
 		mask[regexp.MustCompile(k)] = regexp.MustCompile(v)
 	}
 	sdata := ""
-	for k, v := range c.M {
+	for k, v := range c.config {
 		if !strings.HasPrefix(k, section) {
 			continue
 		}
@@ -268,7 +180,7 @@ func (c *Config) PrintSection(section string) {
 
 //Range the section key-value by callback
 func (c *Config) Range(section string, callback func(key string, val interface{})) {
-	for k, v := range c.M {
+	for k, v := range c.config {
 		if strings.HasPrefix(k, section) {
 			callback(strings.TrimPrefix(k, section+"/"), v)
 		}
@@ -298,7 +210,7 @@ func (c *Config) exec(base, line string, wait bool) error {
 		} else {
 			key := c.sec + c.EnvReplace(strings.Trim(ps[0], " "))
 			val := c.EnvReplace(strings.Trim(ps[1], " "))
-			c.M[key] = val
+			c.config[key] = val
 		}
 		return nil
 	}
@@ -383,7 +295,7 @@ func (c *Config) LoadFileWait(filename string, wait bool) error {
 		if err == nil {
 			query := furl.Query()
 			for k := range query {
-				c.M.SetValue(k, query.Get(k))
+				c.config[k] = query.Get(k)
 			}
 		}
 	}
@@ -459,7 +371,7 @@ func (c *Config) LoadConfReader(base string, reader io.Reader) error {
 		line, err := readLine(buf)
 		if err != nil {
 			if len(key) > 0 {
-				c.M[key] = strings.Trim(val, "\n")
+				c.config[key] = strings.Trim(val, "\n")
 				key, val = "", ""
 			}
 			break
@@ -467,7 +379,7 @@ func (c *Config) LoadConfReader(base string, reader io.Reader) error {
 		if regexp.MustCompile("^\\[[^\\]]*\\][\t ]*$").MatchString(line) {
 			sec := strings.Trim(line, "\t []")
 			if len(key) > 0 {
-				c.M[key] = strings.Trim(val, "\n")
+				c.config[key] = strings.Trim(val, "\n")
 				key, val = "", ""
 			}
 			key = sec
@@ -567,7 +479,7 @@ func (c *Config) EnvReplaceEmpty(val string, empty bool) string {
 		for _, key := range keys {
 			if c.Exist(key) {
 				rval = c.Str(key)
-			} else if key == "C_PWD" {
+			} else if key == "CONF_DIR" {
 				rval = c.Base
 			} else {
 				rval = os.Getenv(key)
@@ -592,8 +504,8 @@ func (c *Config) Merge(config *Config) {
 	if config == nil {
 		return
 	}
-	for k, v := range config.M {
-		c.M[k] = v
+	for k, v := range config.config {
+		c.config[k] = v
 	}
 	for _, s := range config.Seces {
 		if _, ok := c.SecLn[s]; ok {
@@ -605,11 +517,11 @@ func (c *Config) Merge(config *Config) {
 
 //MergeSection merge section on another configure
 func (c *Config) MergeSection(section string, config *Config) {
-	for k, v := range config.M {
+	for k, v := range config.config {
 		if strings.HasPrefix(k, section) {
 			continue
 		}
-		c.M[k] = v
+		c.config[k] = v
 	}
 	if _, ok := c.SecLn[section]; !ok {
 		c.Seces = append(c.Seces, section)
@@ -619,8 +531,8 @@ func (c *Config) MergeSection(section string, config *Config) {
 //Clone will clone the configure
 func (c *Config) Clone() (conf *Config) {
 	conf = NewConfig()
-	for k, v := range c.M {
-		conf.M[k] = v
+	for k, v := range c.config {
+		conf.config[k] = v
 	}
 	conf.ShowLog = c.ShowLog
 	conf.sec = c.sec
@@ -655,7 +567,7 @@ func (c *Config) String() string {
 	}
 	buf := bytes.NewBuffer(nil)
 	keys, locs := []string{}, []string{}
-	for k := range c.M {
+	for k := range c.config {
 		if strings.HasPrefix(k, "loc/") {
 			locs = append(locs, k)
 		} else {
@@ -664,7 +576,7 @@ func (c *Config) String() string {
 	}
 	sort.Sort(sort.StringSlice(keys))
 	for _, k := range keys {
-		val := fmt.Sprintf("%v", c.M[k])
+		val := fmt.Sprintf("%v", c.config[k])
 		for maskKey, maskVal := range mask {
 			if maskKey.MatchString(k) {
 				val = maskVal.ReplaceAllString(val, "***")
@@ -674,7 +586,7 @@ func (c *Config) String() string {
 		buf.WriteString(fmt.Sprintf("%v=%v\n", k, val))
 	}
 	for _, k := range locs {
-		val := fmt.Sprintf("%v", c.M[k])
+		val := fmt.Sprintf("%v", c.config[k])
 		for maskKey, maskVal := range mask {
 			if maskKey.MatchString(k) {
 				val = maskVal.ReplaceAllString(val, "***")

@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 	"time"
@@ -134,6 +135,7 @@ func TestArray(t *testing.T) {
 	//test all type
 	m = map[string]interface{}{}
 	m["str1"] = []byte("123")
+	m["str2"] = "1,2,3"
 	m["arr1"] = []int{1, 1}
 	m["arr2"] = []interface{}{1, 1}
 	for key, val := range m {
@@ -172,6 +174,7 @@ func TestArray(t *testing.T) {
 	m = map[string]interface{}{}
 	m["nil"] = nil
 	m["int"] = 1
+	m["str"] = "xx"
 	m["i1"] = []interface{}{"aaa"}
 	m["i2"] = []*testing.T{nil}
 	for key, val := range m {
@@ -274,6 +277,23 @@ func TestJSON(t *testing.T) {
 	v2 := JSON(TestJSON)
 	if !strings.Contains(v2, "unsupported") {
 		t.Error(v2)
+		return
+	}
+}
+
+type xmlObj struct {
+}
+
+func TestUnmarshal(t *testing.T) {
+	var err error
+	_, err = UnmarshalJSON(bytes.NewBufferString("{}"), &map[string]interface{}{})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = UnmarshalXML(bytes.NewBufferString("<xml></xml>"), &xmlObj{})
+	if err != nil {
+		t.Error(err)
 		return
 	}
 }

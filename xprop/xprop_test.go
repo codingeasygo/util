@@ -23,8 +23,13 @@ func assert(v bool) {
 
 func TestEnvReplace(t *testing.T) {
 	f := NewConfig()
+	f.Base = "."
 	f.SetValue("a", "b111111")
-	fmt.Println(f.EnvReplace("sss${a} ${abc} ${da} ${HOME} ${}"))
+	fmt.Println(f.EnvReplace("sss${a} ${abc} ${da} ${HOME} ${} ${CONF_DIR}"))
+	f.Clear()
+	if f.Length() != 0 {
+		t.Error("error")
+	}
 }
 
 func TestInit(t *testing.T) {
@@ -45,7 +50,7 @@ func TestInit(t *testing.T) {
 		t.Error("error")
 		return
 	}
-	for key, val := range f.M {
+	for key, val := range f.config {
 		fmt.Println(key, ":", val)
 	}
 	fmt.Println(f.StrVal("inta"))
@@ -155,7 +160,7 @@ func TestLoad(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	fmt.Println(converter.JSON(config.M))
+	fmt.Println(converter.JSON(config.config))
 	assert(config.IntDef(0, "a") == 1)
 	ts.Close()
 	//

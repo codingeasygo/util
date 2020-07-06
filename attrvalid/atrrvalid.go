@@ -47,30 +47,17 @@ func (v Values) ValidFormat(format string, args ...interface{}) error {
 
 //QueryValidFormat will valid args by http request query
 func QueryValidFormat(req *http.Request, format string, args ...interface{}) error {
-	query := req.URL.Query()
-	getter := func(key string) (v interface{}, err error) {
-		v = query.Get(key)
-		return
-	}
-	return ValidAttrFormat(format, ValueGetterF(getter), true, args...)
+	return Values(req.URL.Query()).ValidFormat(format, args...)
 }
 
 //FormValidFormat will valid args by http request form
 func FormValidFormat(req *http.Request, format string, args ...interface{}) error {
-	getter := func(key string) (v interface{}, err error) {
-		v = req.FormValue(key)
-		return
-	}
-	return ValidAttrFormat(format, ValueGetterF(getter), true, args...)
+	return Values(req.Form).ValidFormat(format, args...)
 }
 
 //PostFormValidFormat will valid args by http request post form
 func PostFormValidFormat(req *http.Request, format string, args ...interface{}) error {
-	getter := func(key string) (v interface{}, err error) {
-		v = req.PostFormValue(key)
-		return
-	}
-	return ValidAttrFormat(format, ValueGetterF(getter), true, args...)
+	return Values(req.PostForm).ValidFormat(format, args...)
 }
 
 //RequestValidFormat will valid args by http request query/form/postform
@@ -402,15 +389,9 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			continue
 		}
-		var svals []interface{}
-		if v, ok := sval.(string); ok {
-			svals, _ = converter.ArrayVal(strings.Split(v, ","))
-		} else {
-			v, err := converter.ArrayVal(sval)
-			if err != nil {
-				return err
-			}
-			svals = v
+		svals, err := converter.ArrayVal(sval)
+		if err != nil {
+			return err
 		}
 		array := pval
 		for _, sval = range svals {
