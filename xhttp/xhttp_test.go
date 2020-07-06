@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/codingeasygo/util/xio"
@@ -97,9 +98,13 @@ func TestPost(t *testing.T) {
 			fmt.Fprintf(w, r.Header.Get("abc"))
 		case "form":
 			r.ParseForm()
-			r.ParseMultipartForm(1024)
 			xio.WriteJSON(w, map[string]interface{}{
 				"abc": r.PostForm.Get("abc"),
+			})
+		case "part":
+			r.ParseMultipartForm(1024)
+			xio.WriteJSON(w, map[string]interface{}{
+				"abc": r.MultipartForm.Value["abc"][0],
 			})
 		case "body":
 			io.Copy(w, r.Body)
@@ -162,6 +167,11 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	sval, err = PostFormText(map[string]interface{}{"abc": "1"}, "%v?format=json", ts.URL)
+	if err != nil || len(sval) < 1 {
+		t.Error(err)
+		return
+	}
 	mval, err = PostFormMap(map[string]interface{}{"abc": "1"}, "%v?format=json", ts.URL)
 	if err != nil {
 		t.Error(err)
@@ -170,6 +180,21 @@ func TestPost(t *testing.T) {
 	err = mval.ValidFormat(`abc,r|i,r:0;`, &ival)
 	if err != nil || ival != 1 {
 		t.Error(err)
+		return
+	}
+	sval, err = PostXMLText(t, "%v?format=body", ts.URL)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	sval, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?format=part", ts.URL)
+	if err != nil || !strings.Contains(sval, "123") {
+		t.Errorf("err:%v,text:%v", err, sval)
+		return
+	}
+	mval, err = PostMultipartMap(xmap.M{"abc": "123"}, xmap.M{"abc": "123"}, "%v?format=part", ts.URL)
+	if err != nil || mval.Str("abc") != "123" {
+		t.Errorf("err:%v,text:%v", err, sval)
 		return
 	}
 	//
@@ -187,6 +212,22 @@ func TestPost(t *testing.T) {
 	_, err = PostText(nil, "%v/?format=text", "http://127.0.0.1:32")
 	if err == nil {
 		t.Error(err)
+		return
+	}
+	//
+	_, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?format=error", ts.URL)
+	if err == nil {
+		t.Errorf("err:%v,text:%v", err, sval)
+		return
+	}
+	_, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?\x06format=text", ts.URL)
+	if err == nil {
+		t.Errorf("err:%v,text:%v", err, sval)
+		return
+	}
+	_, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?format=text", "http://127.0.0.1:32")
+	if err == nil {
+		t.Errorf("err:%v,text:%v", err, sval)
 		return
 	}
 }
@@ -217,7 +258,7 @@ func TestUpload(t *testing.T) {
 	os.Remove("/tmp/xhttp_test.txt")
 	ioutil.WriteFile("/tmp/xhttp_test.txt", []byte("1"), os.ModePerm)
 	//
-	sval, err := UploadText("abc", "/tmp/xhttp_test.txt", "%v?format=text", ts.URL)
+	sval, err := UploadText(nil, "abc", "/tmp/xhttp_test.txt", "%v?format=text", ts.URL)
 	if err != nil || sval != "1" {
 		t.Error(err)
 		return
@@ -228,7 +269,7 @@ func TestUpload(t *testing.T) {
 		return
 	}
 	//
-	mval, err := UploadMap("abc", "/tmp/xhttp_test.txt", "%v?format=json", ts.URL)
+	mval, err := UploadMap(nil, "abc", "/tmp/xhttp_test.txt", "%v?format=json", ts.URL)
 	if err != nil {
 		t.Error(err)
 		return
@@ -240,17 +281,17 @@ func TestUpload(t *testing.T) {
 	}
 	//
 	//test error
-	_, err = UploadText("abc", "/tmp/xhttp_test.txt", "%v/\x01?format=json", ts.URL)
+	_, err = UploadText(nil, "abc", "/tmp/xhttp_test.txt", "%v/\x01?format=json", ts.URL)
 	if err == nil {
 		t.Error(err)
 		return
 	}
-	_, err = UploadText("abc", "/tmp/xhttp_test.txt", "%v?format=error", ts.URL)
+	_, err = UploadText(nil, "abc", "/tmp/xhttp_test.txt", "%v?format=error", ts.URL)
 	if err == nil {
 		t.Error(err)
 		return
 	}
-	_, err = UploadText("abc", "/tmp/xxxxx", "%v?format=text", ts.URL)
+	_, err = UploadText(nil, "abc", "/tmp/xxxxx", "%v?format=text", ts.URL)
 	if err == nil {
 		t.Error(err)
 		return
