@@ -487,3 +487,68 @@ func UnmarshalXML(r io.Reader, v interface{}) (data []byte, err error) {
 	}
 	return
 }
+
+// Int8Ptr -
+func Int8Ptr(arg int8) *int8 {
+	return &arg
+}
+
+// Uint8Ptr -
+func Uint8Ptr(arg uint8) *uint8 {
+	return &arg
+}
+
+// Int16Ptr -
+func Int16Ptr(arg int16) *int16 {
+	return &arg
+}
+
+// Uint16Ptr -
+func Uint16Ptr(arg uint16) *uint16 {
+	return &arg
+}
+
+// IntPtr -
+func IntPtr(arg int) *int {
+	return &arg
+}
+
+// UintPtr -
+func UintPtr(arg uint) *uint {
+	return &arg
+}
+
+// Int32Ptr -
+func Int32Ptr(arg int32) *int32 {
+	return &arg
+}
+
+// Uint32Ptr -
+func Uint32Ptr(arg uint32) *uint32 {
+	return &arg
+}
+
+// Int64Ptr -
+func Int64Ptr(arg int64) *int64 {
+	return &arg
+}
+
+// Uint64Ptr -
+func Uint64Ptr(arg uint64) *uint64 {
+	return &arg
+}
+
+// Float32Ptr -
+func Float32Ptr(arg float32) *float32 {
+	return &arg
+}
+
+// Float64Ptr -
+func Float64Ptr(arg float64) *float64 {
+	return &arg
+}
+
+// StringPtr -
+func StringPtr(arg string) *string {
+	return &arg
+}

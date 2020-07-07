@@ -297,3 +297,19 @@ func TestUnmarshal(t *testing.T) {
 		return
 	}
 }
+
+func TestPtr(t *testing.T) {
+	Int8Ptr(1)
+	Uint8Ptr(1)
+	Int16Ptr(1)
+	Uint16Ptr(1)
+	Int32Ptr(1)
+	Uint32Ptr(1)
+	IntPtr(1)
+	UintPtr(1)
+	Int64Ptr(1)
+	Uint64Ptr(1)
+	Float32Ptr(1)
+	Float64Ptr(1)
+	StringPtr("ss")
+}
