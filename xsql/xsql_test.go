@@ -110,7 +110,7 @@ func TestIntArray(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -135,7 +135,7 @@ func TestIntArray(t *testing.T) {
 	}
 	{ //nil
 		var arynil IntArray = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -180,7 +180,7 @@ func TestIntPtrArray(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -205,7 +205,7 @@ func TestIntPtrArray(t *testing.T) {
 	}
 	{ //nil
 		var arynil IntPtrArray = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -261,7 +261,7 @@ func TestInt64Array(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -286,7 +286,7 @@ func TestInt64Array(t *testing.T) {
 	}
 	{ //nil
 		var arynil Int64Array = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -331,7 +331,7 @@ func TestInt64PtrArray(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -356,7 +356,7 @@ func TestInt64PtrArray(t *testing.T) {
 	}
 	{ //nil
 		var arynil Int64PtrArray = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -412,7 +412,7 @@ func TestFloat64Array(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -437,7 +437,7 @@ func TestFloat64Array(t *testing.T) {
 	}
 	{ //nil
 		var arynil Float64Array = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -482,7 +482,7 @@ func TestFloat64PtrArray(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -507,7 +507,7 @@ func TestFloat64PtrArray(t *testing.T) {
 	}
 	{ //nil
 		var arynil Float64PtrArray = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -552,7 +552,7 @@ func TestMap(t *testing.T) {
 	}
 	{ //normal
 		var mval = M{"a": 1}
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 1, &mval)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 1, mval)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -570,7 +570,7 @@ func TestMap(t *testing.T) {
 	}
 	{ //nil
 		var mval M = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 2, &mval)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 2, mval)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -615,7 +615,7 @@ func TestStringArray(t *testing.T) {
 		return
 	}
 	{ //normal
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_string values ($1,$2)`, 1, &ary)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_string values ($1,$2)`, 1, ary)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
@@ -640,7 +640,7 @@ func TestStringArray(t *testing.T) {
 	}
 	{ //nil
 		var arynil StringArray = nil
-		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, &arynil)
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
 		if err != nil || !res.Insert() {
 			t.Error(err)
 			return
