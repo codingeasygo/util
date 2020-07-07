@@ -599,6 +599,7 @@ func TestMap(t *testing.T) {
 			t.Error(err)
 			return
 		}
+		mval1.RawMap()
 	}
 }
 

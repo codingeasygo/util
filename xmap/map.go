@@ -27,6 +27,11 @@ type BaseValuable interface {
 	Length() (l int)
 }
 
+//RawMapable will get the raw map
+type RawMapable interface {
+	RawMap() map[string]interface{}
+}
+
 //Valuable is interface which can be store and convert value
 type Valuable interface {
 	attrvalid.ValueGetter
@@ -355,6 +360,9 @@ func MapVal(v interface{}) (M, error) {
 		return mv, nil
 	} else if mv, ok := v.(map[string]interface{}); ok {
 		return M(mv), nil
+	} else if rm, ok := v.(RawMapable); ok {
+		mv = M(rm.RawMap())
+		return mv, nil
 	} else if sv, ok := v.(string); ok {
 		mv := M{}
 		return mv, json.Unmarshal([]byte(sv), &mv)
@@ -600,6 +608,8 @@ func Wrap(raw interface{}) (m Valuable) {
 		m = &impl{BaseValuable: base}
 	} else if mval, ok := raw.(map[string]interface{}); ok {
 		m = &impl{BaseValuable: M(mval)}
+	} else if rm, ok := raw.(RawMapable); ok {
+		m = &impl{BaseValuable: M(rm.RawMap())}
 	} else {
 		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
 	}
@@ -661,6 +671,8 @@ func WrapSafe(raw interface{}) (m *SafeM) {
 		b = base
 	} else if mval, ok := raw.(map[string]interface{}); ok {
 		b = M(mval)
+	} else if rm, ok := raw.(RawMapable); ok {
+		b = M(rm.RawMap())
 	} else {
 		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
 	}

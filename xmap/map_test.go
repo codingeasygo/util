@@ -439,6 +439,12 @@ func TestParse(t *testing.T) {
 	}
 }
 
+type xx map[string]interface{}
+
+func (x xx) RawMap() map[string]interface{} {
+	return x
+}
+
 func TestWrap(t *testing.T) {
 	var res Valuable
 	//
@@ -447,8 +453,23 @@ func TestWrap(t *testing.T) {
 		t.Error(nil)
 		return
 	}
+	res = Wrap(xx{})
+	if res == nil {
+		t.Error(nil)
+		return
+	}
 	res = WrapSafe(map[string]interface{}{})
 	if res == nil {
+		t.Error(nil)
+		return
+	}
+	res = WrapSafe(xx{})
+	if res == nil {
+		t.Error(nil)
+		return
+	}
+	mres, _ := MapVal(xx{})
+	if mres == nil {
 		t.Error(nil)
 		return
 	}

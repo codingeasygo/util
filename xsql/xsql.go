@@ -76,6 +76,11 @@ func (t *Time) Scan(src interface{}) (err error) {
 //M is database value to parse json data to map value
 type M map[string]interface{}
 
+//RawMap will return raw map value
+func (m M) RawMap() map[string]interface{} {
+	return m
+}
+
 //Scan is sql.Sanner
 func (m *M) Scan(src interface{}) (err error) {
 	if src != nil {
