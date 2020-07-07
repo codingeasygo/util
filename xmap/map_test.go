@@ -362,7 +362,7 @@ func TestSafeValidFormat(t *testing.T) {
 
 func TestMSorter(t *testing.T) {
 	newall := func() []Valuable {
-		v := WrapArray([]BaseValuable{
+		v := WrapArray(
 			M{
 				"s": "a",
 				"i": 1,
@@ -378,11 +378,11 @@ func TestMSorter(t *testing.T) {
 				"i": 2,
 				"f": 2.0,
 			},
-		})
+		)
 		return v
 	}
 	newall2 := func() []Valuable {
-		v := WrapSafeArray([]BaseValuable{
+		v := WrapSafeArray(
 			M{
 				"s": "a",
 				"i": 1,
@@ -398,7 +398,7 @@ func TestMSorter(t *testing.T) {
 				"i": 2,
 				"f": 2.0,
 			},
-		})
+		)
 		return v
 	}
 	testMSorter(t, newall)
@@ -439,63 +439,46 @@ func TestParse(t *testing.T) {
 	}
 }
 
-// func TestAryMapVal(t *testing.T) {
-// 	mv, err := NewMap("map2.json")
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 		return
-// 	}
-// 	var ary_1 = mv.AryVal("ary_1")
-// 	if ary_1 == nil || len(ary_1) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	fmt.Println(ary_1)
-// 	var ary_2 = mv.AryVal("ary_2")
-// 	if ary_2 == nil || len(ary_2) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	fmt.Println(ary_2)
-// 	var ary_3 = mv.AryMapVal("ary_3")
-// 	if ary_3 == nil || len(ary_3) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	fmt.Println(ary_3)
-// 	var ary_4 = mv.AryStrVal("ary_1")
-// 	if ary_4 == nil || len(ary_4) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	fmt.Println(ary_4)
-// 	var ary_5 = mv.AryStrVal("ary_2")
-// 	if ary_5 == nil || len(ary_5) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	fmt.Println(ary_5)
-// 	mv.AryValP("/ary_1")
-// 	mv.AryValP("/ary_2")
-// 	mv.AryMapValP("/ary_3")
-// 	mv.AryStrValP("/ary_2")
-// }
-
-// func TestAryMapVal2(t *testing.T) {
-// 	var data = Map{}
-// 	data.SetValue("abc", []Map{
-// 		Map{
-// 			"a": 1,
-// 		},
-// 	})
-// 	fmt.Println(reflect.ValueOf([]int{1, 2}).Kind())
-// 	var vals = data.AryMapVal("abc")
-// 	if len(vals) < 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// 	if vals[0].IntVal("a") != 1 {
-// 		t.Error("error")
-// 		return
-// 	}
-// }
+func TestWrap(t *testing.T) {
+	var res Valuable
+	//
+	res = Wrap(map[string]interface{}{})
+	if res == nil {
+		t.Error(nil)
+		return
+	}
+	res = WrapSafe(map[string]interface{}{})
+	if res == nil {
+		t.Error(nil)
+		return
+	}
+	m := M{}
+	if m.Wrap() == nil {
+		t.Error("error")
+		return
+	}
+	func() {
+		defer func() {
+			recover()
+		}()
+		Wrap(nil)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		Wrap("xx")
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		WrapSafe(nil)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		WrapSafe("xx")
+	}()
+}

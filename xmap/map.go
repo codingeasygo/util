@@ -412,6 +412,11 @@ func ArrayMapVal(v interface{}) (mvals []M, err error) {
 //M is type define to map[string]interface{}
 type M map[string]interface{}
 
+//Wrap map to Valuable
+func (m M) Wrap() Valuable {
+	return Wrap(m)
+}
+
 //ValueVal will convert path value to value, return error when not exist or convert fail
 func (m M) ValueVal(path ...string) (v interface{}, err error) {
 	for _, p := range path {
@@ -587,13 +592,22 @@ func New() (m Valuable) {
 }
 
 //Wrap will wrap raw map to safe
-func Wrap(raw BaseValuable) (m Valuable) {
-	m = &impl{BaseValuable: raw}
+func Wrap(raw interface{}) (m Valuable) {
+	if raw == nil {
+		panic("raw is nil")
+	}
+	if base, ok := raw.(BaseValuable); ok {
+		m = &impl{BaseValuable: base}
+	} else if mval, ok := raw.(map[string]interface{}); ok {
+		m = &impl{BaseValuable: M(mval)}
+	} else {
+		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
+	}
 	return
 }
 
 //WrapArray will wrap base values to array
-func WrapArray(raws []BaseValuable) (ms []Valuable) {
+func WrapArray(raws ...interface{}) (ms []Valuable) {
 	for _, raw := range raws {
 		ms = append(ms, Wrap(raw))
 	}
@@ -638,9 +652,20 @@ func NewSafe() (m *SafeM) {
 }
 
 //WrapSafe will wrap raw map to safe
-func WrapSafe(raw BaseValuable) (m *SafeM) {
+func WrapSafe(raw interface{}) (m *SafeM) {
+	if raw == nil {
+		panic("raw is nil")
+	}
+	var b BaseValuable
+	if base, ok := raw.(BaseValuable); ok {
+		b = base
+	} else if mval, ok := raw.(map[string]interface{}); ok {
+		b = M(mval)
+	} else {
+		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
+	}
 	m = &SafeM{
-		raw:    raw,
+		raw:    b,
 		locker: sync.RWMutex{},
 	}
 	m.Valuable = &impl{BaseValuable: m}
@@ -648,7 +673,7 @@ func WrapSafe(raw BaseValuable) (m *SafeM) {
 }
 
 //WrapSafeArray will wrap raw map to safe
-func WrapSafeArray(raws []BaseValuable) (ms []Valuable) {
+func WrapSafeArray(raws ...interface{}) (ms []Valuable) {
 	for _, raw := range raws {
 		ms = append(ms, WrapSafe(raw))
 	}
