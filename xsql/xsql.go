@@ -73,6 +73,30 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return
 }
 
+//M is database value to parse json data to map value
+type M map[string]interface{}
+
+//Scan is sql.Sanner
+func (m *M) Scan(src interface{}) (err error) {
+	if src != nil {
+		if jsonSrc, ok := src.(string); ok {
+			err = json.Unmarshal([]byte(jsonSrc), m)
+		} else {
+			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		}
+	}
+	return
+}
+
+//Value will parse to json value
+func (m M) Value() (driver.Value, error) {
+	if m == nil {
+		return nil, nil
+	}
+	bys, err := json.Marshal(m)
+	return string(bys), err
+}
+
 //IntArray is database value to parse data to []int64 value
 type IntArray []int
 
@@ -130,6 +154,12 @@ func (i IntArray) Join(sep string) (res string) {
 		}
 		res += fmt.Sprintf("%v", v)
 	}
+	return
+}
+
+//DbArray will join value to database array
+func (i IntArray) DbArray() (res string) {
+	res = "{" + i.Join(",") + "}"
 	return
 }
 
@@ -197,6 +227,12 @@ func (i IntPtrArray) Join(sep string) (res string) {
 	return
 }
 
+//DbArray will join value to database array
+func (i IntPtrArray) DbArray() (res string) {
+	res = "{" + i.Join(",") + "}"
+	return
+}
+
 //Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
@@ -257,6 +293,12 @@ func (i Int64Array) Join(sep string) (res string) {
 	return
 }
 
+//DbArray will join value to database array
+func (i Int64Array) DbArray() (res string) {
+	res = "{" + i.Join(",") + "}"
+	return
+}
+
 //Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
 
@@ -298,7 +340,7 @@ func (i Int64PtrArray) Swap(a, b int) {
 func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 	for _, v0 := range i {
 		for _, v1 := range vals {
-			if *v0 == v1 {
+			if v0 != nil && *v0 == v1 {
 				return true
 			}
 		}
@@ -318,6 +360,12 @@ func (i Int64PtrArray) Join(sep string) (res string) {
 			res += fmt.Sprintf("%v", *v)
 		}
 	}
+	return
+}
+
+//DbArray will join value to database array
+func (i Int64PtrArray) DbArray() (res string) {
+	res = "{" + i.Join(",") + "}"
 	return
 }
 
@@ -381,6 +429,12 @@ func (f Float64Array) Join(sep string) (res string) {
 	return
 }
 
+//DbArray will join value to database array
+func (f Float64Array) DbArray() (res string) {
+	res = "{" + f.Join(",") + "}"
+	return
+}
+
 //Float64PtrArray is database value to parse data to []int64 value
 type Float64PtrArray []*float64
 
@@ -422,7 +476,7 @@ func (f Float64PtrArray) Swap(a, b int) {
 func (f Float64PtrArray) HavingOne(vals ...float64) bool {
 	for _, v0 := range f {
 		for _, v1 := range vals {
-			if *v0 == v1 {
+			if v0 != nil && *v0 == v1 {
 				return true
 			}
 		}
@@ -445,28 +499,10 @@ func (f Float64PtrArray) Join(sep string) (res string) {
 	return
 }
 
-//M is database value to parse json data to map value
-type M map[string]interface{}
-
-//Scan is sql.Sanner
-func (m *M) Scan(src interface{}) (err error) {
-	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), m)
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
-		}
-	}
+//DbArray will join value to database array
+func (f Float64PtrArray) DbArray() (res string) {
+	res = "{" + f.Join(",") + "}"
 	return
-}
-
-//Value will parse to json value
-func (m M) Value() (driver.Value, error) {
-	if m == nil {
-		return nil, nil
-	}
-	bys, err := json.Marshal(m)
-	return string(bys), err
 }
 
 //StringArray is database value to parse data to []string value
@@ -520,3 +556,76 @@ func (s StringArray) Join(sep string) (res string) {
 	res = strings.Join(s, sep)
 	return
 }
+
+// //DbArray will join value to database array
+// func (s StringArray) DbArray() (res string) {
+// 	res = "{" + s.Join(",") + "}"
+// 	return
+// }
+
+//StringPtrArray is database value to parse data to []string value
+type StringPtrArray []*string
+
+//Scan is sql.Sanner
+func (s *StringPtrArray) Scan(src interface{}) (err error) {
+	if src != nil {
+		if jsonSrc, ok := src.(string); ok {
+			err = json.Unmarshal([]byte(jsonSrc), s)
+		} else {
+			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		}
+	}
+	return
+}
+
+//Value will parse to json value
+func (s StringPtrArray) Value() (driver.Value, error) {
+	if s == nil {
+		return nil, nil
+	}
+	bys, err := json.Marshal(s)
+	return string(bys), err
+}
+
+func (s StringPtrArray) Len() int {
+	return len(s)
+}
+func (s StringPtrArray) Less(a, b int) bool {
+	return s[a] == nil || (s[b] != nil && *s[a] < *s[b])
+}
+func (s StringPtrArray) Swap(a, b int) {
+	s[a], s[b] = s[b], s[a]
+}
+
+//HavingOne will check if array having one value in vals
+func (s StringPtrArray) HavingOne(vals ...string) bool {
+	for _, v0 := range s {
+		for _, v1 := range vals {
+			if v0 != nil && *v0 == v1 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//Join will parset to database array
+func (s StringPtrArray) Join(sep string) (res string) {
+	for i, v := range s {
+		if i > 0 {
+			res += sep
+		}
+		if v == nil {
+			res += "nil"
+		} else {
+			res += *v
+		}
+	}
+	return
+}
+
+// //DbArray will join value to database array
+// func (s StringPtrArray) DbArray() (res string) {
+// 	res = "{" + s.Join(",") + "}"
+// 	return
+// }

@@ -132,6 +132,9 @@ func TestIntArray(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil IntArray = nil
@@ -200,6 +203,9 @@ func TestIntPtrArray(t *testing.T) {
 			return
 		}
 		if ary1.Join(",") != "1,2,3" {
+			t.Error("error")
+		}
+		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}
@@ -283,6 +289,9 @@ func TestInt64Array(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil Int64Array = nil
@@ -351,6 +360,9 @@ func TestInt64PtrArray(t *testing.T) {
 			return
 		}
 		if ary1.Join(",") != "1,2,3" {
+			t.Error("error")
+		}
+		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}
@@ -434,6 +446,9 @@ func TestFloat64Array(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil Float64Array = nil
@@ -503,6 +518,9 @@ func TestFloat64PtrArray(t *testing.T) {
 		}
 		if ary1.Join(",") != "1,2,3" {
 			t.Error(ary1.Join(","))
+		}
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
 		}
 	}
 	{ //nil
@@ -637,6 +655,9 @@ func TestStringArray(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
+		// if ary1.DbArray() != "{1,2,3}" {
+		// 	t.Error("error")
+		// }
 	}
 	{ //nil
 		var arynil StringArray = nil
@@ -649,6 +670,90 @@ func TestStringArray(t *testing.T) {
 		err = Pool().QueryRow(context.Background(), `select iarry from xsql_test_int64 where tid=$1`, 2).Scan(&ary1)
 		if err != nil || len(ary1) != 0 {
 			t.Error(err)
+			return
+		}
+	}
+}
+
+func TestStringPtrArray(t *testing.T) {
+	var ary StringPtrArray
+	err := ary.Scan(1)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	err = ary.Scan("a")
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	// ary.Value()
+	//
+	v0, v1, v2 := "3", "2", "1"
+	ary = append(ary, &v0)
+	ary = append(ary, &v1)
+	ary = append(ary, &v2)
+	sort.Sort(ary)
+	//
+	_, err = Pool().Exec(context.Background(), `drop table if exists xsql_test_string`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = Pool().Exec(context.Background(), `create table xsql_test_string(tid int,sarry text)`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	{ //normal
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_string values ($1,$2)`, 1, ary)
+		if err != nil || !res.Insert() {
+			t.Error(err)
+			return
+		}
+		var ary1 StringPtrArray
+		err = Pool().QueryRow(context.Background(), `select sarry from xsql_test_string where tid=$1`, 1).Scan(&ary1)
+		if err != nil || len(ary1) != 3 {
+			t.Error(err)
+			return
+		}
+		if !ary1.HavingOne("3") {
+			t.Error("error")
+			return
+		}
+		if ary1.HavingOne("4") {
+			t.Error("error")
+			return
+		}
+		if ary1.Join(",") != "1,2,3" {
+			t.Error("error")
+		}
+		// if ary1.DbArray() != "{1,2,3}" {
+		// 	t.Error("error")
+		// }
+	}
+	{ //nil
+		var arynil StringPtrArray = nil
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_int64 values ($1,$2)`, 2, arynil)
+		if err != nil || !res.Insert() {
+			t.Error(err)
+			return
+		}
+		var ary1 StringPtrArray
+		err = Pool().QueryRow(context.Background(), `select iarry from xsql_test_int64 where tid=$1`, 2).Scan(&ary1)
+		if err != nil || len(ary1) != 0 {
+			t.Error(err)
+			return
+		}
+	}
+	{ //join
+		var ary1 = StringPtrArray{}
+		ary1 = append(ary1, &v0)
+		ary1 = append(ary1, nil)
+		ary1 = append(ary1, &v2)
+		sort.Sort(ary1)
+		if ary1.Join(",") != "nil,1,3" {
+			t.Error(ary1.Join(","))
 			return
 		}
 	}

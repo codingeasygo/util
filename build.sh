@@ -20,7 +20,6 @@ pkgs="\
   github.com/codingeasygo/util/xio/frame\
   github.com/codingeasygo/util/xmap\
   github.com/codingeasygo/util/xprop\
-  github.com/codingeasygo/util/xtest\
 "
 echo "mode: set" >a.out
 for p in $pkgs; do
