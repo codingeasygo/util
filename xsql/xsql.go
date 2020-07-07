@@ -122,6 +122,17 @@ func (i IntArray) HavingOne(vals ...int) bool {
 	return false
 }
 
+//Join will parset to database array
+func (i IntArray) Join(sep string) (res string) {
+	for i, v := range i {
+		if i > 0 {
+			res += sep
+		}
+		res += fmt.Sprintf("%v", v)
+	}
+	return
+}
+
 //IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
 
@@ -153,7 +164,7 @@ func (i IntPtrArray) Len() int {
 	return len(i)
 }
 func (i IntPtrArray) Less(a, b int) bool {
-	return *i[a] < *i[b]
+	return i[a] == nil || (i[b] != nil && *i[a] < *i[b])
 }
 func (i IntPtrArray) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
@@ -169,6 +180,21 @@ func (i IntPtrArray) HavingOne(vals ...int) bool {
 		}
 	}
 	return false
+}
+
+//Join will parset to database array
+func (i IntPtrArray) Join(sep string) (res string) {
+	for i, v := range i {
+		if i > 0 {
+			res += sep
+		}
+		if v == nil {
+			res += "nil"
+		} else {
+			res += fmt.Sprintf("%v", *v)
+		}
+	}
+	return
 }
 
 //Int64Array is database value to parse data to []int64 value
@@ -220,6 +246,17 @@ func (i Int64Array) HavingOne(vals ...int64) bool {
 	return false
 }
 
+//Join will parset to database array
+func (i Int64Array) Join(sep string) (res string) {
+	for i, v := range i {
+		if i > 0 {
+			res += sep
+		}
+		res += fmt.Sprintf("%v", v)
+	}
+	return
+}
+
 //Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
 
@@ -251,7 +288,7 @@ func (i Int64PtrArray) Len() int {
 	return len(i)
 }
 func (i Int64PtrArray) Less(a, b int) bool {
-	return *i[a] < *i[b]
+	return i[a] == nil || (i[b] != nil && *i[a] < *i[b])
 }
 func (i Int64PtrArray) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
@@ -267,6 +304,145 @@ func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 		}
 	}
 	return false
+}
+
+//Join will parset to database array
+func (i Int64PtrArray) Join(sep string) (res string) {
+	for i, v := range i {
+		if i > 0 {
+			res += sep
+		}
+		if v == nil {
+			res += "nil"
+		} else {
+			res += fmt.Sprintf("%v", *v)
+		}
+	}
+	return
+}
+
+//Float64Array is database value to parse data to []int64 value
+type Float64Array []float64
+
+//Scan is sql.Sanner
+func (f *Float64Array) Scan(src interface{}) (err error) {
+	if src != nil {
+		if jsonSrc, ok := src.(string); ok {
+			err = json.Unmarshal([]byte(jsonSrc), f)
+			if err != nil {
+				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+			}
+		} else {
+			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		}
+	}
+	return
+}
+
+//Value is driver.Valuer
+func (f *Float64Array) Value() (driver.Value, error) {
+	if f == nil || *f == nil {
+		return nil, nil
+	}
+	bys, err := json.Marshal(*f)
+	return string(bys), err
+}
+
+func (f Float64Array) Len() int {
+	return len(f)
+}
+func (f Float64Array) Less(a, b int) bool {
+	return f[a] < f[b]
+}
+func (f Float64Array) Swap(a, b int) {
+	f[a], f[b] = f[b], f[a]
+}
+
+//HavingOne will check if array having one value in vals
+func (f Float64Array) HavingOne(vals ...float64) bool {
+	for _, v0 := range f {
+		for _, v1 := range vals {
+			if v0 == v1 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//Join will parset to database array
+func (f Float64Array) Join(sep string) (res string) {
+	for i, v := range f {
+		if i > 0 {
+			res += sep
+		}
+		res += fmt.Sprintf("%v", v)
+	}
+	return
+}
+
+//Float64PtrArray is database value to parse data to []int64 value
+type Float64PtrArray []*float64
+
+//Scan is sql.Sanner
+func (f *Float64PtrArray) Scan(src interface{}) (err error) {
+	if src != nil {
+		if jsonSrc, ok := src.(string); ok {
+			err = json.Unmarshal([]byte(jsonSrc), f)
+			if err != nil {
+				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+			}
+		} else {
+			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		}
+	}
+	return
+}
+
+//Value is driver.Valuer
+func (f *Float64PtrArray) Value() (driver.Value, error) {
+	if f == nil || *f == nil {
+		return nil, nil
+	}
+	bys, err := json.Marshal(*f)
+	return string(bys), err
+}
+
+func (f Float64PtrArray) Len() int {
+	return len(f)
+}
+func (f Float64PtrArray) Less(a, b int) bool {
+	return f[a] == nil || (f[b] != nil && *f[a] < *f[b])
+}
+func (f Float64PtrArray) Swap(a, b int) {
+	f[a], f[b] = f[b], f[a]
+}
+
+//HavingOne will check if array having one value in vals
+func (f Float64PtrArray) HavingOne(vals ...float64) bool {
+	for _, v0 := range f {
+		for _, v1 := range vals {
+			if *v0 == v1 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//Join will parset to database array
+func (f Float64PtrArray) Join(sep string) (res string) {
+	for i, v := range f {
+		if i > 0 {
+			res += sep
+		}
+		if v == nil {
+			res += "nil"
+		} else {
+			res += fmt.Sprintf("%v", *v)
+		}
+	}
+	return
 }
 
 //M is database value to parse json data to map value
@@ -337,4 +513,10 @@ func (s StringArray) HavingOne(vals ...string) bool {
 		}
 	}
 	return false
+}
+
+//Join will parset to database array
+func (s StringArray) Join(sep string) (res string) {
+	res = strings.Join(s, sep)
+	return
 }
