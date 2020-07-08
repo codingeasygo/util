@@ -413,11 +413,6 @@ func ArrayMapVal(v interface{}) (mvals []M, err error) {
 //M is type define to map[string]interface{}
 type M map[string]interface{}
 
-//Wrap map to Valuable
-func (m M) Wrap() Valuable {
-	return Wrap(m)
-}
-
 //ValueVal will convert path value to value, return error when not exist or convert fail
 func (m M) ValueVal(path ...string) (v interface{}, err error) {
 	for _, p := range path {
@@ -593,9 +588,243 @@ func (m M) Exist(path ...string) bool {
 	return err == nil
 }
 
+//Raw will return raw base valuable
+func (m M) Raw() BaseValuable {
+	return m
+}
+
+//Int will convert path value to int
+func (m M) Int(path ...string) int {
+	return converter.Int(m.Value(path...))
+}
+
+//IntDef will convert path value to int, return default when not exist or convert fail
+func (m M) IntDef(def int, path ...string) (v int) {
+	v, err := m.IntVal(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//IntVal will convert path value to int, return error when not exist or convert fail
+func (m M) IntVal(path ...string) (int, error) {
+	return converter.IntVal(m.Value(path...))
+}
+
+//Int64 will convert path value to int64
+func (m M) Int64(path ...string) int64 {
+	return converter.Int64(m.Value(path...))
+}
+
+//Int64Def will convert path value to int64, return default when not exist or convert fail
+func (m M) Int64Def(def int64, path ...string) (v int64) {
+	v, err := m.Int64Val(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//Int64Val will convert path value to int64, return error when not exist or convert fail
+func (m M) Int64Val(path ...string) (int64, error) {
+	return converter.Int64Val(m.Value(path...))
+}
+
+//Uint64 will convert path value to uint64
+func (m M) Uint64(path ...string) uint64 {
+	return converter.Uint64(m.Value(path...))
+}
+
+//Uint64Def will convert path value to uint64, return default when not exist or convert fail
+func (m M) Uint64Def(def uint64, path ...string) (v uint64) {
+	v, err := m.Uint64Val(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//Uint64Val will convert path value to uint64, return error when not exist or convert fail
+func (m M) Uint64Val(path ...string) (uint64, error) {
+	return converter.Uint64Val(m.Value(path...))
+}
+
+//Float64 will convert path value to float64
+func (m M) Float64(path ...string) float64 {
+	return converter.Float64(m.Value(path...))
+}
+
+//Float64Def will convert path value to float64, return default when not exist or convert fail
+func (m M) Float64Def(def float64, path ...string) (v float64) {
+	v, err := m.Float64Val(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//Float64Val will convert path value to float64, return error when not exist or convert fail
+func (m M) Float64Val(path ...string) (float64, error) {
+	return converter.Float64Val(m.Value(path...))
+}
+
+//Str will convert path value to string
+func (m M) Str(path ...string) string {
+	return converter.String(m.Value(path...))
+}
+
+//StrDef will convert path value to string, return default when not exist or convert fail
+func (m M) StrDef(def string, path ...string) (v string) {
+	v, err := m.StrVal(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//StrVal will convert path value to string, return error when not exist or convert fail
+func (m M) StrVal(path ...string) (string, error) {
+	return converter.StringVal(m.Value(path...))
+}
+
+//Map will convert path value to map
+func (m M) Map(path ...string) M {
+	v, _ := MapVal(m.Value(path...))
+	return v
+}
+
+//MapDef will convert path value to map, return default when not exist or convert fail
+func (m M) MapDef(def M, path ...string) (v M) {
+	v, err := m.MapVal(path...)
+	if err != nil {
+		v = def
+	}
+	return
+}
+
+//MapVal will convert path value to map, return error when not exist or convert fail
+func (m M) MapVal(path ...string) (M, error) {
+	return MapVal(m.Value(path...))
+}
+
+//ArrayDef will convert path value to interface{} array, return default when not exist or convert fail
+func (m M) ArrayDef(def []interface{}, path ...string) []interface{} {
+	vals, err := m.ArrayVal(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayVal will convert path value to interface{} array, return error when not exist or convert fail
+func (m M) ArrayVal(path ...string) ([]interface{}, error) {
+	return converter.ArrayVal(m.Value(path...))
+}
+
+//ArrayMapDef will convert path value to interface{} array, return default when not exist or convert fail
+func (m M) ArrayMapDef(def []M, path ...string) []M {
+	vals, err := m.ArrayMapVal(path...)
+	if err != nil || len(vals) < 1 {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayMapVal will convert path value to map array, return error when not exist or convert fail
+func (m M) ArrayMapVal(path ...string) ([]M, error) {
+	return ArrayMapVal(m.Value(path...))
+}
+
+//ArrayStrDef will convert path value to string array, return default when not exist or convert fail
+func (m M) ArrayStrDef(def []string, path ...string) []string {
+	vals, err := m.ArrayStrVal(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayStrVal will convert path value to string array, return error when not exist or convert fail
+func (m M) ArrayStrVal(path ...string) ([]string, error) {
+	return converter.ArrayStringVal(m.Value(path...))
+}
+
+//ArrayIntDef will convert path value to string array, return default when not exist or convert fail
+func (m M) ArrayIntDef(def []int, path ...string) []int {
+	vals, err := m.ArrayIntVal(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayIntVal will convert path value to int array, return error when not exist or convert fail
+func (m M) ArrayIntVal(path ...string) ([]int, error) {
+	return converter.ArrayIntVal(m.Value(path...))
+}
+
+//ArrayInt64Def will convert path value to int64 array, return default when not exist or convert fail
+func (m M) ArrayInt64Def(def []int64, path ...string) []int64 {
+	vals, err := m.ArrayInt64Val(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayInt64Val will convert path value to int64 array, return error when not exist or convert fail
+func (m M) ArrayInt64Val(path ...string) ([]int64, error) {
+	return converter.ArrayInt64Val(m.Value(path...))
+}
+
+//ArrayUint64Def will convert path value to uint64 array, return default when not exist or convert fail
+func (m M) ArrayUint64Def(def []uint64, path ...string) []uint64 {
+	vals, err := m.ArrayUint64Val(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayUint64Val will convert path value to uint64 array, return error when not exist or convert fail
+func (m M) ArrayUint64Val(path ...string) ([]uint64, error) {
+	return converter.ArrayUint64Val(m.Value(path...))
+}
+
+//ArrayFloat64Def will convert path value to float64 array, return default when not exist or convert fail
+func (m M) ArrayFloat64Def(def []float64, path ...string) []float64 {
+	vals, err := m.ArrayFloat64Val(path...)
+	if err != nil {
+		vals = def
+	}
+	return vals
+}
+
+//ArrayFloat64Val will convert path value to float64 array, return error when not exist or convert fail
+func (m M) ArrayFloat64Val(path ...string) ([]float64, error) {
+	return converter.ArrayFloat64Val(m.Value(path...))
+}
+
+//Value will convert path value to interface{}
+func (m M) Value(path ...string) interface{} {
+	v, _ := m.ValueVal(path...)
+	return v
+}
+
+//Get is implement for attrvalid.ValueGetter
+func (m M) Get(path string) (interface{}, error) {
+	return m.Value(strings.Split(path, "|")...), nil
+}
+
+//ValidFormat is implement for attrvalid.Validable
+func (m M) ValidFormat(f string, args ...interface{}) error {
+	return attrvalid.ValidAttrFormat(f, m, true, args...)
+}
+
 //New will create map Valuable
 func New() (m Valuable) {
-	return &impl{BaseValuable: M{}}
+	return M{}
 }
 
 //Wrap will wrap raw map to safe
@@ -606,9 +835,9 @@ func Wrap(raw interface{}) (m Valuable) {
 	if base, ok := raw.(BaseValuable); ok {
 		m = &impl{BaseValuable: base}
 	} else if mval, ok := raw.(map[string]interface{}); ok {
-		m = &impl{BaseValuable: M(mval)}
+		m = M(mval)
 	} else if rm, ok := raw.(RawMapable); ok {
-		m = &impl{BaseValuable: M(rm.RawMap())}
+		m = M(rm.RawMap())
 	} else {
 		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
 	}

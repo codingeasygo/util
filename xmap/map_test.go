@@ -11,6 +11,8 @@ func TestMap(t *testing.T) {
 	testMap(t, m)
 	m2 := NewSafe()
 	testMap(t, m2)
+	m3 := M{}
+	testMap(t, m3)
 }
 
 func testMap(t *testing.T, m Valuable) {
@@ -303,13 +305,13 @@ func assertError(t *testing.T, v interface{}, err error) {
 // }
 
 func TestValidFormat(t *testing.T) {
-	m := Wrap(M(map[string]interface{}{
+	m := M(map[string]interface{}{
 		"ab1": 1,
 		"ab2": "xxx",
 		"map": map[string]interface{}{
 			"x1": 100,
 		},
-	}))
+	})
 	var v1 int64
 	var v2 string
 	var v3 int
@@ -329,6 +331,18 @@ func TestValidFormat(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	i := &impl{BaseValuable: m}
+	err = i.ValidFormat(`
+		ab1,R|I,R:0;
+		ab2,R|S,L:0;
+		/map/x1,R|I,R:0;
+		not|ab1,R|I,R:0;
+	`, &v1, &v2, &v3, &v4)
+	if v1 != 1 || v2 != "xxx" || v3 != 100 || v4 != 1 {
+		t.Error("error")
+		return
+	}
+	i.Raw()
 }
 
 func TestSafeValidFormat(t *testing.T) {
@@ -471,11 +485,6 @@ func TestWrap(t *testing.T) {
 	mres, _ := MapVal(xx{})
 	if mres == nil {
 		t.Error(nil)
-		return
-	}
-	m := M{}
-	if m.Wrap() == nil {
-		t.Error("error")
 		return
 	}
 	func() {
