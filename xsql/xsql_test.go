@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xmap"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -136,6 +137,10 @@ func TestIntArray(t *testing.T) {
 		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
+		ary2 := append(ary1, 3).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil IntArray = nil
@@ -207,6 +212,10 @@ func TestIntPtrArray(t *testing.T) {
 			t.Error("error")
 		}
 		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary2 := append(ary1, converter.IntPtr(3)).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}
@@ -293,6 +302,10 @@ func TestInt64Array(t *testing.T) {
 		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
+		ary2 := append(ary1, 3).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil Int64Array = nil
@@ -364,6 +377,10 @@ func TestInt64PtrArray(t *testing.T) {
 			t.Error("error")
 		}
 		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary2 := append(ary1, converter.Int64Ptr(3)).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}
@@ -450,6 +467,10 @@ func TestFloat64Array(t *testing.T) {
 		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
+		ary2 := append(ary1, 3).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil Float64Array = nil
@@ -521,6 +542,10 @@ func TestFloat64PtrArray(t *testing.T) {
 			t.Error(ary1.Join(","))
 		}
 		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary2 := append(ary1, converter.Float64Ptr(3)).RemoveDuplicate()
+		if ary2.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}
@@ -660,6 +685,14 @@ func TestStringArray(t *testing.T) {
 		if ary1.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
+		ary2 := append(ary1, "3", "", " ").RemoveDuplicate(true, true)
+		if ary2.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary3 := append(ary1, "", " ").RemoveEmpty(true)
+		if ary3.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil StringArray = nil
@@ -731,6 +764,14 @@ func TestStringPtrArray(t *testing.T) {
 			t.Error("error")
 		}
 		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary2 := append(ary1, nil, converter.StringPtr("3"), converter.StringPtr(""), converter.StringPtr(" ")).RemoveDuplicate(true, true)
+		if ary2.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
+		ary3 := append(ary1, nil, converter.StringPtr(""), converter.StringPtr(" ")).RemoveEmpty(true)
+		if ary3.DbArray() != "{1,2,3}" {
 			t.Error("error")
 		}
 	}

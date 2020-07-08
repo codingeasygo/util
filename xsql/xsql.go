@@ -173,6 +173,20 @@ func (i IntArray) DbArray() (res string) {
 	return
 }
 
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (i IntArray) RemoveDuplicate() IntArray {
+	var arr IntArray
+	m := map[int]bool{}
+	for _, v := range i {
+		if m[v] {
+			continue
+		}
+		m[v] = true
+		arr = append(arr, v)
+	}
+	return arr
+}
+
 //IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
 
@@ -243,6 +257,20 @@ func (i IntPtrArray) DbArray() (res string) {
 	return
 }
 
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (i IntPtrArray) RemoveDuplicate() IntPtrArray {
+	var arr IntPtrArray
+	m := map[int]bool{}
+	for _, v := range i {
+		if v == nil || m[*v] {
+			continue
+		}
+		m[*v] = true
+		arr = append(arr, v)
+	}
+	return arr
+}
+
 //Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
@@ -307,6 +335,20 @@ func (i Int64Array) Join(sep string) (res string) {
 func (i Int64Array) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
 	return
+}
+
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (i Int64Array) RemoveDuplicate() Int64Array {
+	var arr Int64Array
+	m := map[int64]bool{}
+	for _, v := range i {
+		if m[v] {
+			continue
+		}
+		m[v] = true
+		arr = append(arr, v)
+	}
+	return arr
 }
 
 //Int64PtrArray is database value to parse data to []int64 value
@@ -379,6 +421,20 @@ func (i Int64PtrArray) DbArray() (res string) {
 	return
 }
 
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (i Int64PtrArray) RemoveDuplicate() Int64PtrArray {
+	var arr Int64PtrArray
+	m := map[int64]bool{}
+	for _, v := range i {
+		if v == nil || m[*v] {
+			continue
+		}
+		m[*v] = true
+		arr = append(arr, v)
+	}
+	return arr
+}
+
 //Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
@@ -443,6 +499,20 @@ func (f Float64Array) Join(sep string) (res string) {
 func (f Float64Array) DbArray() (res string) {
 	res = "{" + f.Join(",") + "}"
 	return
+}
+
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (f Float64Array) RemoveDuplicate() Float64Array {
+	var arr Float64Array
+	m := map[float64]bool{}
+	for _, v := range f {
+		if m[v] {
+			continue
+		}
+		m[v] = true
+		arr = append(arr, v)
+	}
+	return arr
 }
 
 //Float64PtrArray is database value to parse data to []int64 value
@@ -515,6 +585,20 @@ func (f Float64PtrArray) DbArray() (res string) {
 	return
 }
 
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (f Float64PtrArray) RemoveDuplicate() Float64PtrArray {
+	var arr Float64PtrArray
+	m := map[float64]bool{}
+	for _, v := range f {
+		if v == nil || m[*v] {
+			continue
+		}
+		m[*v] = true
+		arr = append(arr, v)
+	}
+	return arr
+}
+
 //StringArray is database value to parse data to []string value
 type StringArray []string
 
@@ -571,6 +655,43 @@ func (s StringArray) Join(sep string) (res string) {
 func (s StringArray) DbArray() (res string) {
 	res = "{" + s.Join(",") + "}"
 	return
+}
+
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (s StringArray) RemoveDuplicate(trim, empty bool) StringArray {
+	var arr StringArray
+	m := map[string]bool{}
+	for _, v := range s {
+		nv := v
+		if trim {
+			nv = strings.TrimSpace(v)
+		}
+		if empty && len(nv) < 1 {
+			continue
+		}
+		if m[nv] {
+			continue
+		}
+		m[nv] = true
+		arr = append(arr, nv)
+	}
+	return arr
+}
+
+//RemoveEmpty will remove empty and copy item to new array
+func (s StringArray) RemoveEmpty(trim bool) StringArray {
+	var arr StringArray
+	for _, v := range s {
+		nv := v
+		if trim {
+			nv = strings.TrimSpace(v)
+		}
+		if len(nv) < 1 {
+			continue
+		}
+		arr = append(arr, nv)
+	}
+	return arr
 }
 
 //StringPtrArray is database value to parse data to []string value
@@ -638,4 +759,49 @@ func (s StringPtrArray) Join(sep string) (res string) {
 func (s StringPtrArray) DbArray() (res string) {
 	res = "{" + s.Join(",") + "}"
 	return
+}
+
+//RemoveDuplicate will remove duplicate and copy item to new array
+func (s StringPtrArray) RemoveDuplicate(trim, empty bool) StringPtrArray {
+	var arr StringPtrArray
+	m := map[string]bool{}
+	for _, v := range s {
+		if v == nil {
+			continue
+		}
+		nv := v
+		if trim {
+			n := strings.TrimSpace(*v)
+			nv = &n
+		}
+		if empty && len(*nv) < 1 {
+			continue
+		}
+		if m[*nv] {
+			continue
+		}
+		m[*nv] = true
+		arr = append(arr, nv)
+	}
+	return arr
+}
+
+//RemoveEmpty will remove empty and copy item to new array
+func (s StringPtrArray) RemoveEmpty(trim bool) StringPtrArray {
+	var arr StringPtrArray
+	for _, v := range s {
+		if v == nil {
+			continue
+		}
+		nv := v
+		if trim {
+			n := strings.TrimSpace(*v)
+			nv = &n
+		}
+		if len(*nv) < 1 {
+			continue
+		}
+		arr = append(arr, nv)
+	}
+	return arr
 }
