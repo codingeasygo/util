@@ -656,9 +656,9 @@ func TestStringArray(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
-		// if ary1.DbArray() != "{1,2,3}" {
-		// 	t.Error("error")
-		// }
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil StringArray = nil
@@ -729,9 +729,9 @@ func TestStringPtrArray(t *testing.T) {
 		if ary1.Join(",") != "1,2,3" {
 			t.Error("error")
 		}
-		// if ary1.DbArray() != "{1,2,3}" {
-		// 	t.Error("error")
-		// }
+		if ary1.DbArray() != "{1,2,3}" {
+			t.Error("error")
+		}
 	}
 	{ //nil
 		var arynil StringPtrArray = nil

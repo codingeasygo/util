@@ -562,11 +562,11 @@ func (s StringArray) Join(sep string) (res string) {
 	return
 }
 
-// //DbArray will join value to database array
-// func (s StringArray) DbArray() (res string) {
-// 	res = "{" + s.Join(",") + "}"
-// 	return
-// }
+//DbArray will join value to database array
+func (s StringArray) DbArray() (res string) {
+	res = "{" + s.Join(",") + "}"
+	return
+}
 
 //StringPtrArray is database value to parse data to []string value
 type StringPtrArray []*string
@@ -629,8 +629,8 @@ func (s StringPtrArray) Join(sep string) (res string) {
 	return
 }
 
-// //DbArray will join value to database array
-// func (s StringPtrArray) DbArray() (res string) {
-// 	res = "{" + s.Join(",") + "}"
-// 	return
-// }
+//DbArray will join value to database array
+func (s StringPtrArray) DbArray() (res string) {
+	res = "{" + s.Join(",") + "}"
+	return
+}
