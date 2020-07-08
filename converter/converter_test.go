@@ -313,3 +313,28 @@ func TestPtr(t *testing.T) {
 	Float64Ptr(1)
 	StringPtr("ss")
 }
+
+func TestJoin(t *testing.T) {
+	if Join([]int{}, ",") != "" {
+		t.Error("error")
+		return
+	}
+	if Join([]int{1, 2, 3}, ",") != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if Join([]*int{IntPtr(1), IntPtr(2), IntPtr(3)}, ",") != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if Join([]*string{StringPtr("1"), StringPtr("2"), StringPtr("3")}, ",") != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	func() {
+		defer func() {
+			recover()
+		}()
+		Join("xx", ",")
+	}()
+}

@@ -552,3 +552,20 @@ func Float64Ptr(arg float64) *float64 {
 func StringPtr(arg string) *string {
 	return &arg
 }
+
+//Join all slice to string
+func Join(v interface{}, sep string) string {
+	vtype := reflect.TypeOf(v)
+	if vtype.Kind() != reflect.Slice {
+		panic("not slice")
+	}
+	vval := reflect.ValueOf(v)
+	if vval.Len() < 1 {
+		return ""
+	}
+	val := fmt.Sprintf("%v", reflect.Indirect(vval.Index(0)).Interface())
+	for i := 1; i < vval.Len(); i++ {
+		val += fmt.Sprintf("%v%v", sep, reflect.Indirect(vval.Index(i)).Interface())
+	}
+	return val
+}
