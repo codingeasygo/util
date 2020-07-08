@@ -22,6 +22,19 @@ func TestM(t *testing.T) {
 
 }
 
+func TestMS(t *testing.T) {
+	var a int
+	m := MS(map[string]string{
+		"a": "1",
+	})
+	err := m.ValidFormat(`a,r|i,r:0`, &a)
+	if err != nil || a != 1 {
+		t.Error(err)
+		return
+	}
+
+}
+
 func TestValidAttrTemple(t *testing.T) {
 	v, err := ValidAttrTemple("测试", "r|s", "l:~10", true)
 	if err != nil {

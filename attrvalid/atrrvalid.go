@@ -32,6 +32,19 @@ func (m M) ValidFormat(format string, args ...interface{}) error {
 	return ValidAttrFormat(format, m, true, args...)
 }
 
+//MS is an map[string]string which can be valid by valid temple
+type MS map[string]string
+
+//Get will return value by key
+func (m MS) Get(key string) (v interface{}, err error) {
+	return m[key], nil
+}
+
+//ValidFormat will valid args by format temple
+func (m MS) ValidFormat(format string, args ...interface{}) error {
+	return ValidAttrFormat(format, m, true, args...)
+}
+
 //Values is an url.Values which can be valid by valid temple
 type Values url.Values
 
