@@ -77,6 +77,7 @@ func TestTime(t *testing.T) {
 	TimeNow()
 	TimeStartOfToday()
 	TimeStartOfMonth()
+	TimeUnix(0)
 }
 
 func TestIntArray(t *testing.T) {

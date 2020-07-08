@@ -13,6 +13,11 @@ import (
 //Time is database value to parse data from database and parset time.Time to timestamp on json mashal
 type Time time.Time
 
+// TimeUnix will return time by timestamp
+func TimeUnix(timestamp int64) Time {
+	return Time(time.Unix(0, timestamp*1e6))
+}
+
 // TimeZero will return zero time
 func TimeZero() Time {
 	return Time(time.Unix(0, 0*1e6))
