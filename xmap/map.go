@@ -25,6 +25,8 @@ type BaseValuable interface {
 	Clear() (err error)
 	//Length will return value count
 	Length() (l int)
+	//Exist will return true if key having
+	Exist(path ...string) bool
 }
 
 //RawMapable will get the raw map
@@ -105,8 +107,6 @@ type Valuable interface {
 	ArrayFloat64Val(path ...string) ([]float64, error)
 	//Value will convert path value to interface{}
 	Value(path ...string) interface{}
-	//Exist will return true if key having
-	Exist(path ...string) bool
 }
 
 type impl struct {
@@ -279,7 +279,6 @@ func (i *impl) ArrayStrVal(path ...string) ([]string, error) {
 func (i *impl) ArrayIntDef(def []int, path ...string) []int {
 	vals, err := i.ArrayIntVal(path...)
 	if err != nil {
-		fmt.Println("\n\n--->", err)
 		vals = def
 	}
 	return vals
@@ -346,12 +345,6 @@ func (i *impl) Get(path string) (interface{}, error) {
 //ValidFormat is implement for attrvalid.Validable
 func (i *impl) ValidFormat(f string, args ...interface{}) error {
 	return attrvalid.ValidAttrFormat(f, i, true, args...)
-}
-
-//Exist will return true if key having
-func (i *impl) Exist(path ...string) bool {
-	_, err := i.ValueVal(path...)
-	return err == nil
 }
 
 //MapVal will conventer value to map
@@ -594,6 +587,12 @@ func (m M) Length() (l int) {
 	return
 }
 
+//Exist will return true if key having
+func (m M) Exist(path ...string) bool {
+	_, err := m.ValueVal(path...)
+	return err == nil
+}
+
 //New will create map Valuable
 func New() (m Valuable) {
 	return &impl{BaseValuable: M{}}
@@ -750,6 +749,13 @@ func (s *SafeM) Length() (l int) {
 	s.locker.RLock()
 	defer s.locker.RUnlock()
 	return s.raw.Length()
+}
+
+//Exist will return true if key having
+func (s *SafeM) Exist(path ...string) bool {
+	s.locker.RLock()
+	defer s.locker.RUnlock()
+	return s.raw.Exist(path...)
 }
 
 // func (m Map) ToS(dest interface{}) {
