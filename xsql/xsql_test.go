@@ -629,6 +629,58 @@ func TestMap(t *testing.T) {
 	}
 }
 
+func TestMapArray(t *testing.T) {
+	var eval MArray
+	err := eval.Scan(1)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//
+	_, err = Pool().Exec(context.Background(), `drop table if exists xsql_test_map`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = Pool().Exec(context.Background(), `create table xsql_test_map(tid int,mval text)`)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	{ //normal
+		var mval = MArray{{"a": 1}}
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 1, mval)
+		if err != nil || !res.Insert() {
+			t.Error(err)
+			return
+		}
+		var mval1 MArray
+		err = Pool().QueryRow(context.Background(), `select mval from xsql_test_map where tid=$1`, 1).Scan(&mval1)
+		if err != nil || len(mval1) != 1 {
+			t.Error(err)
+			return
+		}
+		mv1 := xmap.Wrap(mval1[0])
+		if mv1.Int("a") != 1 {
+			t.Error("error")
+		}
+	}
+	{ //nil
+		var mval MArray = nil
+		res, err := Pool().Exec(context.Background(), `insert into xsql_test_map values ($1,$2)`, 2, mval)
+		if err != nil || !res.Insert() {
+			t.Error(err)
+			return
+		}
+		var mval1 MArray
+		err = Pool().QueryRow(context.Background(), `select mval from xsql_test_map where tid=$1`, 2).Scan(&mval1)
+		if err != nil || len(mval1) != 0 {
+			t.Error(err)
+			return
+		}
+	}
+}
+
 func TestStringArray(t *testing.T) {
 	var ary StringArray
 	err := ary.Scan(1)

@@ -107,6 +107,30 @@ func (m M) Value() (driver.Value, error) {
 	return string(bys), err
 }
 
+//MArray is database value to parse json data to map value
+type MArray []M
+
+//Scan is sql.Sanner
+func (m *MArray) Scan(src interface{}) (err error) {
+	if src != nil {
+		if jsonSrc, ok := src.(string); ok {
+			err = json.Unmarshal([]byte(jsonSrc), m)
+		} else {
+			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		}
+	}
+	return
+}
+
+//Value will parse to json value
+func (m MArray) Value() (driver.Value, error) {
+	if m == nil {
+		return nil, nil
+	}
+	bys, err := json.Marshal(m)
+	return string(bys), err
+}
+
 //IntArray is database value to parse data to []int64 value
 type IntArray []int
 
