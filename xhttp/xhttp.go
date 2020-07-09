@@ -81,6 +81,15 @@ func DisableCookie() {
 	initClient()
 }
 
+//ClearCookie will clear cookie
+func ClearCookie() {
+	if enableCookie {
+		DefaultClient.Jar, _ = cookiejar.New(nil)
+	} else {
+		DefaultClient.Jar = nil
+	}
+}
+
 func defaultRaw(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error) {
 	req, err = http.NewRequest(method, uri, body)
 	if err != nil {
