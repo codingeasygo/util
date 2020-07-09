@@ -2,6 +2,7 @@ package converter
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -337,4 +338,11 @@ func TestJoin(t *testing.T) {
 		}()
 		Join("xx", ",")
 	}()
+}
+
+func TestIndirectString(t *testing.T) {
+	var x *int
+	fmt.Println(IndirectString(x))
+	fmt.Println(IndirectString(nil))
+	fmt.Println(IndirectString(1))
 }

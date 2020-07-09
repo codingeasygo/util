@@ -571,3 +571,14 @@ func Join(v interface{}, sep string) string {
 	}
 	return val
 }
+
+func IndirectString(val interface{}) string {
+	if val == nil {
+		return "nil"
+	}
+	rval := reflect.ValueOf(val)
+	if rval.Kind() == reflect.Ptr && rval.IsNil() {
+		return "nil"
+	}
+	return fmt.Sprintf("%v", reflect.Indirect(rval).Interface())
+}
