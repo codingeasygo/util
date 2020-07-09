@@ -42,6 +42,11 @@ func TestGet(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	bval, _, err = GetHeaderBytes(nil, "%v/?format=text", ts.URL)
+	if err != nil || string(bval) != "1" {
+		t.Error(err)
+		return
+	}
 	//
 	sval, err := GetText("%v/?format=text", ts.URL)
 	if err != nil || sval != "1" {
@@ -55,6 +60,11 @@ func TestGet(t *testing.T) {
 	}
 	//
 	mval, err := GetMap("%v/?format=json", ts.URL)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	mval, _, err = GetHeaderMap(nil, "%v/?format=json", ts.URL)
 	if err != nil {
 		t.Error(err)
 		return
@@ -124,6 +134,11 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	bval, _, err = PostHeaderBytes(xmap.M{"Content-Type": ContentTypeForm}, nil, "%v/?format=text", ts.URL)
+	if err != nil || string(bval) != "1" {
+		t.Error(err)
+		return
+	}
 	//
 	sval, err := PostText(nil, "%v/?format=text", ts.URL)
 	if err != nil || sval != "1" {
@@ -135,9 +150,24 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	sval, _, err = PostHeaderText(xmap.M{"Content-Type": ContentTypeForm}, nil, "%v/?format=text", ts.URL)
+	if err != nil || sval != "1" {
+		t.Error(err)
+		return
+	}
 	//
 	var ival int
 	mval, err := PostMap(nil, "%v?format=json", ts.URL)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = mval.ValidFormat(`abc,r|i,r:0;`, &ival)
+	if err != nil || ival != 1 {
+		t.Error(err)
+		return
+	}
+	mval, _, err = PostHeaderMap(xmap.M{"Content-Type": ContentTypeForm}, nil, "%v?format=json", ts.URL)
 	if err != nil {
 		t.Error(err)
 		return
@@ -185,6 +215,11 @@ func TestPost(t *testing.T) {
 	sval, err = PostXMLText(t, "%v?format=body", ts.URL)
 	if err != nil {
 		t.Error(err)
+		return
+	}
+	bval, _, err = PostMultipartBytes(nil, xmap.M{"abc": "123"}, "%v?format=part", ts.URL)
+	if err != nil || !strings.Contains(string(bval), "123") {
+		t.Errorf("err:%v,text:%v", err, bval)
 		return
 	}
 	sval, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?format=part", ts.URL)
