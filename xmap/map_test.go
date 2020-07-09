@@ -375,51 +375,26 @@ func TestSafeValidFormat(t *testing.T) {
 }
 
 func TestMSorter(t *testing.T) {
-	newall := func() []Valuable {
-		v := WrapArray(
-			M{
+	newall := func() []M {
+		v := WrapArray([]M{
+			{
 				"s": "a",
 				"i": 1,
 				"f": 1.0,
 			},
-			M{
+			{
 				"s": "c",
 				"i": 3,
 				"f": 3.0,
 			},
-			M{
+			{
 				"s": "b",
 				"i": 2,
 				"f": 2.0,
 			},
-		)
+		})
 		return v
 	}
-	newall2 := func() []Valuable {
-		v := WrapSafeArray(
-			M{
-				"s": "a",
-				"i": 1,
-				"f": 1.0,
-			},
-			M{
-				"s": "c",
-				"i": 3,
-				"f": 3.0,
-			},
-			M{
-				"s": "b",
-				"i": 2,
-				"f": 2.0,
-			},
-		)
-		return v
-	}
-	testMSorter(t, newall)
-	testMSorter(t, newall2)
-}
-
-func testMSorter(t *testing.T, newall func() []Valuable) {
 	sort.Sort(NewMSorter(newall(), 0, false, "i"))
 	sort.Sort(NewMSorter(newall(), 0, true, "i"))
 	sort.Sort(NewMSorter(newall(), 1, false, "f"))
@@ -428,87 +403,31 @@ func testMSorter(t *testing.T, newall func() []Valuable) {
 	sort.Sort(NewMSorter(newall(), 2, true, "s"))
 }
 
-func TestParse(t *testing.T) {
-	var err error
-	//
-	_, err = Parse("{}")
-	if err != nil {
-		t.Error(err)
-		return
+func TestValuableSorter(t *testing.T) {
+	newall := func() []Valuable {
+		v := WrapSafeArray([]M{
+			{
+				"s": "a",
+				"i": 1,
+				"f": 1.0,
+			},
+			{
+				"s": "c",
+				"i": 3,
+				"f": 3.0,
+			},
+			{
+				"s": "b",
+				"i": 2,
+				"f": 2.0,
+			},
+		})
+		return v
 	}
-	_, err = ParseArray("[{}]")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	_, err = ParseSafe("{}")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	_, err = ParseSafeArray("[{}]")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-}
-
-type xx map[string]interface{}
-
-func (x xx) RawMap() map[string]interface{} {
-	return x
-}
-
-func TestWrap(t *testing.T) {
-	var res Valuable
-	//
-	res = Wrap(map[string]interface{}{})
-	if res == nil {
-		t.Error(nil)
-		return
-	}
-	res = Wrap(xx{})
-	if res == nil {
-		t.Error(nil)
-		return
-	}
-	res = WrapSafe(map[string]interface{}{})
-	if res == nil {
-		t.Error(nil)
-		return
-	}
-	res = WrapSafe(xx{})
-	if res == nil {
-		t.Error(nil)
-		return
-	}
-	mres, _ := MapVal(xx{})
-	if mres == nil {
-		t.Error(nil)
-		return
-	}
-	func() {
-		defer func() {
-			recover()
-		}()
-		Wrap(nil)
-	}()
-	func() {
-		defer func() {
-			recover()
-		}()
-		Wrap("xx")
-	}()
-	func() {
-		defer func() {
-			recover()
-		}()
-		WrapSafe(nil)
-	}()
-	func() {
-		defer func() {
-			recover()
-		}()
-		WrapSafe("xx")
-	}()
+	sort.Sort(NewValuableSorter(newall(), 0, false, "i"))
+	sort.Sort(NewValuableSorter(newall(), 0, true, "i"))
+	sort.Sort(NewValuableSorter(newall(), 1, false, "f"))
+	sort.Sort(NewValuableSorter(newall(), 1, true, "f"))
+	sort.Sort(NewValuableSorter(newall(), 2, false, "s"))
+	sort.Sort(NewValuableSorter(newall(), 2, true, "s"))
 }

@@ -373,7 +373,9 @@ func ArrayMapVal(v interface{}) (mvals []M, err error) {
 		return nil, nil
 	}
 	var mval M
-	if vals, ok := v.([]interface{}); ok {
+	if vals, ok := v.([]M); ok {
+		return vals, nil
+	} else if vals, ok := v.([]interface{}); ok {
 		for _, v := range vals {
 			mval, err = MapVal(v)
 			if err != nil {
@@ -382,6 +384,10 @@ func ArrayMapVal(v interface{}) (mvals []M, err error) {
 			mvals = append(mvals, mval)
 		}
 		return
+	} else if vals, ok := v.([]map[string]interface{}); ok {
+		for _, v := range vals {
+			mvals = append(mvals, M(v))
+		}
 	}
 	if sv, ok := v.(string); ok {
 		err = json.Unmarshal([]byte(sv), &mvals)
@@ -412,6 +418,11 @@ func ArrayMapVal(v interface{}) (mvals []M, err error) {
 
 //M is type define to map[string]interface{}
 type M map[string]interface{}
+
+//New will create map Valuable
+func New() (m M) {
+	return M{}
+}
 
 //ValueVal will convert path value to value, return error when not exist or convert fail
 func (m M) ValueVal(path ...string) (v interface{}, err error) {
@@ -822,56 +833,6 @@ func (m M) ValidFormat(f string, args ...interface{}) error {
 	return attrvalid.ValidAttrFormat(f, m, true, args...)
 }
 
-//New will create map Valuable
-func New() (m Valuable) {
-	return M{}
-}
-
-//Wrap will wrap raw map to safe
-func Wrap(raw interface{}) (m Valuable) {
-	if raw == nil {
-		panic("raw is nil")
-	}
-	if base, ok := raw.(BaseValuable); ok {
-		m = &impl{BaseValuable: base}
-	} else if mval, ok := raw.(map[string]interface{}); ok {
-		m = M(mval)
-	} else if rm, ok := raw.(RawMapable); ok {
-		m = M(rm.RawMap())
-	} else {
-		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
-	}
-	return
-}
-
-//WrapArray will wrap base values to array
-func WrapArray(raws ...interface{}) (ms []Valuable) {
-	for _, raw := range raws {
-		ms = append(ms, Wrap(raw))
-	}
-	return
-}
-
-//Parse will parse val to map
-func Parse(v interface{}) (m Valuable, err error) {
-	raw, err := MapVal(v)
-	if err == nil {
-		m = Wrap(raw)
-	}
-	return
-}
-
-//ParseArray will parse value to map array
-func ParseArray(v interface{}) (ms []Valuable, err error) {
-	raws, err := ArrayMapVal(v)
-	if err == nil {
-		for _, raw := range raws {
-			ms = append(ms, Wrap(raw))
-		}
-	}
-	return
-}
-
 //SafeM is safe map
 type SafeM struct {
 	Valuable
@@ -886,57 +847,6 @@ func NewSafe() (m *SafeM) {
 		locker: sync.RWMutex{},
 	}
 	m.Valuable = &impl{BaseValuable: m}
-	return
-}
-
-//WrapSafe will wrap raw map to safe
-func WrapSafe(raw interface{}) (m *SafeM) {
-	if raw == nil {
-		panic("raw is nil")
-	}
-	var b BaseValuable
-	if base, ok := raw.(BaseValuable); ok {
-		b = base
-	} else if mval, ok := raw.(map[string]interface{}); ok {
-		b = M(mval)
-	} else if rm, ok := raw.(RawMapable); ok {
-		b = M(rm.RawMap())
-	} else {
-		panic("not supported type " + reflect.TypeOf(raw).Kind().String())
-	}
-	m = &SafeM{
-		raw:    b,
-		locker: sync.RWMutex{},
-	}
-	m.Valuable = &impl{BaseValuable: m}
-	return
-}
-
-//WrapSafeArray will wrap raw map to safe
-func WrapSafeArray(raws ...interface{}) (ms []Valuable) {
-	for _, raw := range raws {
-		ms = append(ms, WrapSafe(raw))
-	}
-	return
-}
-
-//ParseSafe will parse val to map
-func ParseSafe(v interface{}) (m Valuable, err error) {
-	raw, err := MapVal(v)
-	if err == nil {
-		m = WrapSafe(raw)
-	}
-	return
-}
-
-//ParseSafeArray will parse value to map array
-func ParseSafeArray(v interface{}) (ms []Valuable, err error) {
-	raws, err := ArrayMapVal(v)
-	if err == nil {
-		for _, raw := range raws {
-			ms = append(ms, WrapSafe(raw))
-		}
-	}
 	return
 }
 
@@ -1012,13 +922,13 @@ func (s *SafeM) Exist(path ...string) bool {
 // }
 
 type MSorter struct {
-	All  []Valuable
+	All  []M
 	Path []string
 	Type int //0 is int,1 is float,2 is string
 	Desc bool
 }
 
-func NewMSorter(all []Valuable, vtype int, desc bool, path ...string) *MSorter {
+func NewMSorter(all []M, vtype int, desc bool, path ...string) *MSorter {
 	return &MSorter{
 		All:  all,
 		Path: path,
@@ -1051,6 +961,48 @@ func (m *MSorter) Less(i, j int) bool {
 }
 func (m *MSorter) Swap(i, j int) {
 	m.All[i], m.All[j] = m.All[j], m.All[i]
+}
+
+type ValuableSorter struct {
+	All  []Valuable
+	Path []string
+	Type int //0 is int,1 is float,2 is string
+	Desc bool
+}
+
+func NewValuableSorter(all []Valuable, vtype int, desc bool, path ...string) *ValuableSorter {
+	return &ValuableSorter{
+		All:  all,
+		Path: path,
+		Type: vtype,
+		Desc: desc,
+	}
+}
+func (v *ValuableSorter) Len() int {
+	return len(v.All)
+}
+
+func (v *ValuableSorter) Less(i, j int) bool {
+	switch v.Type {
+	case 0:
+		if v.Desc {
+			return v.All[i].Int(v.Path...) > v.All[j].Int(v.Path...)
+		}
+		return v.All[i].Int(v.Path...) < v.All[j].Int(v.Path...)
+	case 1:
+		if v.Desc {
+			return v.All[i].Float64(v.Path...) > v.All[j].Float64(v.Path...)
+		}
+		return v.All[i].Float64(v.Path...) < v.All[j].Float64(v.Path...)
+	default:
+		if v.Desc {
+			return v.All[i].Str(v.Path...) > v.All[j].Str(v.Path...)
+		}
+		return v.All[i].Str(v.Path...) < v.All[j].Str(v.Path...)
+	}
+}
+func (v *ValuableSorter) Swap(i, j int) {
+	v.All[i], v.All[j] = v.All[j], v.All[i]
 }
 
 // func Maps2Map(ms []Map, path ...string) Map {
