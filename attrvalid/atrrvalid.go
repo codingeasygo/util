@@ -90,6 +90,22 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 	return ValidAttrFormat(format, ValueGetterF(getter), true, args...)
 }
 
+func checkTemplateRequired(data interface{}, required bool, lts []string) (bool, error) {
+	if v, ok := data.(string); data == nil || (ok && len(v) < 1) { //chekc the value required.
+		if (lts[0] == "R" || lts[0] == "r") && required {
+			return true, errors.New("data is empty")
+		}
+		return true, nil
+	}
+	if v, ok := data.([]interface{}); data == nil || (ok && len(v) < 1) { //chekc the value required.
+		if (lts[0] == "R" || lts[0] == "r") && required {
+			return true, errors.New("data is empty")
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
 //ValidAttrTemple will valid the data to specified value by limit
 //
 //
@@ -124,19 +140,16 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 func ValidAttrTemple(data interface{}, valueType string, valueRange string, required bool) (interface{}, error) {
 	valueRange = strings.Replace(valueRange, "%N", ",", -1)
 	valueRange = strings.Replace(valueRange, "%%", "%", -1)
-	lrs := strings.SplitN(valueRange, ":", 2) //valid value range.
-	lts := strings.SplitN(valueType, "|", 2)  //valid required type
-	if len(lrs) < 2 {
-		return nil, fmt.Errorf("invalid range limit:%s", valueRange)
-	}
+	lts := strings.SplitN(valueType, "|", 2) //valid required type
 	if len(lts) < 2 {
 		return nil, fmt.Errorf("invalid type limit:%s", valueType)
 	}
-	if v, ok := data.(string); data == nil || (ok && len(v) < 1) { //chekc the value required.
-		if (lts[0] == "R" || lts[0] == "r") && required {
-			return nil, errors.New("data is empty")
-		}
-		return nil, nil
+	lrs := strings.SplitN(valueRange, ":", 2) //valid value range.
+	if len(lrs) < 2 {
+		return nil, fmt.Errorf("invalid range limit:%s", valueRange)
+	}
+	if ret, err := checkTemplateRequired(data, required, lts); ret { //check required
+		return nil, err
 	}
 	//define the valid string function.
 	validStr := func(ds string) (interface{}, error) {
@@ -403,8 +416,14 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			continue
 		}
 		svals, err := converter.ArrayVal(sval)
-		if err != nil {
+		if err != nil && err != converter.ErrNil {
 			return err
+		}
+		if ret, err := checkTemplateRequired(svals, required, strings.SplitN(parts[1], "|", 2)); ret { //check required
+			if err != nil {
+				return err
+			}
+			continue
 		}
 		array := pval
 		for _, sval = range svals {

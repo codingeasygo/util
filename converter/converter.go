@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var ErrNil = fmt.Errorf("nil value")
+
 func Int(v interface{}) (val int) {
 	val, _ = IntVal(v)
 	return
@@ -19,7 +21,7 @@ func Int(v interface{}) (val int) {
 
 func IntVal(v interface{}) (int, error) {
 	if v == nil {
-		return 0, fmt.Errorf("arg value is null")
+		return 0, ErrNil
 	}
 	k := reflect.TypeOf(v)
 	if k.Name() == "Time" {
@@ -66,7 +68,7 @@ func Int64(v interface{}) int64 {
 
 func Int64Val(v interface{}) (int64, error) {
 	if v == nil {
-		return 0, fmt.Errorf("arg value is null")
+		return 0, ErrNil
 	}
 	k := reflect.TypeOf(v)
 	if k.Name() == "Time" {
@@ -113,7 +115,7 @@ func Uint64(v interface{}) uint64 {
 
 func Uint64Val(v interface{}) (uint64, error) {
 	if v == nil {
-		return 0, fmt.Errorf("arg value is null")
+		return 0, ErrNil
 	}
 	k := reflect.TypeOf(v)
 	if k.Name() == "Time" {
@@ -160,7 +162,7 @@ func Float64(v interface{}) float64 {
 
 func Float64Val(v interface{}) (float64, error) {
 	if v == nil {
-		return 0, fmt.Errorf("arg value is null")
+		return 0, ErrNil
 	}
 	k := reflect.TypeOf(v)
 	if k.Name() == "Time" {
@@ -206,7 +208,7 @@ func String(v interface{}) string {
 
 func StringVal(v interface{}) (res string, err error) {
 	if v == nil {
-		return "", fmt.Errorf("arg value is null")
+		return "", ErrNil
 	}
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.String:
@@ -223,7 +225,7 @@ func StringVal(v interface{}) (res string, err error) {
 
 func ArrayVal(v interface{}) ([]interface{}, error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	if vals, ok := v.([]interface{}); ok {
 		return vals, nil
@@ -248,7 +250,7 @@ func ArrayVal(v interface{}) ([]interface{}, error) {
 
 func ArrayStringVal(v interface{}) (svals []string, err error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	var sval string
 	if vals, ok := v.([]interface{}); ok {
@@ -286,7 +288,7 @@ func ArrayStringVal(v interface{}) (svals []string, err error) {
 
 func ArrayIntVal(v interface{}) (ivals []int, err error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	var ival int
 	if vals, ok := v.([]interface{}); ok {
@@ -326,7 +328,7 @@ func ArrayIntVal(v interface{}) (ivals []int, err error) {
 
 func ArrayInt64Val(v interface{}) (ivals []int64, err error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	var ival int64
 	if vals, ok := v.([]interface{}); ok {
@@ -366,7 +368,7 @@ func ArrayInt64Val(v interface{}) (ivals []int64, err error) {
 
 func ArrayUint64Val(v interface{}) (ivals []uint64, err error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	var ival uint64
 	if vals, ok := v.([]interface{}); ok {
@@ -406,7 +408,7 @@ func ArrayUint64Val(v interface{}) (ivals []uint64, err error) {
 
 func ArrayFloat64Val(v interface{}) (ivals []float64, err error) {
 	if v == nil {
-		return nil, fmt.Errorf("arg value is null")
+		return nil, ErrNil
 	}
 	var ival float64
 	if vals, ok := v.([]interface{}); ok {

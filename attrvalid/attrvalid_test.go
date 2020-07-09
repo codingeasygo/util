@@ -893,3 +893,27 @@ func TestValidWeb(t *testing.T) {
 		return
 	}
 }
+
+func TestValidNil(t *testing.T) {
+	m := M{
+		"a": nil,
+		"b": []interface{}{},
+	}
+	var aryptr1, aryptr2 []*int64
+	err := m.ValidFormat(`
+		a,o|i,r:0;
+		b,o|i,r:0;
+	`, &aryptr1, &aryptr2)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = m.ValidFormat(`
+		a,r|i,r:0;
+		b,r|i,r:0;
+	`, &aryptr1, &aryptr2)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+}
