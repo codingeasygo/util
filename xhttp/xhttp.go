@@ -29,20 +29,23 @@ const (
 	ContentTypeXML = "application/xml;charset=utf-8"
 )
 
+var insecureSkipVerify = false
+var enableCookie = false
+
 func init() {
-	initClient(true)
+	initClient()
 }
 
-func initClient(insecureSkipVerify bool) {
+func initClient() {
 	DefaultTransport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
 	}
-	jar, _ := cookiejar.New(nil)
 	DefaultClient = &http.Client{
 		Transport: DefaultTransport,
-		Jar:       jar,
 	}
-
+	if enableCookie {
+		DefaultClient.Jar, _ = cookiejar.New(nil)
+	}
 }
 
 //DefaultTransport is default http transport
@@ -56,12 +59,26 @@ var Shared *Client = &Client{Raw: defaultRaw}
 
 //DisableInsecureVerify will disable verify insecure
 func DisableInsecureVerify() {
-	initClient(true)
+	insecureSkipVerify = true
+	initClient()
 }
 
 //EnableInsecureVerify will enable verify insecure
 func EnableInsecureVerify() {
-	initClient(false)
+	insecureSkipVerify = false
+	initClient()
+}
+
+//EnableCookie will enable cookie
+func EnableCookie() {
+	enableCookie = true
+	initClient()
+}
+
+//DisableCookie will disable cookie
+func DisableCookie() {
+	enableCookie = false
+	initClient()
 }
 
 func defaultRaw(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error) {
