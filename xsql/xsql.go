@@ -125,7 +125,7 @@ func (m *MArray) Scan(src interface{}) (err error) {
 //Value will parse to json value
 func (m MArray) Value() (driver.Value, error) {
 	if m == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(m)
 	return string(bys), err
@@ -152,7 +152,7 @@ func (i *IntArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i IntArray) Value() (driver.Value, error) {
 	if i == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(i)
 	return string(bys), err
@@ -232,7 +232,7 @@ func (i *IntPtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i IntPtrArray) Value() (driver.Value, error) {
 	if i == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(i)
 	return string(bys), err
@@ -316,7 +316,7 @@ func (i *Int64Array) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i Int64Array) Value() (driver.Value, error) {
 	if i == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(i)
 	return string(bys), err
@@ -396,7 +396,7 @@ func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i Int64PtrArray) Value() (driver.Value, error) {
 	if i == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(i)
 	return string(bys), err
@@ -480,7 +480,7 @@ func (f *Float64Array) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (f Float64Array) Value() (driver.Value, error) {
 	if f == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(f)
 	return string(bys), err
@@ -560,7 +560,7 @@ func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (f Float64PtrArray) Value() (driver.Value, error) {
 	if f == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(f)
 	return string(bys), err
@@ -641,7 +641,7 @@ func (s *StringArray) Scan(src interface{}) (err error) {
 //Value will parse to json value
 func (s StringArray) Value() (driver.Value, error) {
 	if s == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(s)
 	return string(bys), err
@@ -736,7 +736,7 @@ func (s *StringPtrArray) Scan(src interface{}) (err error) {
 //Value will parse to json value
 func (s StringPtrArray) Value() (driver.Value, error) {
 	if s == nil {
-		return nil, nil
+		return "[]", nil
 	}
 	bys, err := json.Marshal(s)
 	return string(bys), err
