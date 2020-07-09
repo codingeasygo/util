@@ -101,7 +101,7 @@ func (m *Monitor) Done(id string) {
 func (m *Monitor) State() (interface{}, error) {
 	m.lck.RLock()
 	defer m.lck.RUnlock()
-	var used = []interface{}{}
+	var used = []xmap.M{}
 	for _, u := range m.Used {
 		used = append(used, xmap.M{
 			"name":     u.Name,
@@ -114,7 +114,7 @@ func (m *Monitor) State() (interface{}, error) {
 			"conc_avg": u.ConcAvg,
 		})
 	}
-	sort.Sort(xmap.NewMSorter(xmap.WrapArray(used...), 0, true, "/avg"))
+	sort.Sort(xmap.NewMSorter(xmap.WrapArray(used), 0, true, "/avg"))
 	//
 	var pending = map[string]int64{}
 	for k, v := range m.Pending {
