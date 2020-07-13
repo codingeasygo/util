@@ -21,10 +21,73 @@ import (
 	"github.com/codingeasygo/util/xmap"
 )
 
+type sconf map[string]string
+
+func (s sconf) autoPath(path ...string) (all []string) {
+	all = path
+	for _, p := range path {
+		if strings.Contains(p, "/") {
+			continue
+		}
+		all = append(all, "loc/"+p)
+	}
+	return
+}
+
+//ValueVal will get value by path
+func (s sconf) ValueVal(path ...string) (v interface{}, err error) {
+	ps := s.autoPath(path...)
+	for _, p := range ps {
+		val, ok := s[p]
+		if ok {
+			v = val
+			break
+		}
+	}
+	return
+}
+
+//SetValue will set value to path
+func (s sconf) SetValue(path string, val interface{}) (err error) {
+	s[path] = converter.String(val)
+	return
+}
+
+//Delete will delete value on path
+func (s sconf) Delete(path string) (err error) {
+	delete(s, path)
+	return
+}
+
+//Clear will clear all key on map
+func (s sconf) Clear() (err error) {
+	for key := range s {
+		delete(s, key)
+	}
+	return
+}
+
+//Length will return value count
+func (s sconf) Length() (l int) {
+	l = len(s)
+	return
+}
+
+//Exist will check path whether exist
+func (s sconf) Exist(path ...string) (ok bool) {
+	for _, p := range path {
+		_, ok = s[p]
+		if ok {
+			break
+		}
+	}
+	return
+}
+
 //Config is parser for properties file
 type Config struct {
 	xmap.Valuable
-	config  map[string]string
+	config  sconf
 	ShowLog bool
 	sec     string
 	Lines   []string
@@ -37,12 +100,12 @@ type Config struct {
 //NewConfig will return new config
 func NewConfig() (config *Config) {
 	config = &Config{
-		config:  map[string]string{},
+		config:  sconf{},
 		ShowLog: true,
 		SecLn:   map[string]int{},
 		Masks:   map[string]string{},
 	}
-	config.Valuable = xmap.Wrap(config)
+	config.Valuable, _ = xmap.Parse(config.config)
 	return
 }
 
@@ -63,67 +126,6 @@ func (c *Config) slog(fs string, args ...interface{}) {
 	if c.ShowLog {
 		fmt.Println(fmt.Sprintf(fs, args...))
 	}
-}
-
-func (c *Config) autoPath(path ...string) (all []string) {
-	all = path
-	for _, p := range path {
-		if strings.Contains(p, "/") {
-			continue
-		}
-		all = append(all, "loc/"+p)
-	}
-	return
-}
-
-//ValueVal will get value by path
-func (c *Config) ValueVal(path ...string) (v interface{}, err error) {
-	ps := c.autoPath(path...)
-	for _, p := range ps {
-		val, ok := c.config[p]
-		if ok {
-			v = val
-			break
-		}
-	}
-	return
-}
-
-//SetValue will set value to path
-func (c *Config) SetValue(path string, val interface{}) (err error) {
-	c.config[path] = converter.String(val)
-	return
-}
-
-//Delete will delete value on path
-func (c *Config) Delete(path string) (err error) {
-	delete(c.config, path)
-	return
-}
-
-//Clear will clear all key on map
-func (c *Config) Clear() (err error) {
-	for key := range c.config {
-		delete(c.config, key)
-	}
-	return
-}
-
-//Length will return value count
-func (c *Config) Length() (l int) {
-	l = len(c.config)
-	return
-}
-
-//Exist will check path whether exist
-func (c *Config) Exist(path ...string) (ok bool) {
-	for _, p := range path {
-		_, ok = c.config[p]
-		if ok {
-			break
-		}
-	}
-	return
 }
 
 //FileModeDef read file mode value
