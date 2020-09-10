@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"reflect"
+	"time"
 )
 
 //WriteJSON will marshal value to string and write to io.Writer
@@ -150,4 +151,27 @@ func CopyBufferMax(dst io.Writer, src io.Reader, max int64, buf []byte) (written
 		}
 	}
 	return written, err
+}
+
+//FullBuffer will read data from reader until to buffer
+func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) error {
+	all := uint32(0)
+	buf := buffer[:length]
+	for {
+		readed, err := r.Read(buf)
+		if err != nil {
+			return err
+		}
+		if latest != nil {
+			*latest = time.Now()
+		}
+		all += uint32(readed)
+		if all < length {
+			buf = buffer[all:]
+			continue
+		} else {
+			break
+		}
+	}
+	return nil
 }

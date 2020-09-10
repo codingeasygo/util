@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"os"
 	"testing"
 	"time"
 )
@@ -230,6 +231,37 @@ func TestCopyMax(t *testing.T) {
 	_, err = CopyMax(ioutil.Discard, &copyMultiTestReader{}, 1024)
 	if err == nil {
 		t.Error(err)
+		return
+	}
+}
+
+func TestFullBuffer(t *testing.T) {
+	var err error
+	var latest time.Time
+	wait := make(chan int, 1)
+	reader, writer, _ := os.Pipe()
+	buf := make([]byte, 1024)
+	go func() {
+		err = FullBuffer(reader, buf, 9, &latest)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		err = FullBuffer(reader, buf, 9, &latest)
+		if err == nil {
+			t.Error(err)
+			return
+		}
+		wait <- 1
+	}()
+	writer.Write([]byte("1234"))
+	time.Sleep(10 * time.Millisecond)
+	writer.Write([]byte("56789"))
+	time.Sleep(10 * time.Millisecond)
+	writer.Close()
+	<-wait
+	if string(buf[0:9]) != "123456789" {
+		t.Error("error")
 		return
 	}
 }
