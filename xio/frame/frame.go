@@ -81,6 +81,14 @@ func (b *BaseReadWriteCloser) Close() (err error) {
 	return
 }
 
+func (b *BaseReadWriteCloser) String() string {
+	var rawReader, rawWriter interface{} = b.BaseReader.Raw, b.BaseWriter.Raw
+	if rawReader == rawWriter {
+		return fmt.Sprintf("%v", b.BaseReader)
+	}
+	return fmt.Sprintf("Reader:%v,Writer:%v", b.BaseReader, b.BaseWriter)
+}
+
 //SetTimeout will record the timout
 func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 	b.BaseReader.SetReadTimeout(timeout)
