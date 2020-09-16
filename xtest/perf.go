@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/codingeasygo/util"
+	"github.com/codingeasygo/util/xtime"
 )
 
 // var FullError = fmt.Errorf("runner is almost full")
@@ -91,9 +91,9 @@ func (p *Perf) String() string {
 func (p *Perf) AutoExec(total, tc, peradd int, logf string, pretimeout int64, call func(int) error) (used int64, max, avg int, err error) {
 	used, err = p.Exec(total, tc, logf,
 		func(idx int, state Perf, callErr error) (int, error) {
-			beg := util.Now()
+			beg := xtime.Now()
 			if callErr == nil {
-				if util.Now()-beg < pretimeout {
+				if xtime.Now()-beg < pretimeout {
 					return peradd, nil
 				}
 				if int(state.Running) < tc {
@@ -131,7 +131,7 @@ func (p *Perf) monitor() {
 	var allrunning, allc int32
 	p.mrunning = true
 	p.mwait.Add(1)
-	beg := util.Now()
+	beg := xtime.Now()
 	for p.mrunning {
 		running := p.Running
 		allrunning += running
@@ -140,7 +140,7 @@ func (p *Perf) monitor() {
 		if p.Max < running {
 			p.Max = running
 		}
-		p.Used = util.Now() - beg
+		p.Used = xtime.Now() - beg
 		if p.ShowState {
 			fmt.Fprintf(p.stdout, "State:%v\n", p)
 		}
@@ -166,16 +166,16 @@ func (p *Perf) Exec(total, tc int, logf string, increase func(idx int, state Per
 	go p.monitor()
 	ws := sync.WaitGroup{}
 	// ws.Add(total)
-	beg := util.Now()
+	beg := xtime.Now()
 	var tidx_ int32 = 0
 	var run_call func(int)
 	var run_next func(int, error)
 	var err error = nil
 	run_call = func(v int) {
-		perbeg := util.Now()
+		perbeg := xtime.Now()
 		terr := call(v)
 		atomic.AddInt32(&p.Running, -1)
-		perused := util.Now() - perbeg
+		perused := xtime.Now() - perbeg
 		if terr == nil {
 			p.perdone(perused)
 		}
@@ -208,7 +208,7 @@ func (p *Perf) Exec(total, tc int, logf string, increase func(idx int, state Per
 		go run_call(i)
 	}
 	ws.Wait()
-	end := util.Now()
+	end := xtime.Now()
 	if len(logf) > 0 {
 		os.Stdout.Close()
 		os.Stdout = p.stdout

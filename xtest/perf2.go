@@ -16,7 +16,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/codingeasygo/util"
+	"github.com/codingeasygo/util/xtime"
 )
 
 func AutoExec2(logf string, precall func(state Perf2, ridx uint64, used int64, rerr error) (uint64, error), call func(uint64) error) (used int64, max, avg uint64, err error) {
@@ -260,7 +260,7 @@ func (p *Perf2) monitor() {
 	p.mwait.Add(1)
 	defer p.mwait.Done()
 
-	beg := util.Now()
+	beg := xtime.Now()
 	for p.mrunning {
 		running := uint64(p.Running)
 		allrunning += running
@@ -269,7 +269,7 @@ func (p *Perf2) monitor() {
 		if p.Max < running {
 			p.Max = running
 		}
-		p.Used = util.Now() - beg
+		p.Used = xtime.Now() - beg
 		if p.ShowState {
 			fmt.Fprintf(p.stdout, "->%v\n", p)
 		}
@@ -294,7 +294,7 @@ func (p *Perf2) Exec(total, tc uint64, logf string, increase func(state Perf2, r
 	go p.monitor()
 	ws := sync.WaitGroup{}
 	// ws.Add(total)
-	beg := util.Now()
+	beg := xtime.Now()
 	var tidx_ uint64 = 0
 	var run_call func(ridx uint64)
 	var run_next func(ridx uint64, used int64, rerr error)
@@ -302,9 +302,9 @@ func (p *Perf2) Exec(total, tc uint64, logf string, increase func(state Perf2, r
 	run_call = func(ridx uint64) {
 		defer ws.Done()
 
-		perbeg := util.Now()
+		perbeg := xtime.Now()
 		terr := call(ridx)
-		perused := util.Now() - perbeg
+		perused := xtime.Now() - perbeg
 		if terr == nil {
 			p.perdone(perused)
 		} else {
@@ -344,7 +344,7 @@ func (p *Perf2) Exec(total, tc uint64, logf string, increase func(state Perf2, r
 	// 	run_next(0)
 	// }
 	ws.Wait()
-	end := util.Now()
+	end := xtime.Now()
 	if len(logf) > 0 {
 		os.Stdout.Close()
 		os.Stdout = p.stdout

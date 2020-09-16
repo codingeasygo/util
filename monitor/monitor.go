@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/codingeasygo/util"
 	"github.com/codingeasygo/util/xmap"
+	"github.com/codingeasygo/util/xtime"
 )
 
 type Statable interface {
@@ -50,7 +50,7 @@ func (m *Monitor) Start(name string) string {
 	defer m.lck.Unlock()
 	m.sequence++
 	var id = fmt.Sprintf("%v/%v", name, m.sequence)
-	m.Pending[id] = util.Now()
+	m.Pending[id] = xtime.Now()
 	m.max[name]++
 	old, ok := m.Used[name]
 	if !ok {
@@ -68,7 +68,7 @@ func (m *Monitor) Start(name string) string {
 func (m *Monitor) Start_(id string) {
 	m.lck.Lock()
 	defer m.lck.Unlock()
-	m.Pending[id] = util.Now()
+	m.Pending[id] = xtime.Now()
 }
 
 func (m *Monitor) Done(id string) {
@@ -85,7 +85,7 @@ func (m *Monitor) Done(id string) {
 	if !ok {
 		old = &State{Name: name, Min: math.MaxInt64}
 	}
-	used := util.Now() - beg
+	used := xtime.Now() - beg
 	old.Total += used
 	old.Count++
 	if old.Max < used {
