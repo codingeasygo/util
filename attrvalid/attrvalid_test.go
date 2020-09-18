@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/codingeasygo/util/converter"
 )
 
 func TestM(t *testing.T) {
@@ -1000,11 +1002,13 @@ type testStruct struct {
 	Sub2   *testSubStruct         `json:"sub2"`
 }
 
+type testStructPtr struct {
+	Int    *int     `json:"int"`
+	Float  *float64 `json:"float"`
+	String *string  `json:"string"`
+}
+
 func TestValidStruct(t *testing.T) {
-	var err error
-	var intValue int
-	var floatValue float64
-	var stringValue, abc1Value, abc2Value string
 	value := testStruct{
 		Int:    100,
 		Float:  200,
@@ -1026,6 +1030,10 @@ func TestValidStruct(t *testing.T) {
 			Map:    M{"abc": 500},
 		},
 	}
+	var err error
+	var intValue int
+	var floatValue float64
+	var stringValue, abc1Value, abc2Value string
 	//
 	//test json tag
 	err = ValidStructAttrFormat(`
@@ -1106,6 +1114,22 @@ func TestValidStruct(t *testing.T) {
 		map/abc,R|S,L:0;
 	`, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
 	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	//
+	//test struct ptr
+	valuePtr := testStructPtr{
+		Int:    converter.IntPtr(100),
+		Float:  converter.Float64Ptr(200),
+		String: converter.StringPtr("300"),
+	}
+	err = NewStruct(&valuePtr).ValidFormat(`
+		int,R|I,R:0;
+		float,R|I,R:0;
+		string,R|S,L:0;
+	`, &intValue, &floatValue, &stringValue)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" {
 		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
 		return
 	}
