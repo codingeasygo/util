@@ -1166,3 +1166,17 @@ func TestValid(t *testing.T) {
 		return
 	}
 }
+
+func TestCheck(t *testing.T) {
+	var err error
+	err = Valid(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:1000`, M(map[string]interface{}{"int": 100}))
+	if err == nil {
+		t.Error(err)
+		return
+	}
+}

@@ -392,6 +392,9 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		return errors.New("format not found")
 	}
 	temples := strings.Split(format, ";")
+	if len(args) < 1 {
+		args = make([]interface{}, len(temples))
+	}
 	if len(temples) != len(args) {
 		return errors.New("args count is not equal format count")
 	}
@@ -405,7 +408,10 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		if err != nil {
 			return fmt.Errorf("get value by key %v fail with %v", parts[0], err)
 		}
-		pval := reflect.Indirect(reflect.ValueOf(args[idx]))
+		var pval reflect.Value
+		if args[idx] != nil {
+			pval = reflect.Indirect(reflect.ValueOf(args[idx]))
+		}
 		if pval.Kind() != reflect.Slice {
 			rval, err := validAttrTemple(sval, temple, parts, required)
 			if err != nil {
@@ -414,7 +420,9 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			if rval == nil {
 				continue
 			}
-			err = ValidSetValue(pval, rval)
+			if args[idx] != nil {
+				err = ValidSetValue(pval, rval)
+			}
 			if err != nil {
 				return err
 			}
@@ -445,7 +453,9 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			array = reflect.Append(array, reflect.ValueOf(tval))
 		}
-		pval.Set(array)
+		if args[idx] != nil {
+			pval.Set(array)
+		}
 	}
 	return nil
 }
