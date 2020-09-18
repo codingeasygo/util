@@ -2,6 +2,7 @@ package attrvalid
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -916,4 +917,204 @@ func TestValidNil(t *testing.T) {
 		t.Error(err)
 		return
 	}
+}
+
+func TestValidNoArray2Array(t *testing.T) {
+	var data = `{"number":1000,"string":"1000"}`
+	var m = map[string]interface{}{}
+	var err = json.Unmarshal([]byte(data), &m)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	mval := M(m)
+	{
+		var nval0 []int
+		var nval1 []*int
+		var nval2 []int64
+		var nval3 []*int64
+		var nval4 []float64
+		var nval5 []*float64
+		err = ValidAttrFormat(`
+			number,O|I,R:-1;
+			number,O|I,R:-1;
+			number,O|I,R:-1;
+			number,O|I,R:-1;
+			number,O|I,R:-1;
+			number,O|I,R:-1;
+		`, mval, true, &nval0, &nval1, &nval2, &nval3, &nval4, &nval5)
+		if err != nil ||
+			len(nval0) != 1 || nval0[0] != 1000 ||
+			len(nval1) != 1 || *nval1[0] != 1000 ||
+			len(nval2) != 1 || nval2[0] != 1000 ||
+			len(nval3) != 1 || *nval3[0] != 1000 ||
+			len(nval4) != 1 || nval4[0] != 1000 ||
+			len(nval5) != 1 || *nval5[0] != 1000 {
+			t.Error(err)
+			return
+		}
+	}
+	{
+		var nval0 []int
+		var nval1 []*int
+		var nval2 []int64
+		var nval3 []*int64
+		var nval4 []float64
+		var nval5 []*float64
+		err = ValidAttrFormat(`
+			string,O|I,R:-1;
+			string,O|I,R:-1;
+			string,O|I,R:-1;
+			string,O|I,R:-1;
+			string,O|I,R:-1;
+			string,O|I,R:-1;
+		`, mval, true, &nval0, &nval1, &nval2, &nval3, &nval4, &nval5)
+		if err != nil ||
+			len(nval0) != 1 || nval0[0] != 1000 ||
+			len(nval1) != 1 || *nval1[0] != 1000 ||
+			len(nval2) != 1 || nval2[0] != 1000 ||
+			len(nval3) != 1 || *nval3[0] != 1000 ||
+			len(nval4) != 1 || nval4[0] != 1000 ||
+			len(nval5) != 1 || *nval5[0] != 1000 {
+			t.Error(err)
+			return
+		}
+	}
+}
+
+type testSubStruct struct {
+	Int    int                    `json:"int"`
+	Float  float64                `json:"float"`
+	String string                 `json:"string"`
+	Raw    map[string]interface{} `json:"raw"`
+	Map    M                      `json:"map"`
+}
+
+type testStruct struct {
+	Int    int                    `json:"int"`
+	Float  float64                `json:"float"`
+	String string                 `json:"string"`
+	Raw    map[string]interface{} `json:"raw"`
+	Map    M                      `json:"map"`
+	Sub1   testSubStruct          `json:"sub1"`
+	Sub2   *testSubStruct         `json:"sub2"`
+}
+
+func TestValidStruct(t *testing.T) {
+	var err error
+	var intValue int
+	var floatValue float64
+	var stringValue, abc1Value, abc2Value string
+	value := testStruct{
+		Int:    100,
+		Float:  200,
+		String: "300",
+		Raw:    map[string]interface{}{"abc": 400},
+		Map:    M{"abc": 500},
+		Sub1: testSubStruct{
+			Int:    100,
+			Float:  200,
+			String: "300",
+			Raw:    map[string]interface{}{"abc": 400},
+			Map:    M{"abc": 500},
+		},
+		Sub2: &testSubStruct{
+			Int:    100,
+			Float:  200,
+			String: "300",
+			Raw:    map[string]interface{}{"abc": 400},
+			Map:    M{"abc": 500},
+		},
+	}
+	//
+	//test json tag
+	err = ValidStructAttrFormat(`
+		int,R|I,R:0;
+		float,R|I,R:0;
+		string,R|S,L:0;
+		raw/abc,R|S,L:0;
+		map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	err = ValidStructAttrFormat(`
+		sub1/int,R|I,R:0;
+		sub1/float,R|I,R:0;
+		sub1/string,R|S,L:0;
+		sub1/raw/abc,R|S,L:0;
+		sub1/map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	err = ValidStructAttrFormat(`
+		sub2/int,R|I,R:0;
+		sub2/float,R|I,R:0;
+		sub2/string,R|S,L:0;
+		sub2/raw/abc,R|S,L:0;
+		sub2/map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	//
+	//test field name
+	err = ValidStructAttrFormat(`
+		Int,R|I,R:0;
+		Float,R|I,R:0;
+		String,R|S,L:0;
+		Raw/abc,R|S,L:0;
+		Map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	err = ValidStructAttrFormat(`
+		Sub1/Int,R|I,R:0;
+		Sub1/Float,R|I,R:0;
+		Sub1/String,R|S,L:0;
+		Sub1/Raw/abc,R|S,L:0;
+		Sub1/Map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	err = ValidStructAttrFormat(`
+		Sub2/int,R|I,R:0;
+		Sub2/float,R|I,R:0;
+		Sub2/string,R|S,L:0;
+		Sub2/raw/abc,R|S,L:0;
+		Sub2/map/abc,R|S,L:0;
+	`, &value, true, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	//
+	//test new struct
+	err = NewStruct(&value).ValidFormat(`
+		int,R|I,R:0;
+		float,R|I,R:0;
+		string,R|S,L:0;
+		raw/abc,R|S,L:0;
+		map/abc,R|S,L:0;
+	`, &intValue, &floatValue, &stringValue, &abc1Value, &abc2Value)
+	if err != nil || intValue != 100 || floatValue != 200 || stringValue != "300" || abc1Value != "400" || abc2Value != "500" {
+		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
+		return
+	}
+	//
+	//test error
+	func() {
+		defer func() {
+			recover()
+		}()
+		NewStruct(1)
+	}()
 }

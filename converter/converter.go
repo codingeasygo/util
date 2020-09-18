@@ -223,7 +223,13 @@ func StringVal(v interface{}) (res string, err error) {
 	}
 }
 
+//ArrayVal will convert value to array, if v is string will split it by comma, if v is slice will loop element to array, other will error
 func ArrayVal(v interface{}) ([]interface{}, error) {
+	return ArrayValAll(v, false)
+}
+
+//ArrayValAll will convert all value to array, if v is string will split it by comma, if v is slice will loop element to array, other will return []interface{}{v} when all is true
+func ArrayValAll(v interface{}, all bool) ([]interface{}, error) {
 	if v == nil {
 		return nil, ErrNil
 	}
@@ -239,6 +245,9 @@ func ArrayVal(v interface{}) ([]interface{}, error) {
 	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
+		if all {
+			return []interface{}{v}, nil
+		}
 		return nil, fmt.Errorf("incompactable kind(%v)", vals.Kind())
 	}
 	var vs = []interface{}{}

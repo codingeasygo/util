@@ -22,6 +22,11 @@ type Validable interface {
 //M is an map[string]interface{} which can be valid by valid temple
 type M map[string]interface{}
 
+//RawMap will return raw map
+func (m M) RawMap() map[string]interface{} {
+	return m
+}
+
 //Get will return value by key
 func (m M) Get(key string) (v interface{}, err error) {
 	return m[key], nil
@@ -415,7 +420,7 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			continue
 		}
-		svals, err := converter.ArrayVal(sval)
+		svals, err := converter.ArrayValAll(sval, true)
 		if err != nil && err != converter.ErrNil {
 			return err
 		}
@@ -582,4 +587,76 @@ func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) 
 		return val, err
 	}
 	return nil, fmt.Errorf("parse kind(%v) value to kind(%v) value->%v", sk.Kind(), dst, err)
+}
+
+type rawMapable interface {
+	RawMap() map[string]interface{}
+}
+
+//Struct is validable struct impl
+type Struct struct {
+	Target   interface{}
+	Required bool
+	loaded   map[string]interface{}
+}
+
+//NewStruct will return new struct
+func NewStruct(target interface{}) (s *Struct) {
+	if reflect.TypeOf(target).Kind() != reflect.Ptr {
+		panic("target must be pointer")
+	}
+	s = &Struct{
+		Target:   target,
+		Required: true,
+		loaded:   map[string]interface{}{},
+	}
+	return
+}
+
+//Get will return field value by key
+func (s *Struct) Get(key string) (value interface{}, err error) {
+	if len(s.loaded) < 1 {
+		value := reflect.ValueOf(s.Target).Elem()
+		vtype := reflect.TypeOf(s.Target).Elem()
+		for i := 0; i < vtype.NumField(); i++ {
+			valueField := value.Field(i)
+			typeField := vtype.Field(i)
+			tag := strings.SplitN(typeField.Tag.Get("json"), ",", 2)[0]
+			targetValue := valueField.Interface()
+			if mv, ok := targetValue.(map[string]interface{}); ok {
+				targetValue = M(mv)
+			} else if mv, ok := targetValue.(rawMapable); ok {
+				targetValue = M(mv.RawMap())
+			} else {
+				if typeField.Type.Kind() == reflect.Struct {
+					targetValue = NewStruct(valueField.Addr().Interface())
+				} else if typeField.Type.Kind() == reflect.Ptr && typeField.Type.Elem().Kind() == reflect.Struct {
+					targetValue = NewStruct(valueField.Interface())
+				}
+			}
+			s.loaded[typeField.Name] = targetValue
+			s.loaded[tag] = targetValue
+		}
+	}
+	key = strings.Trim(key, "/")
+	parts := strings.SplitN(key, "/", 2)
+	value, _ = s.loaded[parts[0]]
+	if len(parts) < 2 || value == nil {
+		return
+	}
+	if getter, ok := value.(ValueGetter); ok {
+		value, err = getter.Get(parts[1])
+		return
+	}
+	return
+}
+
+//ValidFormat will valid format to struct filed
+func (s *Struct) ValidFormat(format string, args ...interface{}) error {
+	return ValidAttrFormat(format, s, s.Required, args...)
+}
+
+//ValidStructAttrFormat will valid struct by filed
+func ValidStructAttrFormat(format string, target interface{}, required bool, args ...interface{}) error {
+	return ValidAttrFormat(format, NewStruct(target), required, args...)
 }
