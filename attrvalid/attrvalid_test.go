@@ -1118,3 +1118,51 @@ func TestValidStruct(t *testing.T) {
 		NewStruct(1)
 	}()
 }
+
+type xxx map[string]interface{}
+
+func (x xxx) RawMap() map[string]interface{} {
+	return x
+}
+
+func TestValid(t *testing.T) {
+	var err error
+	var intValue int
+	//
+	err = Valid(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}), &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	req, _ := http.NewRequest("GET", "http://test/?int=100", nil)
+	err = Valid(`int,R|I,R:0`, req, &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:0`, req.URL.Query(), &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:0`, map[string]string{"int": "100"}, &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:0`, map[string]interface{}{"int": "100"}, &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:0`, xxx(map[string]interface{}{"int": 100}), &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+	err = Valid(`int,R|I,R:0`, &testStruct{Int: 100}, &intValue)
+	if err != nil || intValue != 100 {
+		t.Error(err)
+		return
+	}
+}

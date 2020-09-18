@@ -660,3 +660,26 @@ func (s *Struct) ValidFormat(format string, args ...interface{}) error {
 func ValidStructAttrFormat(format string, target interface{}, required bool, args ...interface{}) error {
 	return ValidAttrFormat(format, NewStruct(target), required, args...)
 }
+
+//Valid will check all supported type and run valid format
+func Valid(format string, target interface{}, args ...interface{}) error {
+	if getter, ok := target.(ValueGetter); ok {
+		return ValidAttrFormat(format, getter, true, args...)
+	}
+	if req, ok := target.(*http.Request); ok {
+		return QueryValidFormat(req, format, args...)
+	}
+	if val, ok := target.(url.Values); ok {
+		return Values(val).ValidFormat(format, args...)
+	}
+	if ms, ok := target.(map[string]string); ok {
+		return MS(ms).ValidFormat(format, args...)
+	}
+	if mv, ok := target.(map[string]interface{}); ok {
+		return M(mv).ValidFormat(format, args...)
+	}
+	if mv, ok := target.(rawMapable); ok {
+		return M(mv.RawMap()).ValidFormat(format, args...)
+	}
+	return NewStruct(target).ValidFormat(format, args...)
+}
