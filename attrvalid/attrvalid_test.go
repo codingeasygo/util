@@ -807,13 +807,6 @@ func TestValidAttrFormatError(t *testing.T) {
 	//
 	var iary []int
 	err = ValidAttrFormat(`
-		ary1,r|s,l:~5;
-	`, getter, true, &iary)
-	if err == nil {
-		t.Error("nil")
-		return
-	}
-	err = ValidAttrFormat(`
 		ary2,r|s,l:~5;
 	`, getter, true, &iary)
 	if err == nil {
@@ -1134,11 +1127,12 @@ func TestValidStruct(t *testing.T) {
 		return
 	}
 	valuePtr2 := testStructPtr{}
-	err = NewStruct(&valuePtr2).ValidFormat(`
-		int,R|I,R:0;
-		float,R|I,R:0;
-		string,R|S,L:0;
-	`, &intValue, &floatValue, &stringValue)
+	err = Valid(`string,R|S,L:0;`, &valuePtr2, &intValue)
+	if err == nil {
+		t.Errorf("%v", err)
+		return
+	}
+	err = Valid(`string,R|S,L:0;`, &valuePtr2)
 	if err == nil {
 		t.Errorf("%v", err)
 		return

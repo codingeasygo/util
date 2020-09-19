@@ -96,6 +96,12 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 }
 
 func checkTemplateRequired(data interface{}, required bool, lts []string) (bool, error) {
+	if v := reflect.ValueOf(data); v.Kind() == reflect.Ptr && v.IsZero() {
+		if (lts[0] == "R" || lts[0] == "r") && required {
+			return true, errors.New("data is empty")
+		}
+		return true, nil
+	}
 	if v, ok := data.(string); data == nil || (ok && len(v) < 1) { //chekc the value required.
 		if (lts[0] == "R" || lts[0] == "r") && required {
 			return true, errors.New("data is empty")
@@ -408,8 +414,8 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		if err != nil {
 			return fmt.Errorf("get value by key %v fail with %v", parts[0], err)
 		}
-		rval := reflect.ValueOf(sval)
-		if rval.Kind() == reflect.Ptr && !rval.IsZero() {
+		checkValue := reflect.ValueOf(sval)
+		if checkValue.Kind() == reflect.Ptr && !checkValue.IsZero() {
 			sval = reflect.Indirect(reflect.ValueOf(sval)).Interface()
 		}
 		var pval reflect.Value
