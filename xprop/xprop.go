@@ -24,12 +24,13 @@ import (
 type sconf map[string]string
 
 func (s sconf) autoPath(path ...string) (all []string) {
-	all = path
 	for _, p := range path {
 		if strings.Contains(p, "/") {
+			p = strings.Trim(p, "/")
+			all = append(all, p)
 			continue
 		}
-		all = append(all, "loc/"+p)
+		all = append(all, p, "loc/"+p)
 	}
 	return
 }

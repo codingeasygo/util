@@ -245,7 +245,15 @@ func TestSection(t *testing.T) {
 		t.Error("not right")
 		return
 	}
+	if config.StrDef("", "/ukk") != "123" {
+		t.Error("not right")
+		return
+	}
 	if config.StrDef("", "abc/txabc") != "1" {
+		t.Error("not right")
+		return
+	}
+	if config.StrDef("", "/abc/txabc") != "1" {
 		t.Error("not right")
 		return
 	}
