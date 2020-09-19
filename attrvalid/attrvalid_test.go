@@ -1133,6 +1133,16 @@ func TestValidStruct(t *testing.T) {
 		t.Errorf("%v,%v,%v,%v,%v,%v", err, intValue, floatValue, stringValue, abc1Value, abc2Value)
 		return
 	}
+	valuePtr2 := testStructPtr{}
+	err = NewStruct(&valuePtr2).ValidFormat(`
+		int,R|I,R:0;
+		float,R|I,R:0;
+		string,R|S,L:0;
+	`, &intValue, &floatValue, &stringValue)
+	if err == nil {
+		t.Errorf("%v", err)
+		return
+	}
 	//
 	//test error
 	func() {
