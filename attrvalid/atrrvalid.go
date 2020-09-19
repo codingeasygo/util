@@ -408,7 +408,9 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		if err != nil {
 			return fmt.Errorf("get value by key %v fail with %v", parts[0], err)
 		}
-		sval = reflect.Indirect(reflect.ValueOf(sval)).Interface()
+		if sval != nil {
+			sval = reflect.Indirect(reflect.ValueOf(sval)).Interface()
+		}
 		var pval reflect.Value
 		if args[idx] != nil {
 			pval = reflect.Indirect(reflect.ValueOf(args[idx]))
