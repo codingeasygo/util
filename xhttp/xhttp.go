@@ -91,6 +91,18 @@ func ClearCookie() {
 }
 
 func defaultRaw(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error) {
+	c := &RawClient{C: DefaultClient}
+	req, res, err = c.RawRequest(method, uri, header, body)
+	return
+}
+
+//RawClient is http raw request impl
+type RawClient struct {
+	C *http.Client
+}
+
+//RawRequest will do raw request
+func (r *RawClient) RawRequest(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error) {
 	req, err = http.NewRequest(method, uri, body)
 	if err != nil {
 		return
@@ -98,7 +110,7 @@ func defaultRaw(method, uri string, header xmap.M, body io.Reader) (req *http.Re
 	for k, v := range header {
 		req.Header.Set(k, fmt.Sprintf("%v", v))
 	}
-	res, err = DefaultClient.Do(req)
+	res, err = r.C.Do(req)
 	return
 }
 
@@ -237,9 +249,27 @@ func DownloadHeader(saveto string, header xmap.M, format string, args ...interfa
 	return Shared.DownloadHeader(saveto, header, format, args...)
 }
 
+//RawRequestF is raw request func define
+type RawRequestF func(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error)
+
 //Client is http get client
 type Client struct {
-	Raw func(method, uri string, header xmap.M, body io.Reader) (req *http.Request, res *http.Response, err error)
+	Raw RawRequestF
+}
+
+//NewRawClient will return new client
+func NewRawClient(raw RawRequestF) (client *Client) {
+	client = &Client{Raw: raw}
+	return
+}
+
+//NewClient will return new client by http.Client
+func NewClient(raw *http.Client) (client *Client) {
+	c := &RawClient{C: raw}
+	client = &Client{
+		Raw: c.RawRequest,
+	}
+	return
 }
 
 //GetBytes will do http request and read the bytes response
