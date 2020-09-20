@@ -42,6 +42,6 @@ func Pipe() (a, b *PipeConn, err error) {
 //Close will close reader/writer
 func (p *PipeConn) Close() (err error) {
 	err = p.Closer.Close()
-	p.side.Close()
+	p.side.Closer.Close()
 	return
 }
