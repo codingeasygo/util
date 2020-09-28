@@ -347,6 +347,12 @@ func (i *impl) ValidFormat(f string, args ...interface{}) error {
 	return attrvalid.ValidAttrFormat(f, i, true, args...)
 }
 
+//ReplaceAll will replace value by ${xx}, which xx is having
+func (i *impl) ReplaceAll(in string, usingEnv, keepEmpty bool) (out string) {
+	out = ReplaceAll(i, in, usingEnv, keepEmpty)
+	return
+}
+
 //MapVal will conventer value to map
 func MapVal(v interface{}) (M, error) {
 	if mv, ok := v.(M); ok {
@@ -833,6 +839,14 @@ func (m M) ValidFormat(f string, args ...interface{}) error {
 	return attrvalid.ValidAttrFormat(f, m, true, args...)
 }
 
+//ReplaceAll will replace input string by ${xx}, which xx is in values,
+//if usingEnv is true, xx will check use env when vals is not having xx,
+//if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
+func (m M) ReplaceAll(in string, usingEnv, usingEmpty bool) (out string) {
+	out = ReplaceAll(m, in, usingEnv, usingEmpty)
+	return
+}
+
 //SafeM is safe map
 type SafeM struct {
 	Valuable
@@ -895,6 +909,14 @@ func (s *SafeM) Exist(path ...string) bool {
 	s.locker.RLock()
 	defer s.locker.RUnlock()
 	return s.raw.Exist(path...)
+}
+
+//ReplaceAll will replace input string by ${xx}, which xx is in values,
+//if usingEnv is true, xx will check use env when vals is not having xx,
+//if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
+func (s *SafeM) ReplaceAll(in string, usingEnv, usingEmpty bool) (out string) {
+	out = ReplaceAll(s, in, usingEnv, usingEmpty)
+	return
 }
 
 // func (m Map) ToS(dest interface{}) {
