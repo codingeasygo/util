@@ -349,7 +349,13 @@ func (i *impl) ValidFormat(f string, args ...interface{}) error {
 
 //ReplaceAll will replace value by ${xx}, which xx is having
 func (i *impl) ReplaceAll(in string, usingEnv, keepEmpty bool) (out string) {
-	out = ReplaceAll(i, in, usingEnv, keepEmpty)
+	out = ReplaceAll(func(key string) interface{} {
+		v, err := i.ValueVal(key)
+		if err != nil {
+			return nil
+		}
+		return v
+	}, in, usingEnv, keepEmpty)
 	return
 }
 
@@ -843,7 +849,13 @@ func (m M) ValidFormat(f string, args ...interface{}) error {
 //if usingEnv is true, xx will check use env when vals is not having xx,
 //if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
 func (m M) ReplaceAll(in string, usingEnv, usingEmpty bool) (out string) {
-	out = ReplaceAll(m, in, usingEnv, usingEmpty)
+	out = ReplaceAll(func(key string) interface{} {
+		v, err := m.ValueVal(key)
+		if err != nil {
+			return nil
+		}
+		return v
+	}, in, usingEnv, usingEmpty)
 	return
 }
 
@@ -915,7 +927,13 @@ func (s *SafeM) Exist(path ...string) bool {
 //if usingEnv is true, xx will check use env when vals is not having xx,
 //if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
 func (s *SafeM) ReplaceAll(in string, usingEnv, usingEmpty bool) (out string) {
-	out = ReplaceAll(s, in, usingEnv, usingEmpty)
+	out = ReplaceAll(func(key string) interface{} {
+		v, err := s.ValueVal(key)
+		if err != nil {
+			return nil
+		}
+		return v
+	}, in, usingEnv, usingEmpty)
 	return
 }
 
