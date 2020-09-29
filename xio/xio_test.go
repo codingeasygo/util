@@ -140,6 +140,10 @@ func (c *copyMultiTestReader) Read(p []byte) (n int, err error) {
 	return
 }
 
+func (c *copyMultiTestReader) Close() (err error) {
+	return
+}
+
 type copyMultiTestWriter struct {
 	n int
 }
@@ -153,6 +157,10 @@ func (c *copyMultiTestWriter) Write(p []byte) (n int, err error) {
 	case 2:
 		err = fmt.Errorf("test error")
 	}
+	return
+}
+
+func (c *copyMultiTestWriter) Close() (err error) {
 	return
 }
 
