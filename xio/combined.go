@@ -40,25 +40,10 @@ func (c *CombinedReadWriteCloser) Write(p []byte) (n int, err error) {
 	return
 }
 
-//Close will close Reader/Writer/Closer
+//Close will close Closer
 func (c *CombinedReadWriteCloser) Close() (err error) {
-	if closer, ok := c.Reader.(io.Closer); ok {
-		xerr := closer.Close()
-		if err == nil {
-			err = xerr
-		}
-	}
-	if closer, ok := c.Writer.(io.Closer); ok {
-		xerr := closer.Close()
-		if err == nil {
-			err = xerr
-		}
-	}
 	if c.Closer != nil {
-		xerr := c.Closer.Close()
-		if err == nil {
-			err = xerr
-		}
+		err = c.Closer.Close()
 	}
 	return
 }
