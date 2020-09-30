@@ -273,3 +273,34 @@ func TestFullBuffer(t *testing.T) {
 		return
 	}
 }
+
+func TestStringConn(t *testing.T) {
+	netRaw := &net.TCPConn{}
+	fmt.Printf("%v\n", NewStringConn(netRaw))
+	fmt.Printf("%v\n", NewStringConn(os.Stdout))
+	conn := NewStringConn(os.Stdout)
+	conn.Name = "stdout"
+	fmt.Printf("%v\n", conn)
+}
+
+func TestTCPKeepAliveListener(t *testing.T) {
+	wait := make(chan int, 1)
+	listner, _ := net.Listen("tcp", ":0")
+	l := NewTCPKeepAliveListener(listner.(*net.TCPListener))
+	go func() {
+		c, err := l.Accept()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		ioutil.ReadAll(c)
+		wait <- 1
+	}()
+	conn, err := net.Dial("tcp", listner.Addr().String())
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	conn.Close()
+	<-wait
+}

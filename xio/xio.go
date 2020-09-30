@@ -175,3 +175,55 @@ func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) er
 	}
 	return nil
 }
+
+//StringConn is an ReadWriteCloser for return  remote address info
+type StringConn struct {
+	Name string
+	io.ReadWriteCloser
+}
+
+//NewStringConn will return new StringConn
+func NewStringConn(raw io.ReadWriteCloser) *StringConn {
+	return &StringConn{
+		ReadWriteCloser: raw,
+	}
+}
+
+func (s *StringConn) String() string {
+	if len(s.Name) > 0 {
+		return s.Name
+	}
+	return remoteAddr(s.ReadWriteCloser)
+}
+
+func remoteAddr(v interface{}) string {
+	if netc, ok := v.(net.Conn); ok {
+		return fmt.Sprintf("%v", netc.RemoteAddr())
+	}
+	return fmt.Sprintf("%v", v)
+}
+
+//TCPKeepAliveListener is normal tcp listner for set tcp connection keep alive
+type TCPKeepAliveListener struct {
+	*net.TCPListener
+	Period time.Duration
+}
+
+//NewTCPKeepAliveListener will create listener
+func NewTCPKeepAliveListener(l *net.TCPListener) (listener *TCPKeepAliveListener) {
+	listener = &TCPKeepAliveListener{
+		TCPListener: l,
+		Period:      time.Minute,
+	}
+	return
+}
+
+//Accept will accept one connection
+func (ln TCPKeepAliveListener) Accept() (net.Conn, error) {
+	tc, err := ln.AcceptTCP()
+	if err == nil {
+		tc.SetKeepAlive(true)
+		tc.SetKeepAlivePeriod(ln.Period)
+	}
+	return tc, err
+}
