@@ -31,3 +31,19 @@ func TestPipe(t *testing.T) {
 		return
 	}
 }
+
+func TestPipedConne(t *testing.T) {
+	a, b, err := CreatePipedConn()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	a.RemoteAddr()
+	a.LocalAddr()
+	a.SetDeadline(time.Now())
+	a.SetReadDeadline(time.Now())
+	a.SetWriteDeadline(time.Now())
+	a.Network()
+	fmt.Printf("-->%v\n", a)
+	b.Close()
+}

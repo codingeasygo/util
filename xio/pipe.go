@@ -2,19 +2,21 @@ package xio
 
 import (
 	"io"
+	"net"
 	"os"
+	"time"
 )
 
-//PipeConn is pipe connection
-type PipeConn struct {
+//PipeReadWriteCloser is pipe connection
+type PipeReadWriteCloser struct {
 	io.Reader
 	io.Writer
 	io.Closer
-	side *PipeConn
+	side *PipeReadWriteCloser
 }
 
 //Pipe will return new pipe connection.
-func Pipe() (a, b *PipeConn, err error) {
+func Pipe() (a, b *PipeReadWriteCloser, err error) {
 	aReader, aWriter, err := os.Pipe()
 	if err != nil {
 		return
@@ -24,12 +26,12 @@ func Pipe() (a, b *PipeConn, err error) {
 		aWriter.Close()
 		return
 	}
-	a = &PipeConn{
+	a = &PipeReadWriteCloser{
 		Reader: aReader,
 		Writer: bWriter,
 		Closer: aWriter,
 	}
-	b = &PipeConn{
+	b = &PipeReadWriteCloser{
 		Reader: bReader,
 		Writer: aWriter,
 		Closer: bWriter,
@@ -40,8 +42,57 @@ func Pipe() (a, b *PipeConn, err error) {
 }
 
 //Close will close reader/writer
-func (p *PipeConn) Close() (err error) {
+func (p *PipeReadWriteCloser) Close() (err error) {
 	err = p.Closer.Close()
 	p.side.Closer.Close()
 	return
+}
+
+//PipedConn is an implementation of the net.Conn interface for piped two connection.
+type PipedConn struct {
+	*PipeReadWriteCloser
+}
+
+//CreatePipedConn will return two piped connection.
+func CreatePipedConn() (a, b *PipedConn, err error) {
+	basea, baseb, err := Pipe()
+	if err == nil {
+		a = &PipedConn{PipeReadWriteCloser: basea}
+		b = &PipedConn{PipeReadWriteCloser: baseb}
+	}
+	return
+}
+
+//LocalAddr return self
+func (p *PipedConn) LocalAddr() net.Addr {
+	return p
+}
+
+//RemoteAddr return self
+func (p *PipedConn) RemoteAddr() net.Addr {
+	return p
+}
+
+//SetDeadline is empty
+func (p *PipedConn) SetDeadline(t time.Time) error {
+	return nil
+}
+
+//SetReadDeadline is empty
+func (p *PipedConn) SetReadDeadline(t time.Time) error {
+	return nil
+}
+
+//SetWriteDeadline is empty
+func (p *PipedConn) SetWriteDeadline(t time.Time) error {
+	return nil
+}
+
+//Network return "piped"
+func (p *PipedConn) Network() string {
+	return "piped"
+}
+
+func (p *PipedConn) String() string {
+	return "piped"
 }
