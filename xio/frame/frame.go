@@ -96,7 +96,10 @@ func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 }
 
 //NewReadWriter will return new ReadWriteCloser
-func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame ReadWriteCloser) {
+func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame *BaseReadWriteCloser) {
+	if bufferSize < 1 {
+		panic("buffer size is < 1")
+	}
 	closer, _ := raw.(io.Closer)
 	frame = &BaseReadWriteCloser{
 		Closer:     closer,
@@ -107,7 +110,7 @@ func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame ReadWriteCloser) {
 }
 
 //NewReadWriteCloser will return new ReadWriteCloser
-func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame ReadWriteCloser) {
+func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame *BaseReadWriteCloser) {
 	if bufferSize < 1 {
 		panic("buffer size is < 1")
 	}
