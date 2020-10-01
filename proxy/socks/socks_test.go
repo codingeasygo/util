@@ -253,39 +253,39 @@ func TestSocksProxy(t *testing.T) {
 	{ //test error
 		//
 		conn, conb, _ := xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x00, 0x00})
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x05, 0x01})
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x05, 0x01, 0x00})
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x05, 0x01, 0x00})
 		conn.Read(make([]byte, 1024))
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x05, 0x01, 0x00})
 		conn.Read(make([]byte, 1024))
 		conn.Write([]byte{0x00, 0x01, 0x00, 0x00, 0x00})
 		conn.Close()
 		//
 		conn, conb, _ = xio.CreatePipedConn()
-		go proxy.procConn(conb)
+		go proxy.ProcConn(conb)
 		conn.Write([]byte{0x05, 0x01, 0x00})
 		conn.Read(make([]byte, 1024))
 		buf := []byte{0x05, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x010}

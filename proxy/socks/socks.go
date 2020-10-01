@@ -105,7 +105,7 @@ func (s *Server) loopAccept(l net.Listener) {
 		if err != nil {
 			break
 		}
-		go s.procConn(conn)
+		go s.ProcConn(conn)
 	}
 	s.waiter.Done()
 }
@@ -145,7 +145,8 @@ func (s *Server) Stop() (err error) {
 	return
 }
 
-func (s *Server) procConn(conn net.Conn) (err error) {
+//ProcConn will process connecton as socket protocol
+func (s *Server) ProcConn(conn net.Conn) (err error) {
 	var raw io.ReadWriteCloser
 	DebugLog("Server proxy socks connection from %v", conn.RemoteAddr())
 	defer func() {
