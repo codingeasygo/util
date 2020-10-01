@@ -227,3 +227,31 @@ func (ln TCPKeepAliveListener) Accept() (net.Conn, error) {
 	}
 	return tc, err
 }
+
+//ListenerF is net.Listener func implement
+type ListenerF func() (conn net.Conn, err error)
+
+//Accept is net.Listener implement
+func (l ListenerF) Accept() (conn net.Conn, err error) {
+	conn, err = l()
+	return
+}
+
+//Close is net.Listener implement
+func (l ListenerF) Close() (err error) {
+	return
+}
+
+//Addr is net.Listener implement
+func (l ListenerF) Addr() net.Addr {
+	return nil
+}
+
+//Network is net.Addr implement
+func (l ListenerF) Network() string {
+	return "func"
+}
+
+func (l ListenerF) String() string {
+	return reflect.TypeOf(l).PkgPath()
+}
