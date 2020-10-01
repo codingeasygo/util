@@ -12,7 +12,8 @@ type PipeReadWriteCloser struct {
 	io.Reader
 	io.Writer
 	io.Closer
-	side *PipeReadWriteCloser
+	Alias string
+	side  *PipeReadWriteCloser
 }
 
 //Pipe will return new pipe connection.
@@ -30,11 +31,13 @@ func Pipe() (a, b *PipeReadWriteCloser, err error) {
 		Reader: aReader,
 		Writer: bWriter,
 		Closer: aWriter,
+		Alias:  "piped",
 	}
 	b = &PipeReadWriteCloser{
 		Reader: bReader,
 		Writer: aWriter,
 		Closer: bWriter,
+		Alias:  "piped",
 	}
 	a.side = b
 	b.side = a
@@ -46,6 +49,10 @@ func (p *PipeReadWriteCloser) Close() (err error) {
 	err = p.Closer.Close()
 	p.side.Closer.Close()
 	return
+}
+
+func (p *PipeReadWriteCloser) String() string {
+	return p.Alias
 }
 
 //PipedConn is an implementation of the net.Conn interface for piped two connection.
@@ -94,5 +101,5 @@ func (p *PipedConn) Network() string {
 }
 
 func (p *PipedConn) String() string {
-	return "piped"
+	return p.PipeReadWriteCloser.String()
 }
