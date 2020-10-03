@@ -32,6 +32,17 @@ func TestPipe(t *testing.T) {
 	}
 }
 
+func TestPipe2(t *testing.T) {
+	for i := 0; i < 10000; i++ {
+		a, _, err := Pipe()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		a.Close()
+	}
+}
+
 func TestPipedConne(t *testing.T) {
 	a, b, err := CreatePipedConn()
 	if err != nil {

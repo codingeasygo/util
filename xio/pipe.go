@@ -1,7 +1,6 @@
 package xio
 
 import (
-	"io"
 	"net"
 	"os"
 	"time"
@@ -9,11 +8,10 @@ import (
 
 //PipeReadWriteCloser is pipe connection
 type PipeReadWriteCloser struct {
-	io.Reader
-	io.Writer
-	io.Closer
-	Alias string
-	side  *PipeReadWriteCloser
+	Alias  string
+	reader *os.File
+	writer *os.File
+	side   *PipeReadWriteCloser
 }
 
 //Pipe will return new pipe connection.
@@ -28,15 +26,13 @@ func Pipe() (a, b *PipeReadWriteCloser, err error) {
 		return
 	}
 	a = &PipeReadWriteCloser{
-		Reader: aReader,
-		Writer: bWriter,
-		Closer: aWriter,
+		reader: aReader,
+		writer: bWriter,
 		Alias:  "piped",
 	}
 	b = &PipeReadWriteCloser{
-		Reader: bReader,
-		Writer: aWriter,
-		Closer: bWriter,
+		reader: bReader,
+		writer: aWriter,
 		Alias:  "piped",
 	}
 	a.side = b
@@ -44,10 +40,22 @@ func Pipe() (a, b *PipeReadWriteCloser, err error) {
 	return
 }
 
+func (p *PipeReadWriteCloser) Read(b []byte) (n int, err error) {
+	n, err = p.reader.Read(b)
+	return
+}
+
+func (p *PipeReadWriteCloser) Write(b []byte) (n int, err error) {
+	n, err = p.writer.Write(b)
+	return
+}
+
 //Close will close reader/writer
 func (p *PipeReadWriteCloser) Close() (err error) {
-	err = p.Closer.Close()
-	p.side.Closer.Close()
+	p.reader.Close()
+	p.writer.Close()
+	p.side.reader.Close()
+	p.side.writer.Close()
 	return
 }
 
