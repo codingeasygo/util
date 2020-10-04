@@ -15,7 +15,7 @@ const (
 )
 
 //ErrFrameTooLarge is the error when the frame head lenght > buffer length
-var ErrFrameTooLarge = fmt.Errorf("%v", "farme is too large")
+var ErrFrameTooLarge = fmt.Errorf("%v", "frame is too large")
 
 type readDeadlinable interface {
 	SetReadDeadline(t time.Time) error
@@ -193,6 +193,10 @@ func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 		b.length -= frameLength
 		more = b.length <= 4
 		if b.length < 1 {
+			b.offset = 0
+		}
+		if more && b.offset > 0 {
+			copy(b.Buffer[0:], b.Buffer[b.offset:b.offset+b.length])
 			b.offset = 0
 		}
 		break
