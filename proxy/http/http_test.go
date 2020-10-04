@@ -6,9 +6,14 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	_ "net/http/pprof"
 	"testing"
 	"time"
 )
+
+func init() {
+	go http.ListenAndServe(":6060", nil)
+}
 
 func TestProxy(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

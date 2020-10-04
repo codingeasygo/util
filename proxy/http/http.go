@@ -2,27 +2,31 @@ package http
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/codingeasygo/util/xio"
 )
 
 //Server is http proxy server
 type Server struct {
-	listners map[net.Listener]string
-	waiter   sync.WaitGroup
-	Dialer   func(network, address string) (raw net.Conn, err error)
+	BufferSize int
+	listners   map[net.Listener]string
+	waiter     sync.WaitGroup
+	Dialer     xio.PiperDialer
 }
 
 //NewServer will return new server
 func NewServer() (proxy *Server) {
 	proxy = &Server{
-		listners: map[net.Listener]string{},
-		waiter:   sync.WaitGroup{},
-		Dialer:   net.Dial,
+		BufferSize: 32 * 1024,
+		listners:   map[net.Listener]string{},
+		waiter:     sync.WaitGroup{},
+		Dialer:     xio.PiperDialerF(xio.DialNetPiper),
 	}
 	return
 }
@@ -35,7 +39,12 @@ func (s *Server) loopAccept(l net.Listener) (err error) {
 		if err != nil {
 			break
 		}
-		go s.ProcConn(conn)
+		go func() {
+			xerr := s.ProcConn(conn)
+			if xerr != xio.ErrAsyncRunning {
+				conn.Close()
+			}
+		}()
 	}
 	s.waiter.Done()
 	return
@@ -83,7 +92,6 @@ func (s *Server) ProcConn(conn net.Conn) (err error) {
 		if err != nil {
 			DebugLog("Server proxy http connection from %v is done with %v", conn.RemoteAddr(), err)
 		}
-		conn.Close()
 	}()
 	reader := bufio.NewReader(conn)
 	req, err := http.ReadRequest(reader)
@@ -98,9 +106,11 @@ func (s *Server) ProcConn(conn net.Conn) (err error) {
 		Header:     http.Header{},
 	}
 	resp.Header.Add("Proxy-Agent", "test/v1.0.0")
-	var raw net.Conn
+	var raw xio.Piper
+	var uri string
 	if req.Method == "CONNECT" {
-		raw, err = s.Dialer("tcp", req.RequestURI)
+		uri = "tcp://" + req.RequestURI
+		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Write(conn)
@@ -114,19 +124,20 @@ func (s *Server) ProcConn(conn net.Conn) (err error) {
 		if _, port, _ := net.SplitHostPort(host); port == "" {
 			host += ":80"
 		}
-		raw, err = s.Dialer("tcp", host)
+		uri = "tcp://" + host
+		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Write(conn)
 			return
 		}
-		req.Write(raw)
+		buffer := bytes.NewBuffer(nil)
+		req.Write(buffer)
+		prefix := xio.NewPrefixConn(conn)
+		prefix.Prefix = buffer.Bytes()
+		conn = prefix
 	}
-	go func() {
-		io.Copy(raw, conn)
-		raw.Close()
-	}()
-	io.Copy(conn, raw)
+	err = raw.PipeConn(conn, uri)
 	return
 }
 
