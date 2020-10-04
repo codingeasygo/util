@@ -1,38 +1,97 @@
 package xio
 
 import (
+	"fmt"
 	"net"
-	"os"
+	"sync"
 	"time"
 )
+
+//PipedChan provoider Write buffer to Read implement by chan
+type PipedChan struct {
+	closed uint32
+	piper  chan []byte
+	having []byte
+	locker sync.RWMutex
+}
+
+//NewPipedChan will return new PipedChan
+func NewPipedChan() (piped *PipedChan) {
+	piped = &PipedChan{
+		piper:  make(chan []byte, 1),
+		locker: sync.RWMutex{},
+	}
+	return
+}
+
+func (p *PipedChan) Read(b []byte) (n int, err error) {
+	p.locker.RLock()
+	if p.closed > 0 {
+		err = fmt.Errorf("closed")
+		p.locker.RUnlock()
+		return
+	}
+	p.locker.RUnlock()
+	if len(p.having) < 1 {
+		p.having = <-p.piper
+	}
+	if len(p.having) < 1 {
+		err = fmt.Errorf("closed")
+		return
+	}
+	n = copy(b, p.having)
+	p.having = p.having[n:]
+	return
+}
+
+func (p *PipedChan) Write(b []byte) (n int, err error) {
+	p.locker.RLock()
+	if p.closed > 0 {
+		err = fmt.Errorf("closed")
+		p.locker.RUnlock()
+		return
+	}
+	p.locker.RUnlock()
+	t := make([]byte, len(b))
+	n = copy(t, b)
+	p.piper <- t
+	return
+}
+
+//Close will close piped channel
+func (p *PipedChan) Close() (err error) {
+	p.locker.Lock()
+	defer p.locker.Unlock()
+	if p.closed > 0 {
+		err = fmt.Errorf("closed")
+		return
+	}
+	p.closed = 1
+	close(p.piper)
+	return
+}
 
 //PipeReadWriteCloser is pipe connection
 type PipeReadWriteCloser struct {
 	Alias  string
-	reader *os.File
-	writer *os.File
+	reader *PipedChan
+	writer *PipedChan
 	side   *PipeReadWriteCloser
 }
 
 //Pipe will return new pipe connection.
 func Pipe() (a, b *PipeReadWriteCloser, err error) {
-	aReader, aWriter, err := os.Pipe()
-	if err != nil {
-		return
-	}
-	bReader, bWriter, err := os.Pipe()
-	if err != nil {
-		aWriter.Close()
-		return
-	}
+	piperA := NewPipedChan()
+	piperB := NewPipedChan()
+
 	a = &PipeReadWriteCloser{
-		reader: aReader,
-		writer: bWriter,
+		reader: piperA,
+		writer: piperB,
 		Alias:  "piped",
 	}
 	b = &PipeReadWriteCloser{
-		reader: bReader,
-		writer: aWriter,
+		reader: piperB,
+		writer: piperA,
 		Alias:  "piped",
 	}
 	a.side = b

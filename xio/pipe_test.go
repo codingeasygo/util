@@ -30,6 +30,9 @@ func TestPipe(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	a.Close()
+	a.Read(nil)
+	a.Write(nil)
 }
 
 func TestPipe2(t *testing.T) {

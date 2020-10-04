@@ -7,7 +7,7 @@ import (
 )
 
 func TestEcho(t *testing.T) {
-	echo, _ := NewEchoConn()
+	echo := NewEchoConn()
 	buffer := make([]byte, 1024)
 	go func() {
 		fmt.Fprintf(echo, "%v", "abc")
@@ -25,4 +25,21 @@ func TestEcho(t *testing.T) {
 	echo.SetWriteDeadline(time.Now())
 	echo.Network()
 	fmt.Println(echo.String())
+	//
+	conna, connb, _ := CreatePipedConn()
+	piper := NewEchoPiper(1024)
+	waiter := make(chan int, 1)
+	go func() {
+		piper.PipeConn(connb, "xxx")
+		piper.Close()
+		waiter <- 1
+	}()
+	fmt.Fprintf(conna, "abc")
+	err = FullBuffer(conna, buffer, 3, nil)
+	if err != nil || string(buffer[0:3]) != "abc" {
+		t.Error(err)
+		return
+	}
+	conna.Close()
+	<-waiter
 }
