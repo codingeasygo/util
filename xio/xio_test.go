@@ -6,10 +6,16 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"testing"
 	"time"
 )
+
+func init() {
+	go http.ListenAndServe(":6060", nil)
+}
 
 func TestSimple(t *testing.T) {
 	WriteJSON(ioutil.Discard, map[string]interface{}{})
