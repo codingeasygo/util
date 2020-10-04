@@ -1,12 +1,11 @@
-package proxy
+package xio
 
 import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
-
-	"github.com/codingeasygo/util/xio"
 )
 
 //Processor is interface for process connection
@@ -23,54 +22,67 @@ func (p ProcessorF) ProcConn(conn net.Conn) (err error) {
 	return
 }
 
-//PreReadWriteCloser is prefix read implement
-type PreReadWriteCloser struct {
-	io.Reader
-	io.Writer
-	io.Closer
-	readed []byte
+//ErrAsyncRunning is error for async running on PipeConn
+var ErrAsyncRunning = fmt.Errorf("asynced")
+
+//Piper is interface for process pipe connection
+type Piper interface {
+	PipeConn(conn net.Conn, target string) (err error)
+	Close() (err error)
 }
 
-func (p *PreReadWriteCloser) Read(b []byte) (n int, err error) {
-	if p.readed != nil {
-		n = copy(b, p.readed)
-		p.readed = p.readed[n:]
-		if len(p.readed) < 1 {
-			p.readed = nil
-		}
-		if len(b) == n { //full
-			return
-		}
-	}
-	readed, err := p.Reader.Read(b[n:])
-	n += readed
+//PiperF is func to implement Piper
+type PiperF func(conn net.Conn, target string) (err error)
+
+//PiperDialer is interface for implement piper dialer
+type PiperDialer interface {
+	DialPiper(uri string, bufferSize int) (raw Piper, err error)
+}
+
+//PiperDialerF is func to implement PiperDialer
+type PiperDialerF func(uri string, bufferSize int) (raw Piper, err error)
+
+//DialPiper will dial one piper by uri
+func (p PiperDialerF) DialPiper(uri string, bufferSize int) (raw Piper, err error) {
+	raw, err = p(uri, bufferSize)
 	return
 }
 
-//PreRead will read prefix size data before read loop start
-func (p *PreReadWriteCloser) PreRead(size int) (data []byte, err error) {
-	data = make([]byte, size)
-	err = xio.FullBuffer(p.Reader, data, uint32(size), nil)
-	if err == nil {
-		p.readed = data
-	}
-	return
-}
-
-//PreConn is net.Conn implement for prefix read data
-type PreConn struct {
-	Pre PreReadWriteCloser
+//NetPiper is Piper implement by net.Dial
+type NetPiper struct {
 	net.Conn
+	BufferSize int
 }
 
-func (p *PreConn) Read(b []byte) (n int, err error) {
-	n, err = p.Pre.Read(b)
+//DialNetPiper will return new NetPiper by net.Dial
+func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
+	var network, address string
+	parts := strings.SplitN(uri, "://", 2)
+	if len(parts) < 2 {
+		network = "tcp"
+		address = parts[0]
+	} else {
+		network = parts[0]
+		address = parts[1]
+	}
+	conn, err := net.Dial(network, address)
+	if err == nil {
+		piper = &NetPiper{Conn: conn, BufferSize: bufferSize}
+	}
 	return
 }
 
-//PreRead will read prefix size data before read loop start
-func (p *PreConn) PreRead(size int) (data []byte, err error) {
-	data, err = p.Pre.PreRead(size)
+//PipeConn will pipe conn to n.Conn by copy
+func (n *NetPiper) PipeConn(conn net.Conn, target string) (err error) {
+	wc := make(chan int, 1)
+	go func() {
+		io.CopyBuffer(n.Conn, conn, make([]byte, n.BufferSize))
+		n.Conn.Close()
+		wc <- 1
+	}()
+	_, err = io.CopyBuffer(conn, n.Conn, make([]byte, n.BufferSize))
+	n.Close()
+	<-wc
 	return
 }
 
@@ -98,6 +110,11 @@ func (b *ByteDistributeProcessor) AddProcessor(m byte, procesor Processor) {
 	b.Next[m] = procesor
 }
 
+//RemoveProcessor will remove processor by mode
+func (b *ByteDistributeProcessor) RemoveProcessor(m byte) {
+	delete(b.Next, m)
+}
+
 //ProcAccept will loop accept net.Conn and async call ProcConn
 func (b *ByteDistributeProcessor) ProcAccept(listener net.Listener) (err error) {
 	b.locker.Lock()
@@ -108,13 +125,19 @@ func (b *ByteDistributeProcessor) ProcAccept(listener net.Listener) (err error) 
 		delete(b.listeners, fmt.Sprintf("%p", listener))
 		b.locker.Unlock()
 	}()
+	procConn := func(c net.Conn) {
+		xerr := b.ProcConn(c)
+		if xerr != ErrAsyncRunning {
+			c.Close()
+		}
+	}
 	var conn net.Conn
 	for {
 		conn, err = listener.Accept()
 		if err != nil {
 			break
 		}
-		go b.ProcConn(conn)
+		go procConn(conn)
 	}
 	return
 }
@@ -129,12 +152,7 @@ func (b *ByteDistributeProcessor) ProcConn(conn net.Conn) (err error) {
 		delete(b.conns, fmt.Sprintf("%p", conn))
 		b.locker.Unlock()
 	}()
-	preConn := &PreConn{
-		Conn: conn,
-		Pre: PreReadWriteCloser{
-			Reader: conn,
-		},
-	}
+	preConn := NewPrefixConn(conn)
 	pre, err := preConn.PreRead(1)
 	if err != nil {
 		return
