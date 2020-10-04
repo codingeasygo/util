@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
@@ -228,20 +226,10 @@ func (c *CodableErr) Code() byte {
 
 func TestSocksProxy(t *testing.T) {
 	proxy := NewServer()
-	proxy.Dialer = func(utype int, uri string, conn io.ReadWriteCloser) (raw io.ReadWriteCloser, err error) {
-		r, w, _ := os.Pipe()
-		raw = xio.NewCombinedReadWriteCloser(r, w, w)
-		// raw, err = net.Dial("tcp", uri)
-		// if err == nil {
-		// 	go io.Copy(conn, raw)
-		// 	go io.Copy(raw, conn)
-		// 	time.Sleep(100 * time.Millisecond)
-		// } else {
-		// 	err = &CodableErr{Err: err}
-		// }
-		// fmt.Println("dial to ", uri, err)
+	proxy.Dialer = xio.PiperDialerF(func(uri string, bufferSize int) (raw xio.Piper, err error) {
+		raw = xio.NewEchoPiper(bufferSize)
 		return
-	}
+	})
 	go func() {
 		proxy.Run(":2081")
 	}()
