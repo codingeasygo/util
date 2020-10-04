@@ -10,14 +10,14 @@ import (
 
 //Processor is interface for process connection
 type Processor interface {
-	ProcConn(conn net.Conn) (err error)
+	ProcConn(conn io.ReadWriteCloser) (err error)
 }
 
 //ProcessorF is func to implement Processor
-type ProcessorF func(conn net.Conn) (err error)
+type ProcessorF func(conn io.ReadWriteCloser) (err error)
 
 //ProcConn is process connection by func
-func (p ProcessorF) ProcConn(conn net.Conn) (err error) {
+func (p ProcessorF) ProcConn(conn io.ReadWriteCloser) (err error) {
 	err = p(conn)
 	return
 }
@@ -27,12 +27,12 @@ var ErrAsyncRunning = fmt.Errorf("asynced")
 
 //Piper is interface for process pipe connection
 type Piper interface {
-	PipeConn(conn net.Conn, target string) (err error)
+	PipeConn(conn io.ReadWriteCloser, target string) (err error)
 	Close() (err error)
 }
 
 //PiperF is func to implement Piper
-type PiperF func(conn net.Conn, target string) (err error)
+type PiperF func(conn io.ReadWriteCloser, target string) (err error)
 
 //PiperDialer is interface for implement piper dialer
 type PiperDialer interface {
@@ -73,7 +73,7 @@ func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
 }
 
 //PipeConn will pipe conn to n.Conn by copy
-func (n *NetPiper) PipeConn(conn net.Conn, target string) (err error) {
+func (n *NetPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	wc := make(chan int, 1)
 	go func() {
 		io.CopyBuffer(n.Conn, conn, make([]byte, n.BufferSize))
@@ -89,7 +89,7 @@ func (n *NetPiper) PipeConn(conn net.Conn, target string) (err error) {
 //ByteDistributeProcessor is distribute processor by prefix read first byte
 type ByteDistributeProcessor struct {
 	Next      map[byte]Processor
-	conns     map[string]net.Conn
+	conns     map[string]io.ReadWriteCloser
 	listeners map[string]net.Listener
 	locker    sync.RWMutex
 }
@@ -98,7 +98,7 @@ type ByteDistributeProcessor struct {
 func NewByteDistributeProcessor() (processor *ByteDistributeProcessor) {
 	processor = &ByteDistributeProcessor{
 		Next:      map[byte]Processor{},
-		conns:     map[string]net.Conn{},
+		conns:     map[string]io.ReadWriteCloser{},
 		listeners: map[string]net.Listener{},
 		locker:    sync.RWMutex{},
 	}
@@ -143,7 +143,7 @@ func (b *ByteDistributeProcessor) ProcAccept(listener net.Listener) (err error) 
 }
 
 //ProcConn will process connection by prefix reader and distribute to next processor
-func (b *ByteDistributeProcessor) ProcConn(conn net.Conn) (err error) {
+func (b *ByteDistributeProcessor) ProcConn(conn io.ReadWriteCloser) (err error) {
 	b.locker.Lock()
 	b.conns[fmt.Sprintf("%p", conn)] = conn
 	b.locker.Unlock()
@@ -152,7 +152,7 @@ func (b *ByteDistributeProcessor) ProcConn(conn net.Conn) (err error) {
 		delete(b.conns, fmt.Sprintf("%p", conn))
 		b.locker.Unlock()
 	}()
-	preConn := NewPrefixConn(conn)
+	preConn := NewPrefixReadWriteCloser(conn)
 	pre, err := preConn.PreRead(1)
 	if err != nil {
 		return

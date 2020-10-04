@@ -255,3 +255,11 @@ func (l ListenerF) Network() string {
 func (l ListenerF) String() string {
 	return reflect.TypeOf(l).PkgPath()
 }
+
+//RemoteAddr will return net.Conn.RemoteAddr or fmt.Sprintf("%v", target)
+func RemoteAddr(target interface{}) string {
+	if conn, ok := target.(net.Conn); ok {
+		return conn.RemoteAddr().String()
+	}
+	return fmt.Sprintf("%v", target)
+}

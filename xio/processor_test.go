@@ -71,7 +71,7 @@ func TestByteDistribute(t *testing.T) {
 		}
 		return
 	}))
-	processor.AddProcessor('A', ProcessorF(func(conn net.Conn) (err error) {
+	processor.AddProcessor('A', ProcessorF(func(conn io.ReadWriteCloser) (err error) {
 		buf := make([]byte, 1024)
 		for {
 			err = FullBuffer(conn, buf, 4, nil)
@@ -82,7 +82,7 @@ func TestByteDistribute(t *testing.T) {
 		}
 		return
 	}))
-	processor.AddProcessor('*', ProcessorF(func(conn net.Conn) (err error) {
+	processor.AddProcessor('*', ProcessorF(func(conn io.ReadWriteCloser) (err error) {
 		buf := make([]byte, 1024)
 		for {
 			err = FullBuffer(conn, buf, 4, nil)

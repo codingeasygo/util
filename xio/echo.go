@@ -81,7 +81,7 @@ func NewEchoPiper(bufferSize int) (piper *EchoPiper) {
 }
 
 //PipeConn will process connection by as echo
-func (e *EchoPiper) PipeConn(conn net.Conn, target string) (err error) {
+func (e *EchoPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	_, err = io.CopyBuffer(conn, conn, make([]byte, e.BufferSize))
 	return
 }

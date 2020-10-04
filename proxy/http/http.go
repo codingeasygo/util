@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -86,11 +87,11 @@ func (s *Server) Stop() (err error) {
 }
 
 //ProcConn will processs net connect as http proxy
-func (s *Server) ProcConn(conn net.Conn) (err error) {
-	DebugLog("Server proxy http connection from %v", conn.RemoteAddr())
+func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
+	DebugLog("Server proxy http connection from %v", xio.RemoteAddr(conn))
 	defer func() {
 		if err != nil {
-			DebugLog("Server proxy http connection from %v is done with %v", conn.RemoteAddr(), err)
+			DebugLog("Server proxy http connection from %v is done with %v", xio.RemoteAddr(conn), err)
 		}
 	}()
 	reader := bufio.NewReader(conn)
@@ -133,7 +134,7 @@ func (s *Server) ProcConn(conn net.Conn) (err error) {
 		}
 		buffer := bytes.NewBuffer(nil)
 		req.Write(buffer)
-		prefix := xio.NewPrefixConn(conn)
+		prefix := xio.NewPrefixReadWriteCloser(conn)
 		prefix.Prefix = buffer.Bytes()
 		conn = prefix
 	}

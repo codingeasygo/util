@@ -2,6 +2,7 @@ package socks
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"sync"
@@ -80,11 +81,11 @@ func (s *Server) Stop() (err error) {
 }
 
 //ProcConn will process connecton as socket protocol
-func (s *Server) ProcConn(conn net.Conn) (err error) {
-	DebugLog("Server proxy socks connection from %v", conn.RemoteAddr())
+func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
+	DebugLog("Server proxy socks connection from %v", xio.RemoteAddr(conn))
 	defer func() {
 		if err != nil {
-			DebugLog("Server proxy socks connection from %v is done with %v", conn.RemoteAddr(), err)
+			DebugLog("Server proxy socks connection from %v is done with %v", xio.RemoteAddr(conn), err)
 		}
 		if err != xio.ErrAsyncRunning {
 			conn.Close()
