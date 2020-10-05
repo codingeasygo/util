@@ -51,7 +51,7 @@ func (p PiperDialerF) DialPiper(uri string, bufferSize int) (raw Piper, err erro
 //NetPiper is Piper implement by net.Dial
 type NetPiper struct {
 	net.Conn
-	BufferSize int
+	CopyPiper
 }
 
 //DialNetPiper will return new NetPiper by net.Dial
@@ -67,22 +67,41 @@ func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
 	}
 	conn, err := net.Dial(network, address)
 	if err == nil {
-		piper = &NetPiper{Conn: conn, BufferSize: bufferSize}
+		piper = &NetPiper{
+			Conn: conn,
+			CopyPiper: CopyPiper{
+				ReadWriteCloser: conn,
+				BufferSize:      bufferSize,
+			},
+		}
 	}
 	return
 }
 
-//PipeConn will pipe conn to n.Conn by copy
-func (n *NetPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
+//CopyPiper is Piper implement by copy
+type CopyPiper struct {
+	io.ReadWriteCloser
+	BufferSize int
+}
+
+//NewCopyPiper will return new CopyPiper
+func NewCopyPiper(raw io.ReadWriteCloser, bufferSize int) (piper *CopyPiper) {
+	piper = &CopyPiper{ReadWriteCloser: raw, BufferSize: bufferSize}
+	return
+}
+
+//PipeConn will pipe connection to raw
+func (c *CopyPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	wc := make(chan int, 1)
 	go func() {
-		io.CopyBuffer(n.Conn, conn, make([]byte, n.BufferSize))
-		n.Conn.Close()
+		io.CopyBuffer(c.ReadWriteCloser, conn, make([]byte, c.BufferSize))
+		c.ReadWriteCloser.Close()
 		wc <- 1
 	}()
-	_, err = io.CopyBuffer(conn, n.Conn, make([]byte, n.BufferSize))
-	n.Close()
+	_, err = io.CopyBuffer(conn, c.ReadWriteCloser, make([]byte, c.BufferSize))
+	c.Close()
 	<-wc
+	close(wc)
 	return
 }
 
