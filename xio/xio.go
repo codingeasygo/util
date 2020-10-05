@@ -167,7 +167,7 @@ func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) er
 		}
 		all += uint32(readed)
 		if all < length {
-			buf = buffer[all:]
+			buf = buf[all:]
 			continue
 		} else {
 			break
