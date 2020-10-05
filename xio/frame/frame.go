@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/codingeasygo/util/xio"
 )
 
 const (
@@ -220,7 +222,7 @@ func (b *BaseReader) SetReadTimeout(timeout time.Duration) {
 }
 
 func (b *BaseReader) String() string {
-	return fmt.Sprintf("%v", b.Raw)
+	return xio.RemoteAddr(b.Raw)
 }
 
 //BaseWriter implment the frame Writer
@@ -267,7 +269,7 @@ func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 }
 
 func (b *BaseWriter) String() string {
-	return fmt.Sprintf("%v", b.Raw)
+	return xio.RemoteAddr(b.Raw)
 }
 
 //Wrap will create buffer and add frame header
