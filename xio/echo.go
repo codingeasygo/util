@@ -90,3 +90,25 @@ func (e *EchoPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error)
 func (e *EchoPiper) Close() (err error) {
 	return
 }
+
+//EchoDialer is dialer test
+type EchoDialer struct {
+}
+
+//NewEchoDialer will return new EchoDialer
+func NewEchoDialer() (dialer *EchoDialer) {
+	dialer = &EchoDialer{}
+	return
+}
+
+//Dial dail one raw connection
+func (e *EchoDialer) Dial(network, address string) (c net.Conn, err error) {
+	c = NewEchoConn()
+	return
+}
+
+//DialPiper will dial piper by target
+func (e *EchoDialer) DialPiper(target string, bufferSize int) (raw Piper, err error) {
+	raw = NewEchoPiper(bufferSize)
+	return
+}

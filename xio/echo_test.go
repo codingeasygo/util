@@ -27,7 +27,8 @@ func TestEcho(t *testing.T) {
 	fmt.Println(echo.String())
 	//
 	conna, connb, _ := CreatePipedConn()
-	piper := NewEchoPiper(1024)
+	dialer := NewEchoDialer()
+	piper, _ := dialer.DialPiper("xxx", 1024)
 	waiter := make(chan int, 1)
 	go func() {
 		piper.PipeConn(connb, "xxx")
@@ -42,4 +43,5 @@ func TestEcho(t *testing.T) {
 	}
 	conna.Close()
 	<-waiter
+	dialer.Dial("", "")
 }
