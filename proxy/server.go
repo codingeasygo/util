@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"net"
+	"sync"
 
 	"github.com/codingeasygo/util/proxy/http"
 	"github.com/codingeasygo/util/proxy/socks"
@@ -14,6 +15,7 @@ type Server struct {
 	Dialer xio.PiperDialer
 	HTTP   *http.Server
 	SOCKS  *socks.Server
+	waiter sync.WaitGroup
 }
 
 //NewServer will return new Server
@@ -23,6 +25,7 @@ func NewServer(dialer xio.PiperDialer) (server *Server) {
 		Dialer:                  dialer,
 		HTTP:                    http.NewServer(),
 		SOCKS:                   socks.NewServer(),
+		waiter:                  sync.WaitGroup{},
 	}
 	server.HTTP.Dialer = server
 	server.SOCKS.Dialer = server
@@ -43,6 +46,15 @@ func (s *Server) Start(addr string) (err error) {
 	if err != nil {
 		return
 	}
-	go s.ProcAccept(listener)
+	s.waiter.Add(1)
+	go func() {
+		s.ProcAccept(listener)
+		s.waiter.Done()
+	}()
 	return
+}
+
+//Wait will wait all runner
+func (s *Server) Wait() {
+	s.waiter.Wait()
 }
