@@ -41,6 +41,10 @@ func (p *PrefixReader) PreRead(size int) (data []byte, err error) {
 	return
 }
 
+func (p *PrefixReader) String() string {
+	return RemoteAddr(p.Reader)
+}
+
 //PrefixReadWriteCloser is prefix read implement
 type PrefixReadWriteCloser struct {
 	io.ReadWriteCloser
@@ -60,6 +64,10 @@ func (p *PrefixReadWriteCloser) Read(b []byte) (n int, err error) {
 	return
 }
 
+func (p *PrefixReadWriteCloser) String() string {
+	return RemoteAddr(p.ReadWriteCloser)
+}
+
 //PrefixConn is net.Conn implement for prefix read data
 type PrefixConn struct {
 	net.Conn
@@ -77,4 +85,8 @@ func NewPrefixConn(conn net.Conn) (prefix *PrefixConn) {
 func (p *PrefixConn) Read(b []byte) (n int, err error) {
 	n, err = p.PrefixReader.Read(b)
 	return
+}
+
+func (p *PrefixConn) String() string {
+	return RemoteAddr(p.Conn)
 }
