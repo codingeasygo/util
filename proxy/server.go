@@ -29,8 +29,8 @@ func NewServer(dialer xio.PiperDialer) (server *Server) {
 	}
 	server.HTTP.Dialer = server
 	server.SOCKS.Dialer = server
-	server.AddProcessor('H', server.HTTP)
-	server.AddProcessor('*', server.SOCKS)
+	server.AddProcessor('*', server.HTTP)
+	server.AddProcessor(0x05, server.SOCKS)
 	return
 }
 
