@@ -82,10 +82,10 @@ func (s *Server) Stop() (err error) {
 
 //ProcConn will process connecton as socket protocol
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
-	DebugLog("Server proxy socks connection from %v", xio.RemoteAddr(conn))
+	DebugLog("Server proxy socks connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
 		if err != nil {
-			DebugLog("Server proxy socks connection from %v is done with %v", xio.RemoteAddr(conn), err)
+			DebugLog("Server proxy socks connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
 		}
 		if err != xio.ErrAsyncRunning {
 			conn.Close()

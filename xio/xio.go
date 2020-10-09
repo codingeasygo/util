@@ -256,6 +256,14 @@ func (l ListenerF) String() string {
 	return reflect.TypeOf(l).PkgPath()
 }
 
+//LocalAddr will return net.Conn.LocalAddr or fmt.Sprintf("%v", target)
+func LocalAddr(target interface{}) string {
+	if conn, ok := target.(net.Conn); ok {
+		return conn.LocalAddr().String()
+	}
+	return fmt.Sprintf("%v", target)
+}
+
 //RemoteAddr will return net.Conn.RemoteAddr or fmt.Sprintf("%v", target)
 func RemoteAddr(target interface{}) string {
 	if conn, ok := target.(net.Conn); ok {
