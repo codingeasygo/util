@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -19,6 +20,7 @@ type Server struct {
 	listners   map[net.Listener]string
 	waiter     sync.WaitGroup
 	Dialer     xio.PiperDialer
+	Loopback   []string //loopback checker
 }
 
 //NewServer will return new server
@@ -99,14 +101,38 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	if err != nil {
 		return
 	}
-	req.Header.Del("Proxy-Authorization")
-	req.Header.Del("Proxy-Connection")
 	resp := &http.Response{
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     http.Header{},
 	}
 	resp.Header.Add("Proxy-Agent", "test/v1.0.0")
+	if len(s.Loopback) > 0 {
+		var mathed bool
+		for _, back := range s.Loopback {
+			reg, err := regexp.Compile(back)
+			if err != nil {
+				WarnLog("Server compile loopback pattern %v fail with %v", back, err)
+				continue
+			}
+			if reg.MatchString(req.Host) {
+				mathed = true
+				break
+			}
+		}
+		if mathed {
+			if req.Method == http.MethodHead {
+				resp.StatusCode = http.StatusOK
+				resp.Write(conn)
+			} else {
+				resp.StatusCode = http.StatusInternalServerError
+				resp.Write(conn)
+			}
+			return
+		}
+	}
+	req.Header.Del("Proxy-Authorization")
+	req.Header.Del("Proxy-Connection")
 	var raw xio.Piper
 	var uri string
 	if req.Method == "CONNECT" {
