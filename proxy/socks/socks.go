@@ -58,8 +58,8 @@ func (s *Server) Run(addr string) (err error) {
 }
 
 //Start proxy listener
-func (s *Server) Start(addr string) (err error) {
-	listener, err := net.Listen("tcp", addr)
+func (s *Server) Start(addr string) (listener net.Listener, err error) {
+	listener, err = net.Listen("tcp", addr)
 	if err == nil {
 		s.listners[listener] = addr
 		InfoLog("Server listen socks5 proxy on %v", addr)

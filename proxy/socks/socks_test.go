@@ -19,7 +19,7 @@ func TestProxy(t *testing.T) {
 		fmt.Fprintf(w, "abc")
 	}))
 	server := NewServer()
-	err := server.Start(":8011")
+	_, err := server.Start(":8011")
 	if err != nil {
 		t.Error(err)
 		return

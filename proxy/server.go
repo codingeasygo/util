@@ -41,8 +41,8 @@ func (s *Server) DialPiper(uri string, bufferSize int) (raw xio.Piper, err error
 }
 
 //Start wiil listen tcp on addr and run process accept to ByteDistributeProcessor
-func (s *Server) Start(addr string) (err error) {
-	listener, err := net.Listen("tcp", addr)
+func (s *Server) Start(addr string) (listener net.Listener, err error) {
+	listener, err = net.Listen("tcp", addr)
 	if err != nil {
 		return
 	}

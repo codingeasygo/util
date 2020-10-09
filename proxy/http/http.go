@@ -66,8 +66,8 @@ func (s *Server) Run(addr string) (err error) {
 }
 
 //Start will listen tcp on address and async accept to ProcConn
-func (s *Server) Start(addr string) (err error) {
-	listener, err := net.Listen("tcp", addr)
+func (s *Server) Start(addr string) (listener net.Listener, err error) {
+	listener, err = net.Listen("tcp", addr)
 	if err == nil {
 		s.listners[listener] = addr
 		InfoLog("Server listen http proxy on %v", addr)
