@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -20,7 +19,7 @@ type Server struct {
 	listners   map[net.Listener]string
 	waiter     sync.WaitGroup
 	Dialer     xio.PiperDialer
-	Loopback   []string //loopback checker
+	Agent      string
 }
 
 //NewServer will return new server
@@ -30,6 +29,7 @@ func NewServer() (proxy *Server) {
 		listners:   map[net.Listener]string{},
 		waiter:     sync.WaitGroup{},
 		Dialer:     xio.PiperDialerF(xio.DialNetPiper),
+		Agent:      "EasyGo/v1.0.0",
 	}
 	return
 }
@@ -90,10 +90,10 @@ func (s *Server) Stop() (err error) {
 
 //ProcConn will processs net connect as http proxy
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
-	DebugLog("Server proxy http connection from %v", xio.RemoteAddr(conn))
+	DebugLog("Server proxy http connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
 		if err != nil {
-			DebugLog("Server proxy http connection from %v is done with %v", xio.RemoteAddr(conn), err)
+			DebugLog("Server proxy http connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
 		}
 	}()
 	reader := bufio.NewReader(conn)
@@ -106,30 +106,17 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		ProtoMinor: 1,
 		Header:     http.Header{},
 	}
-	resp.Header.Add("Proxy-Agent", "test/v1.0.0")
-	if len(s.Loopback) > 0 {
-		var mathed bool
-		for _, back := range s.Loopback {
-			reg, err := regexp.Compile(back)
-			if err != nil {
-				WarnLog("Server compile loopback pattern %v fail with %v", back, err)
-				continue
-			}
-			if reg.MatchString(req.Host) {
-				mathed = true
-				break
-			}
+	resp.Header.Add("Proxy-Agent", s.Agent)
+	if len(req.Header.Get("Proxy-Connection")) < 1 {
+		DebugLog("Server sending proxy server info on %v to %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
+		if req.Method == http.MethodHead {
+			resp.StatusCode = http.StatusOK
+			resp.Write(conn)
+		} else {
+			resp.StatusCode = http.StatusInternalServerError
+			resp.Write(conn)
 		}
-		if mathed {
-			if req.Method == http.MethodHead {
-				resp.StatusCode = http.StatusOK
-				resp.Write(conn)
-			} else {
-				resp.StatusCode = http.StatusInternalServerError
-				resp.Write(conn)
-			}
-			return
-		}
+		return
 	}
 	req.Header.Del("Proxy-Authorization")
 	req.Header.Del("Proxy-Connection")
