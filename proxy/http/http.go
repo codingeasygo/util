@@ -107,7 +107,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		Header:     http.Header{},
 	}
 	resp.Header.Add("Proxy-Agent", s.Agent)
-	if len(req.Header.Get("Proxy-Connection")) < 1 {
+	if req.Method != http.MethodConnect && len(req.Header.Get("Proxy-Connection")) < 1 {
 		DebugLog("Server sending proxy server info on %v to %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 		if req.Method == http.MethodHead {
 			resp.StatusCode = http.StatusOK
