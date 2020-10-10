@@ -127,14 +127,14 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		if err == nil {
 			remote := fmt.Sprintf("%v.%v.%v.%v", buf[4], buf[5], buf[6], buf[7])
 			port := uint16(buf[8])*256 + uint16(buf[9])
-			uri = fmt.Sprintf("%v:%v", remote, port)
+			uri = fmt.Sprintf("tcp://%v:%v", remote, port)
 		}
 	case 0x03:
 		err = xio.FullBuffer(conn, buf[5:], uint32(buf[4]+2), nil)
 		if err == nil {
 			remote := string(buf[5 : buf[4]+5])
 			port := uint16(buf[buf[4]+5])*256 + uint16(buf[buf[4]+6])
-			uri = fmt.Sprintf("%v:%v", remote, port)
+			uri = fmt.Sprintf("tcp://%v:%v", remote, port)
 		}
 	default:
 		err = xio.FullBuffer(conn, buf[5:], uint32(buf[4]+2), nil)
