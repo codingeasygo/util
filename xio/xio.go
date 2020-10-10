@@ -176,6 +176,13 @@ func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) er
 	return nil
 }
 
+//CopyBuffer will copy data and call dst Closer after done
+func CopyBuffer(dst io.WriteCloser, src io.Reader, buf []byte) (n int64, err error) {
+	n, err = io.CopyBuffer(dst, src, buf)
+	dst.Close()
+	return
+}
+
 //StringConn is an ReadWriteCloser for return  remote address info
 type StringConn struct {
 	Name string
