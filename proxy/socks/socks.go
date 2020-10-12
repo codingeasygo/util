@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/codingeasygo/util/xio"
@@ -175,6 +176,7 @@ func Dial(proxy, uri string) (conn net.Conn, err error) {
 
 //DialType wil dial connection by proxy server and uri type
 func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error) {
+	proxy = strings.TrimPrefix(proxy, "socks5://")
 	conn, err = net.Dial("tcp", proxy)
 	if err != nil {
 		return
