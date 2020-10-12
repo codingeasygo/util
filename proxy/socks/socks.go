@@ -235,7 +235,7 @@ func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error)
 	}
 	if buf[1] != 0x00 {
 		conn.Close()
-		err = fmt.Errorf("response code(%x)", buf[1])
+		err = fmt.Errorf("socks server response code(%x)", buf[1])
 		return
 	}
 	return
