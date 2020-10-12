@@ -169,6 +169,12 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 
 //Dial will dial connection by proxy server
 func Dial(proxy, uri string) (conn net.Conn, err error) {
+	conn, err = DialType(proxy, 0x03, uri)
+	return
+}
+
+//DialType wil dial connection by proxy server and uri type
+func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error) {
 	conn, err = net.Dial("tcp", proxy)
 	if err != nil {
 		return
@@ -185,11 +191,18 @@ func Dial(proxy, uri string) (conn net.Conn, err error) {
 		conn.Close()
 		return
 	}
-	host, p, _ := net.SplitHostPort(uri)
-	port, _ := strconv.Atoi(p)
+	var host string
+	var port int
+	if uriType == 0x03 {
+		var p string
+		host, p, _ = net.SplitHostPort(uri)
+		port, _ = strconv.Atoi(p)
+	} else {
+		host = uri
+	}
 	blen := len(host) + 7
 	buf[0], buf[1], buf[2] = 0x05, 0x01, 0x00
-	buf[3], buf[4] = 0x03, byte(len(host))
+	buf[3], buf[4] = uriType, byte(len(host))
 	copy(buf[5:], []byte(host))
 	buf[blen-2] = byte(port / 256)
 	buf[blen-1] = byte(port % 256)

@@ -284,3 +284,21 @@ func TestSocksProxy(t *testing.T) {
 	}
 	proxy.Stop()
 }
+
+func TestDialType(t *testing.T) {
+	proxy := NewServer()
+	proxy.Dialer = xio.PiperDialerF(func(uri string, bufferSize int) (raw xio.Piper, err error) {
+		fmt.Printf("--->%v\n", uri)
+		raw = xio.NewEchoPiper(bufferSize)
+		return
+	})
+	go func() {
+		proxy.Run(":2081")
+	}()
+	_, err := DialType("127.0.0.1:2081", 0x05, "xx://xxx")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	proxy.Stop()
+}
