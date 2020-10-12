@@ -42,12 +42,12 @@ func (s *Server) loopAccept(l net.Listener) (err error) {
 		if err != nil {
 			break
 		}
-		go func() {
-			xerr := s.ProcConn(conn)
+		go func(c net.Conn) {
+			xerr := s.ProcConn(c)
 			if xerr != xio.ErrAsyncRunning {
-				conn.Close()
+				c.Close()
 			}
-		}()
+		}(conn)
 	}
 	s.waiter.Done()
 	return
@@ -114,6 +114,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			resp.Write(conn)
 		} else {
 			resp.StatusCode = http.StatusInternalServerError
+			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString("not supported"), nil, nil)
 			resp.Write(conn)
 		}
 		return
@@ -127,6 +128,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
+			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
 			return
 		}
@@ -142,6 +144,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
+			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
 			return
 		}
