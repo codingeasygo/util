@@ -58,3 +58,9 @@ func (s *Server) Start(addr string) (listener net.Listener, err error) {
 func (s *Server) Wait() {
 	s.waiter.Wait()
 }
+
+//SetLogLevel is set log level to l
+func SetLogLevel(l int) {
+	socks.SetLogLevel(l)
+	http.SetLogLevel(l)
+}
