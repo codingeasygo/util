@@ -16,20 +16,33 @@ func TestPipe(t *testing.T) {
 	go io.Copy(b, b)
 	go func() {
 		fmt.Fprintf(a, "abc")
+		fmt.Printf("--->write0\n")
+		fmt.Fprintf(a, "123")
+		fmt.Printf("--->write1\n")
 		time.Sleep(10 * time.Millisecond)
-		a.Close()
+		b.Close()
+		fmt.Printf("--->close0\n")
 	}()
+	var n int
 	buf := make([]byte, 1024)
-	n, err := a.Read(buf)
+	n, err = a.Read(buf)
 	if err != nil || n != 3 || "abc" != string(buf[0:3]) {
 		t.Error(err)
 		return
 	}
+	fmt.Printf("--->read0\n")
+	n, err = a.Read(buf)
+	if err != nil || n != 3 || "123" != string(buf[0:3]) {
+		t.Error(err)
+		return
+	}
+	fmt.Printf("--->read1\n")
 	_, err = a.Read(buf)
 	if err == nil {
 		t.Error(err)
 		return
 	}
+	fmt.Printf("--->close0\n")
 	a.Close()
 	a.Read(nil)
 	a.Write(nil)

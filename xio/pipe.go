@@ -10,64 +10,69 @@ import (
 //PipedChan provoider Write buffer to Read implement by chan
 type PipedChan struct {
 	closed uint32
-	piper  chan []byte
 	having []byte
-	locker sync.RWMutex
+	locker *sync.Cond
 }
 
 //NewPipedChan will return new PipedChan
 func NewPipedChan() (piped *PipedChan) {
 	piped = &PipedChan{
-		piper:  make(chan []byte, 1),
-		locker: sync.RWMutex{},
+		locker: sync.NewCond(&sync.Mutex{}),
 	}
 	return
 }
 
 func (p *PipedChan) Read(b []byte) (n int, err error) {
-	p.locker.RLock()
-	if p.closed > 0 {
-		err = fmt.Errorf("closed")
-		p.locker.RUnlock()
-		return
-	}
-	p.locker.RUnlock()
+	p.locker.L.Lock()
+	defer p.locker.L.Unlock()
 	if len(p.having) < 1 {
-		p.having = <-p.piper
-	}
-	if len(p.having) < 1 {
-		err = fmt.Errorf("closed")
-		return
+		if p.closed > 0 {
+			err = fmt.Errorf("closed")
+			return
+		}
+		p.locker.Wait()
+		if len(p.having) < 1 {
+			err = fmt.Errorf("closed")
+			return
+		}
 	}
 	n = copy(b, p.having)
 	p.having = p.having[n:]
+	if len(p.having) < 1 {
+		p.locker.Signal()
+	}
 	return
 }
 
 func (p *PipedChan) Write(b []byte) (n int, err error) {
-	p.locker.RLock()
+	p.locker.L.Lock()
+	defer p.locker.L.Unlock()
+	if p.closed < 1 && len(p.having) > 0 {
+		p.locker.Wait()
+	}
 	if p.closed > 0 {
 		err = fmt.Errorf("closed")
-		p.locker.RUnlock()
 		return
 	}
-	p.locker.RUnlock()
-	t := make([]byte, len(b))
-	n = copy(t, b)
-	p.piper <- t
+	if len(p.having) > 0 {
+		panic("having")
+	}
+	p.having = make([]byte, len(b))
+	n = copy(p.having, b)
+	p.locker.Signal()
 	return
 }
 
 //Close will close piped channel
 func (p *PipedChan) Close() (err error) {
-	p.locker.Lock()
-	defer p.locker.Unlock()
+	p.locker.L.Lock()
+	defer p.locker.L.Unlock()
 	if p.closed > 0 {
 		err = fmt.Errorf("closed")
 		return
 	}
 	p.closed = 1
-	close(p.piper)
+	p.locker.Broadcast()
 	return
 }
 
