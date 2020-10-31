@@ -4,3 +4,4 @@ coverage.html
 coverage.json
 coverage.xml
 *.log
+*.exe
