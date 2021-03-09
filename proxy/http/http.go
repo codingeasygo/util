@@ -92,8 +92,9 @@ func (s *Server) Stop() (err error) {
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	DebugLog("Server proxy http connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
-		if err != nil {
-			DebugLog("Server proxy http connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
+		if err != xio.ErrAsyncRunning {
+			DebugLog("Server proxy socks connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
+			conn.Close()
 		}
 	}()
 	reader := bufio.NewReader(conn)
