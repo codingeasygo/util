@@ -32,6 +32,14 @@ type Reader interface {
 	io.Reader
 	ReadFrame() (frame []byte, err error)
 	SetReadTimeout(timeout time.Duration)
+	GetReadLengthFieldMagic() (value int)
+	GetReadLengthFieldOffset() (value int)
+	GetReadLengthFieldLength() (value int)
+	GetReadLengthAdjustment() (value int)
+	SetReadLengthFieldMagic(value int)
+	SetReadLengthFieldOffset(value int)
+	SetReadLengthFieldLength(value int)
+	SetReadLengthAdjustment(value int)
 }
 
 //Writer is interface for write the raw io as frame mode
@@ -41,6 +49,14 @@ type Writer interface {
 	//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 	WriteFrame(buffer []byte) (n int, err error)
 	SetWriteTimeout(timeout time.Duration)
+	GetWriteLengthFieldMagic() (value int)
+	GetWriteLengthFieldOffset() (value int)
+	GetWriteLengthFieldLength() (value int)
+	GetWriteLengthAdjustment() (value int)
+	SetWriteLengthFieldMagic(value int)
+	SetWriteLengthFieldOffset(value int)
+	SetWriteLengthFieldLength(value int)
+	SetWriteLengthAdjustment(value int)
 }
 
 //ReadWriter is interface for read/write the raw io as frame mode
@@ -48,6 +64,14 @@ type ReadWriter interface {
 	Reader
 	Writer
 	SetTimeout(timeout time.Duration)
+	GetLengthFieldMagic() (value int)
+	GetLengthFieldOffset() (value int)
+	GetLengthFieldLength() (value int)
+	GetLengthAdjustment() (value int)
+	SetLengthFieldMagic(value int)
+	SetLengthFieldOffset(value int)
+	SetLengthFieldLength(value int)
+	SetLengthAdjustment(value int)
 }
 
 //ReadWriteCloser is interface for read/write the raw io as frame mode
@@ -93,28 +117,48 @@ func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 	b.BaseWriter.SetWriteTimeout(timeout)
 }
 
+func (b *BaseReadWriteCloser) GetLengthFieldMagic() (value int) {
+	value = b.BaseReader.GetReadLengthFieldMagic()
+	return
+}
+
+func (b *BaseReadWriteCloser) GetLengthFieldOffset() (value int) {
+	value = b.BaseReader.GetReadLengthFieldOffset()
+	return
+}
+
+func (b *BaseReadWriteCloser) GetLengthFieldLength() (value int) {
+	value = b.BaseReader.GetReadLengthFieldLength()
+	return
+}
+
+func (b *BaseReadWriteCloser) GetLengthAdjustment() (value int) {
+	value = b.BaseReader.GetReadLengthAdjustment()
+	return
+}
+
 //SetLengthFieldMagic will set the LengthFieldMagic for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldMagic(value int) {
-	b.BaseReader.LengthFieldMagic = value
-	b.BaseWriter.LengthFieldMagic = value
+	b.BaseReader.SetReadLengthFieldMagic(value)
+	b.BaseWriter.SetWriteLengthFieldMagic(value)
 }
 
 //SetLengthFieldOffset will set the LengthFieldOffset for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldOffset(value int) {
-	b.BaseReader.LengthFieldOffset = value
-	b.BaseWriter.LengthFieldOffset = value
+	b.BaseReader.SetReadLengthFieldOffset(value)
+	b.BaseWriter.SetWriteLengthFieldOffset(value)
 }
 
 //SetLengthFieldLength will set the LengthFieldLength for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldLength(value int) {
-	b.BaseReader.LengthFieldLength = value
-	b.BaseWriter.LengthFieldLength = value
+	b.BaseReader.SetReadLengthFieldLength(value)
+	b.BaseWriter.SetWriteLengthFieldLength(value)
 }
 
 //SetLengthAdjustment will set the LengthAdjustment for reader/writer
 func (b *BaseReadWriteCloser) SetLengthAdjustment(value int) {
-	b.BaseReader.LengthAdjustment = value
-	b.BaseWriter.LengthAdjustment = value
+	b.BaseReader.SetReadLengthAdjustment(value)
+	b.BaseWriter.SetWriteLengthAdjustment(value)
 }
 
 //NewReadWriter will return new ReadWriteCloser
@@ -173,6 +217,42 @@ func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 		locker:            sync.RWMutex{},
 	}
 	return
+}
+
+func (b *BaseReader) GetReadLengthFieldMagic() (value int) {
+	value = b.LengthFieldMagic
+	return
+}
+
+func (b *BaseReader) GetReadLengthFieldOffset() (value int) {
+	value = b.LengthFieldOffset
+	return
+}
+
+func (b *BaseReader) GetReadLengthFieldLength() (value int) {
+	value = b.LengthFieldLength
+	return
+}
+
+func (b *BaseReader) GetReadLengthAdjustment() (value int) {
+	value = b.LengthAdjustment
+	return
+}
+
+func (b *BaseReader) SetReadLengthFieldMagic(value int) {
+	b.LengthFieldMagic = value
+}
+
+func (b *BaseReader) SetReadLengthFieldOffset(value int) {
+	b.LengthFieldOffset = value
+}
+
+func (b *BaseReader) SetReadLengthFieldLength(value int) {
+	b.LengthFieldLength = value
+}
+
+func (b *BaseReader) SetReadLengthAdjustment(value int) {
+	b.LengthAdjustment = value
 }
 
 //readMore will read more data to buffer
@@ -290,6 +370,42 @@ func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
 		Raw:               raw,
 	}
 	return
+}
+
+func (b *BaseWriter) GetWriteLengthFieldMagic() (value int) {
+	value = b.LengthFieldMagic
+	return
+}
+
+func (b *BaseWriter) GetWriteLengthFieldOffset() (value int) {
+	value = b.LengthFieldOffset
+	return
+}
+
+func (b *BaseWriter) GetWriteLengthFieldLength() (value int) {
+	value = b.LengthFieldLength
+	return
+}
+
+func (b *BaseWriter) GetWriteLengthAdjustment() (value int) {
+	value = b.LengthAdjustment
+	return
+}
+
+func (b *BaseWriter) SetWriteLengthFieldMagic(value int) {
+	b.LengthFieldMagic = value
+}
+
+func (b *BaseWriter) SetWriteLengthFieldOffset(value int) {
+	b.LengthFieldOffset = value
+}
+
+func (b *BaseWriter) SetWriteLengthFieldLength(value int) {
+	b.LengthFieldLength = value
+}
+
+func (b *BaseWriter) SetWriteLengthAdjustment(value int) {
+	b.LengthAdjustment = value
 }
 
 //WriteFrame will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
