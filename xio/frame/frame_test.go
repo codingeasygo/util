@@ -34,7 +34,51 @@ func (d *deadlineRWC) Close() (err error) {
 
 func TestReadWrite(t *testing.T) {
 	//
-	{ //one f
+	{ //one frame 8
+		data1 := []byte("one")
+		buf := make([]byte, 1+len(data1))
+		buf[0] = byte(len(data1) + 1)
+		copy(buf[1:], data1)
+		raw := bytes.NewBuffer(buf)
+		proc := NewReadWriter(&deadlineRWC{ReadWriter: raw}, 256*1024)
+		proc.SetTimeout(time.Second)
+		proc.SetLengthFieldLength(1)
+		proc.SetLengthFieldMagic(0)
+		proc.SetLengthFieldOffset(0)
+		proc.SetLengthAdjustment(0)
+		f, err := proc.ReadFrame()
+		if err != nil || !bytes.Equal(f[1:], data1) {
+			t.Error(err)
+			return
+		}
+		_, err = proc.ReadFrame()
+		if err != io.EOF {
+			t.Error(err)
+			return
+		}
+	}
+	{ //one frame 16
+		data1 := []byte("one")
+		buf := make([]byte, 2+len(data1))
+		binary.BigEndian.PutUint16(buf, uint16(2+len(data1)))
+		copy(buf[2:], data1)
+		raw := bytes.NewBuffer(buf)
+		proc := NewReadWriter(&deadlineRWC{ReadWriter: raw}, 256*1024)
+		proc.SetTimeout(time.Second)
+		proc.SetLengthFieldLength(2)
+		proc.SetLengthFieldMagic(0)
+		f, err := proc.ReadFrame()
+		if err != nil || !bytes.Equal(f[2:], data1) {
+			t.Error(err)
+			return
+		}
+		_, err = proc.ReadFrame()
+		if err != io.EOF {
+			t.Error(err)
+			return
+		}
+	}
+	{ //one frame 32
 		data1 := []byte("one")
 		buf := make([]byte, 4+len(data1))
 		binary.BigEndian.PutUint32(buf, uint32(4+len(data1)))
@@ -153,6 +197,106 @@ func TestReadWrite(t *testing.T) {
 		time.Sleep(time.Millisecond)
 		wait.Wait()
 	}
+	//
+	{ //two frame splice 2
+		data1 := []byte("splice1")
+		data2 := []byte("splice2")
+		r, w, _ := os.Pipe()
+		wait := sync.WaitGroup{}
+		wait.Add(1)
+		go func() {
+			proc := NewReadWriter(&deadlineRWC{ReadWriter: r}, 256*1024)
+			proc.SetTimeout(time.Second)
+			f, err := proc.ReadFrame()
+			if err != nil || !bytes.Equal(f[4:], data1) {
+				t.Error(err)
+				return
+			}
+			f, err = proc.ReadFrame()
+			if err != nil || !bytes.Equal(f[4:], data2) {
+				t.Error(err)
+				return
+			}
+			_, err = proc.ReadFrame()
+			if err != io.EOF {
+				t.Error(err)
+				return
+			}
+			wait.Done()
+		}()
+		buf := make([]byte, 1024)
+		binary.BigEndian.PutUint32(buf, uint32(4+len(data1)))
+		copy(buf[4:], data1)
+		binary.BigEndian.PutUint32(buf[4+len(data1):], uint32(4+len(data2)))
+		copy(buf[8+len(data1):], data2)
+		w.Write(buf[:4+len(data1)+3])
+		time.Sleep(time.Millisecond)
+		w.Write(buf[4+len(data1)+3 : 4+len(data1)+4+len(data2)])
+		time.Sleep(time.Millisecond)
+		w.Close()
+		time.Sleep(time.Millisecond)
+		wait.Wait()
+	}
+	{ //test frame read write 8
+		r, w, _ := os.Pipe()
+		reader := NewReader(r, 1024)
+		reader.LengthFieldLength = 1
+		reader.LengthFieldMagic = 0
+		writer := NewWriter(&deadlineRWC{ReadWriter: w})
+		writer.SetWriteTimeout(time.Second)
+		writer.LengthFieldLength = 1
+		writer.LengthFieldMagic = 0
+		readed := bytes.NewBuffer(nil)
+		waiter := make(chan int, 1)
+		go func() {
+			io.Copy(readed, reader)
+			waiter <- 1
+		}()
+		writed := bytes.NewBuffer(nil)
+		count := rand.Intn(10) + 1
+		for i := 0; i < count; i++ {
+			fmt.Fprintf(writer, "data-%v\n", i)
+			fmt.Fprintf(writed, "data-%v\n", i)
+		}
+		w.Close()
+		<-waiter
+		if !bytes.Equal(readed.Bytes(), writed.Bytes()) {
+			fmt.Printf("readed:\n%v\n", (readed.Bytes()))
+			fmt.Printf("writed:\n%v\n", (writed.Bytes()))
+			t.Error("error")
+			return
+		}
+	}
+	{ //test frame read write 16
+		r, w, _ := os.Pipe()
+		reader := NewReader(r, 1024)
+		reader.LengthFieldLength = 2
+		reader.LengthFieldMagic = 0
+		writer := NewWriter(&deadlineRWC{ReadWriter: w})
+		writer.SetWriteTimeout(time.Second)
+		writer.LengthFieldLength = 2
+		writer.LengthFieldMagic = 0
+		readed := bytes.NewBuffer(nil)
+		waiter := make(chan int, 1)
+		go func() {
+			io.Copy(readed, reader)
+			waiter <- 1
+		}()
+		writed := bytes.NewBuffer(nil)
+		count := rand.Intn(10) + 1
+		for i := 0; i < count; i++ {
+			fmt.Fprintf(writer, "data-%v\n", i)
+			fmt.Fprintf(writed, "data-%v\n", i)
+		}
+		w.Close()
+		<-waiter
+		if !bytes.Equal(readed.Bytes(), writed.Bytes()) {
+			fmt.Printf("readed:\n%v\n", (readed.Bytes()))
+			fmt.Printf("writed:\n%v\n", (writed.Bytes()))
+			t.Error("error")
+			return
+		}
+	}
 	{ //test frame read write
 		r, w, _ := os.Pipe()
 		reader := NewReader(r, 1024)
@@ -195,13 +339,7 @@ func TestReadWrite(t *testing.T) {
 	{ //test string
 		fmt.Printf("%v\n", NewReader(bytes.NewBuffer(nil), 1024))
 		fmt.Printf("%v\n", NewWriter(bytes.NewBuffer(nil)))
-	}
-	{ //wrap
-		buf := Wrap([]byte("123"))
-		if len(buf) != 7 {
-			t.Error("error")
-			return
-		}
+		fmt.Printf("%v\n", NewReadWriteCloser(nil, 1024))
 	}
 }
 
@@ -216,6 +354,28 @@ func TestError(t *testing.T) {
 		defer func() {
 			recover()
 		}()
+		NewReadWriter(nil, -1)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
 		NewReadWriteCloser(nil, -1)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		rwc := NewReadWriteCloser(nil, 1024)
+		rwc.SetLengthFieldLength(10)
+		rwc.WriteFrame(nil)
+	}()
+	func() {
+		defer func() {
+			recover()
+		}()
+		rwc := NewReadWriteCloser(nil, 1024)
+		rwc.SetLengthFieldLength(10)
+		rwc.readFrameLength()
 	}()
 }

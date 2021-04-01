@@ -84,10 +84,6 @@ func (b *BaseReadWriteCloser) Close() (err error) {
 }
 
 func (b *BaseReadWriteCloser) String() string {
-	var rawReader, rawWriter interface{} = b.BaseReader.Raw, b.BaseWriter.Raw
-	if rawReader == rawWriter {
-		return fmt.Sprintf("%v", b.BaseReader)
-	}
 	return fmt.Sprintf("Reader:%v,Writer:%v", b.BaseReader, b.BaseWriter)
 }
 
@@ -95,6 +91,30 @@ func (b *BaseReadWriteCloser) String() string {
 func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 	b.BaseReader.SetReadTimeout(timeout)
 	b.BaseWriter.SetWriteTimeout(timeout)
+}
+
+//SetLengthFieldMagic will set the LengthFieldMagic for reader/writer
+func (b *BaseReadWriteCloser) SetLengthFieldMagic(value int) {
+	b.BaseReader.LengthFieldMagic = value
+	b.BaseWriter.LengthFieldMagic = value
+}
+
+//SetLengthFieldOffset will set the LengthFieldOffset for reader/writer
+func (b *BaseReadWriteCloser) SetLengthFieldOffset(value int) {
+	b.BaseReader.LengthFieldOffset = value
+	b.BaseWriter.LengthFieldOffset = value
+}
+
+//SetLengthFieldLength will set the LengthFieldLength for reader/writer
+func (b *BaseReadWriteCloser) SetLengthFieldLength(value int) {
+	b.BaseReader.LengthFieldLength = value
+	b.BaseWriter.LengthFieldLength = value
+}
+
+//SetLengthAdjustment will set the LengthAdjustment for reader/writer
+func (b *BaseReadWriteCloser) SetLengthAdjustment(value int) {
+	b.BaseReader.LengthAdjustment = value
+	b.BaseWriter.LengthAdjustment = value
 }
 
 //NewReadWriter will return new ReadWriteCloser
@@ -126,12 +146,17 @@ func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame *BaseRead
 
 //BaseReader imple read raw connection by frame mode
 type BaseReader struct {
-	Buffer  []byte
-	Raw     io.Reader
-	Timeout time.Duration
-	offset  uint32
-	length  uint32
-	locker  sync.RWMutex
+	ByteOrder         binary.ByteOrder
+	LengthFieldMagic  int
+	LengthFieldOffset int
+	LengthFieldLength int
+	LengthAdjustment  int
+	Buffer            []byte
+	Raw               io.Reader
+	Timeout           time.Duration
+	offset            uint32
+	length            uint32
+	locker            sync.RWMutex
 }
 
 //NewBaseReader will create new Reader by raw reader and buffer size
@@ -140,9 +165,12 @@ func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 		panic("buffer size is < 1")
 	}
 	reader = &BaseReader{
-		Buffer: make([]byte, bufferSize),
-		Raw:    raw,
-		locker: sync.RWMutex{},
+		ByteOrder:         binary.BigEndian,
+		LengthFieldMagic:  1,
+		LengthFieldLength: 4,
+		Buffer:            make([]byte, bufferSize),
+		Raw:               raw,
+		locker:            sync.RWMutex{},
 	}
 	return
 }
@@ -159,24 +187,40 @@ func (b *BaseReader) readMore() (err error) {
 	return
 }
 
+func (b *BaseReader) readFrameLength() (length uint32) {
+	for i := 0; i < b.LengthFieldMagic; i++ {
+		b.Buffer[b.offset+uint32(b.LengthFieldOffset)+uint32(i)] = 0
+	}
+	switch b.LengthFieldLength {
+	case 1:
+		length = uint32(b.Buffer[b.offset+uint32(b.LengthFieldOffset)]) - uint32(b.LengthAdjustment)
+	case 2:
+		length = uint32(b.ByteOrder.Uint16(b.Buffer[b.offset+uint32(b.LengthFieldOffset):])) - uint32(b.LengthAdjustment)
+	case 4:
+		length = uint32(b.ByteOrder.Uint32(b.Buffer[b.offset+uint32(b.LengthFieldOffset):])) - uint32(b.LengthAdjustment)
+	default:
+		panic("not supported LengthFieldLength")
+	}
+	return
+}
+
 //ReadFrame will read raw reader as frame mode. it will return length(4bytes)+data.
 //the return []byte is the buffer slice, must be copy to new []byte, it will be change after next read
 func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 	b.locker.Lock()
 	defer b.locker.Unlock()
-	more := b.length < 5
+	more := b.length < uint32(b.LengthFieldLength)+1
 	for {
 		if more {
 			err = b.readMore()
 			if err != nil {
 				break
 			}
-			if b.length < 5 {
+			if b.length < uint32(b.LengthFieldLength)+1 {
 				continue
 			}
 		}
-		b.Buffer[b.offset] = 0
-		frameLength := binary.BigEndian.Uint32(b.Buffer[b.offset:])
+		frameLength := b.readFrameLength()
 		if frameLength > uint32(len(b.Buffer)) {
 			err = ErrFrameTooLarge
 			break
@@ -193,7 +237,7 @@ func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 		cmd[0] = 0
 		b.offset += frameLength
 		b.length -= frameLength
-		more = b.length <= 4
+		more = b.length <= uint32(b.LengthFieldLength)
 		if b.length < 1 {
 			b.offset = 0
 		}
@@ -227,15 +271,24 @@ func (b *BaseReader) String() string {
 
 //BaseWriter implment the frame Writer
 type BaseWriter struct {
-	//the raw io writer
-	Raw     io.Writer
-	Timeout time.Duration
-	locker  sync.RWMutex
+	ByteOrder         binary.ByteOrder
+	LengthFieldMagic  int
+	LengthFieldOffset int
+	LengthFieldLength int
+	LengthAdjustment  int
+	Raw               io.Writer
+	Timeout           time.Duration
+	locker            sync.RWMutex
 }
 
 //NewBaseWriter will return new BaseWriter
 func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
-	writer = &BaseWriter{Raw: raw}
+	writer = &BaseWriter{
+		ByteOrder:         binary.BigEndian,
+		LengthFieldMagic:  1,
+		LengthFieldLength: 4,
+		Raw:               raw,
+	}
 	return
 }
 
@@ -244,8 +297,19 @@ func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
 func (b *BaseWriter) WriteFrame(buffer []byte) (w int, err error) {
 	b.locker.Lock()
 	defer b.locker.Unlock()
-	binary.BigEndian.PutUint32(buffer, uint32(len(buffer)))
-	buffer[0] = byte(rand.Intn(255))
+	switch b.LengthFieldLength {
+	case 1:
+		buffer[b.LengthFieldOffset] = byte(len(buffer) + b.LengthAdjustment)
+	case 2:
+		b.ByteOrder.PutUint16(buffer[b.LengthFieldOffset:], uint16(len(buffer)+b.LengthAdjustment))
+	case 4:
+		b.ByteOrder.PutUint32(buffer[b.LengthFieldOffset:], uint32(len(buffer)+b.LengthAdjustment))
+	default:
+		panic("not supported LengthFieldLength")
+	}
+	for i := 0; i < b.LengthFieldMagic; i++ {
+		buffer[b.LengthFieldOffset+i] = byte(rand.Intn(255))
+	}
 	if w, ok := b.Raw.(writeDeadlinable); b.Timeout > 0 && ok {
 		w.SetWriteDeadline(time.Now().Add(b.Timeout))
 	}
@@ -270,13 +334,4 @@ func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 
 func (b *BaseWriter) String() string {
 	return xio.RemoteAddr(b.Raw)
-}
-
-//Wrap will create buffer and add frame header
-func Wrap(p []byte) (buffer []byte) {
-	buffer = make([]byte, len(p)+4)
-	copy(buffer[4:], p)
-	binary.BigEndian.PutUint32(buffer, uint32(len(buffer)))
-	buffer[0] = byte(rand.Intn(255))
-	return
 }
