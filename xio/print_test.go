@@ -3,6 +3,7 @@ package xio
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"testing"
 	"time"
@@ -104,4 +105,11 @@ func TestPrint(t *testing.T) {
 	print1.SetWriteDeadline(time.Now())
 	print1.LocalAddr()
 	print1.RemoteAddr()
+	//
+	print2 := NewPrintPiper("testing", PiperF(func(conn io.ReadWriteCloser, target string) (err error) {
+		err = fmt.Errorf("error")
+		return
+	}))
+	print2.PipeConn(nil, "")
+	print2.Close()
 }

@@ -34,6 +34,15 @@ type Piper interface {
 //PiperF is func to implement Piper
 type PiperF func(conn io.ReadWriteCloser, target string) (err error)
 
+func (p PiperF) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
+	err = p(conn, target)
+	return
+}
+
+func (p PiperF) Close() (err error) {
+	return
+}
+
 //PiperDialer is interface for implement piper dialer
 type PiperDialer interface {
 	DialPiper(uri string, bufferSize int) (raw Piper, err error)

@@ -105,3 +105,26 @@ func (p *PrintConn) Close() (err error) {
 	fmt.Printf("%v Close %v\n", p.Name, err)
 	return
 }
+
+type PrintPiper struct {
+	Name string
+	Raw  Piper
+}
+
+func NewPrintPiper(name string, raw Piper) (piper *PrintPiper) {
+	piper = &PrintPiper{
+		Name: name,
+		Raw:  raw,
+	}
+	return
+}
+
+func (p *PrintPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
+	err = p.Raw.PipeConn(NewPrintConn(p.Name, conn), target)
+	return
+}
+
+func (p *PrintPiper) Close() (err error) {
+	err = p.Raw.Close()
+	return
+}
