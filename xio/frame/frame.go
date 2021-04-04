@@ -37,6 +37,7 @@ type Reader interface {
 	GetReadLengthFieldOffset() (value int)
 	GetReadLengthFieldLength() (value int)
 	GetReadLengthAdjustment() (value int)
+	GetReadDataOffset() (value int)
 	SetReadByteOrder(order binary.ByteOrder)
 	SetReadLengthFieldMagic(value int)
 	SetReadLengthFieldOffset(value int)
@@ -56,6 +57,7 @@ type Writer interface {
 	GetWriteLengthFieldOffset() (value int)
 	GetWriteLengthFieldLength() (value int)
 	GetWriteLengthAdjustment() (value int)
+	GetWriteDataOffset() (value int)
 	SetWriteByteOrder(order binary.ByteOrder)
 	SetWriteLengthFieldMagic(value int)
 	SetWriteLengthFieldOffset(value int)
@@ -73,6 +75,7 @@ type ReadWriter interface {
 	GetLengthFieldOffset() (value int)
 	GetLengthFieldLength() (value int)
 	GetLengthAdjustment() (value int)
+	GetDataOffset() (value int)
 	SetByteOrder(order binary.ByteOrder)
 	SetLengthFieldMagic(value int)
 	SetLengthFieldOffset(value int)
@@ -145,6 +148,11 @@ func (b *BaseReadWriteCloser) GetLengthFieldLength() (value int) {
 
 func (b *BaseReadWriteCloser) GetLengthAdjustment() (value int) {
 	value = b.BaseReader.GetReadLengthAdjustment()
+	return
+}
+
+func (b *BaseReadWriteCloser) GetDataOffset() (value int) {
+	value = b.BaseReader.GetReadDataOffset()
 	return
 }
 
@@ -257,6 +265,11 @@ func (b *BaseReader) GetReadLengthFieldLength() (value int) {
 
 func (b *BaseReader) GetReadLengthAdjustment() (value int) {
 	value = b.LengthAdjustment
+	return
+}
+
+func (b *BaseReader) GetReadDataOffset() (value int) {
+	value = b.LengthFieldOffset + b.LengthFieldLength
 	return
 }
 
@@ -419,6 +432,11 @@ func (b *BaseWriter) GetWriteLengthFieldLength() (value int) {
 
 func (b *BaseWriter) GetWriteLengthAdjustment() (value int) {
 	value = b.LengthAdjustment
+	return
+}
+
+func (b *BaseWriter) GetWriteDataOffset() (value int) {
+	value = b.LengthFieldOffset + b.LengthFieldLength
 	return
 }
 
