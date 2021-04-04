@@ -32,10 +32,12 @@ type Reader interface {
 	io.Reader
 	ReadFrame() (frame []byte, err error)
 	SetReadTimeout(timeout time.Duration)
+	GetReadByteOrder() (order binary.ByteOrder)
 	GetReadLengthFieldMagic() (value int)
 	GetReadLengthFieldOffset() (value int)
 	GetReadLengthFieldLength() (value int)
 	GetReadLengthAdjustment() (value int)
+	SetReadByteOrder(order binary.ByteOrder)
 	SetReadLengthFieldMagic(value int)
 	SetReadLengthFieldOffset(value int)
 	SetReadLengthFieldLength(value int)
@@ -49,10 +51,12 @@ type Writer interface {
 	//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 	WriteFrame(buffer []byte) (n int, err error)
 	SetWriteTimeout(timeout time.Duration)
+	GetWriteByteOrder() (order binary.ByteOrder)
 	GetWriteLengthFieldMagic() (value int)
 	GetWriteLengthFieldOffset() (value int)
 	GetWriteLengthFieldLength() (value int)
 	GetWriteLengthAdjustment() (value int)
+	SetWriteByteOrder(order binary.ByteOrder)
 	SetWriteLengthFieldMagic(value int)
 	SetWriteLengthFieldOffset(value int)
 	SetWriteLengthFieldLength(value int)
@@ -64,10 +68,12 @@ type ReadWriter interface {
 	Reader
 	Writer
 	SetTimeout(timeout time.Duration)
+	GetByteOrder() (order binary.ByteOrder)
 	GetLengthFieldMagic() (value int)
 	GetLengthFieldOffset() (value int)
 	GetLengthFieldLength() (value int)
 	GetLengthAdjustment() (value int)
+	SetByteOrder(order binary.ByteOrder)
 	SetLengthFieldMagic(value int)
 	SetLengthFieldOffset(value int)
 	SetLengthFieldLength(value int)
@@ -117,6 +123,11 @@ func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 	b.BaseWriter.SetWriteTimeout(timeout)
 }
 
+func (b *BaseReadWriteCloser) GetByteOrder() (order binary.ByteOrder) {
+	order = b.BaseReader.GetReadByteOrder()
+	return
+}
+
 func (b *BaseReadWriteCloser) GetLengthFieldMagic() (value int) {
 	value = b.BaseReader.GetReadLengthFieldMagic()
 	return
@@ -135,6 +146,11 @@ func (b *BaseReadWriteCloser) GetLengthFieldLength() (value int) {
 func (b *BaseReadWriteCloser) GetLengthAdjustment() (value int) {
 	value = b.BaseReader.GetReadLengthAdjustment()
 	return
+}
+
+func (b *BaseReadWriteCloser) SetByteOrder(order binary.ByteOrder) {
+	b.BaseReader.SetReadByteOrder(order)
+	b.BaseWriter.SetWriteByteOrder(order)
 }
 
 //SetLengthFieldMagic will set the LengthFieldMagic for reader/writer
@@ -219,6 +235,11 @@ func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 	return
 }
 
+func (b *BaseReader) GetReadByteOrder() (order binary.ByteOrder) {
+	order = b.ByteOrder
+	return
+}
+
 func (b *BaseReader) GetReadLengthFieldMagic() (value int) {
 	value = b.LengthFieldMagic
 	return
@@ -237,6 +258,10 @@ func (b *BaseReader) GetReadLengthFieldLength() (value int) {
 func (b *BaseReader) GetReadLengthAdjustment() (value int) {
 	value = b.LengthAdjustment
 	return
+}
+
+func (b *BaseReader) SetReadByteOrder(order binary.ByteOrder) {
+	b.ByteOrder = order
 }
 
 func (b *BaseReader) SetReadLengthFieldMagic(value int) {
@@ -372,6 +397,11 @@ func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
 	return
 }
 
+func (b *BaseWriter) GetWriteByteOrder() (order binary.ByteOrder) {
+	order = b.ByteOrder
+	return
+}
+
 func (b *BaseWriter) GetWriteLengthFieldMagic() (value int) {
 	value = b.LengthFieldMagic
 	return
@@ -390,6 +420,10 @@ func (b *BaseWriter) GetWriteLengthFieldLength() (value int) {
 func (b *BaseWriter) GetWriteLengthAdjustment() (value int) {
 	value = b.LengthAdjustment
 	return
+}
+
+func (b *BaseWriter) SetWriteByteOrder(order binary.ByteOrder) {
+	b.ByteOrder = order
 }
 
 func (b *BaseWriter) SetWriteLengthFieldMagic(value int) {
@@ -450,4 +484,42 @@ func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 
 func (b *BaseWriter) String() string {
 	return xio.RemoteAddr(b.Raw)
+}
+
+type BasePiper struct {
+	Raw               xio.Piper
+	BufferSize        int
+	Timeout           time.Duration
+	ByteOrder         binary.ByteOrder
+	LengthFieldMagic  int
+	LengthFieldOffset int
+	LengthFieldLength int
+	LengthAdjustment  int
+}
+
+func NewBasePiper(raw xio.Piper, bufferSize int) (piper *BasePiper) {
+	piper = &BasePiper{
+		Raw:               raw,
+		BufferSize:        bufferSize,
+		LengthFieldMagic:  1,
+		LengthFieldLength: 4,
+	}
+	return
+}
+
+func (b *BasePiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
+	rwc := NewReadWriteCloser(conn, b.BufferSize)
+	rwc.SetTimeout(b.Timeout)
+	rwc.SetByteOrder(b.ByteOrder)
+	rwc.SetLengthFieldMagic(b.LengthFieldMagic)
+	rwc.SetLengthFieldOffset(b.LengthFieldOffset)
+	rwc.SetLengthFieldLength(b.LengthFieldLength)
+	rwc.SetLengthAdjustment(b.LengthAdjustment)
+	err = b.Raw.PipeConn(rwc, target)
+	return
+}
+
+func (b *BasePiper) Close() (err error) {
+	err = b.Raw.Close()
+	return
 }

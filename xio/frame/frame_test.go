@@ -11,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/codingeasygo/util/xio"
 )
 
 type deadlineRWC struct {
@@ -333,6 +335,41 @@ func TestReadWrite(t *testing.T) {
 			return
 		}
 	}
+	{
+		//
+		NewReader(nil, 1024).GetReadByteOrder()
+		NewReader(nil, 1024).SetReadByteOrder(binary.BigEndian)
+		NewReader(nil, 1024).GetReadLengthFieldMagic()
+		NewReader(nil, 1024).SetReadLengthFieldMagic(1)
+		NewReader(nil, 1024).GetReadLengthFieldOffset()
+		NewReader(nil, 1024).SetReadLengthFieldOffset(1)
+		NewReader(nil, 1024).GetReadLengthFieldLength()
+		NewReader(nil, 1024).SetReadLengthFieldLength(1)
+		NewReader(nil, 1024).GetReadLengthAdjustment()
+		NewReader(nil, 1024).SetReadLengthAdjustment(1)
+		//
+		NewWriter(nil).GetWriteByteOrder()
+		NewWriter(nil).SetWriteByteOrder(binary.BigEndian)
+		NewWriter(nil).GetWriteLengthFieldMagic()
+		NewWriter(nil).SetWriteLengthFieldMagic(1)
+		NewWriter(nil).GetWriteLengthFieldOffset()
+		NewWriter(nil).SetWriteLengthFieldOffset(1)
+		NewWriter(nil).GetWriteLengthFieldLength()
+		NewWriter(nil).SetWriteLengthFieldLength(1)
+		NewWriter(nil).GetWriteLengthAdjustment()
+		NewWriter(nil).SetWriteLengthAdjustment(1)
+		//
+		NewReadWriter(nil, 1024).GetByteOrder()
+		NewReadWriter(nil, 1024).SetByteOrder(binary.BigEndian)
+		NewReadWriter(nil, 1024).GetLengthFieldMagic()
+		NewReadWriter(nil, 1024).SetLengthFieldMagic(1)
+		NewReadWriter(nil, 1024).GetLengthFieldOffset()
+		NewReadWriter(nil, 1024).SetLengthFieldOffset(1)
+		NewReadWriter(nil, 1024).GetLengthFieldLength()
+		NewReadWriter(nil, 1024).SetLengthFieldLength(1)
+		NewReadWriter(nil, 1024).GetLengthAdjustment()
+		NewReadWriter(nil, 1024).SetLengthAdjustment(1)
+	}
 	{ //test close
 		NewReadWriteCloser(&net.TCPConn{}, 1024).Close()
 	}
@@ -341,6 +378,15 @@ func TestReadWrite(t *testing.T) {
 		fmt.Printf("%v\n", NewWriter(bytes.NewBuffer(nil)))
 		fmt.Printf("%v\n", NewReadWriteCloser(nil, 1024))
 	}
+}
+
+func TestPiper(t *testing.T) {
+	piper := NewBasePiper(xio.PiperF(func(conn io.ReadWriteCloser, target string) (err error) {
+		err = fmt.Errorf("error")
+		return
+	}), 1024)
+	piper.PipeConn(nil, "target")
+	piper.Close()
 }
 
 func TestError(t *testing.T) {
