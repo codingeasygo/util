@@ -91,6 +91,7 @@ func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
 type CopyPiper struct {
 	io.ReadWriteCloser
 	BufferSize int
+	XX         string
 }
 
 //NewCopyPiper will return new CopyPiper
@@ -103,12 +104,34 @@ func NewCopyPiper(raw io.ReadWriteCloser, bufferSize int) (piper *CopyPiper) {
 func (c *CopyPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	wc := make(chan int, 1)
 	go func() {
-		io.CopyBuffer(c.ReadWriteCloser, conn, make([]byte, c.BufferSize))
+		var readErr error
+		if to, ok := conn.(io.WriterTo); ok {
+			_, readErr = to.WriteTo(c.ReadWriteCloser)
+		} else if from, ok := c.ReadWriteCloser.(io.ReaderFrom); ok {
+			_, readErr = from.ReadFrom(conn)
+		} else {
+			_, readErr = io.CopyBuffer(c.ReadWriteCloser, conn, make([]byte, c.BufferSize))
+		}
 		c.ReadWriteCloser.Close()
 		wc <- 1
+		if err == nil {
+			err = readErr
+		}
 	}()
-	_, err = io.CopyBuffer(conn, c.ReadWriteCloser, make([]byte, c.BufferSize))
-	c.Close()
+	{
+		var writeErr error
+		if from, ok := conn.(io.ReaderFrom); ok {
+			_, writeErr = from.ReadFrom(c.ReadWriteCloser)
+		} else if to, ok := c.ReadWriteCloser.(io.WriterTo); ok {
+			_, writeErr = to.WriteTo(conn)
+		} else {
+			_, writeErr = io.CopyBuffer(conn, c.ReadWriteCloser, make([]byte, c.BufferSize))
+		}
+		conn.Close()
+		if err == nil {
+			err = writeErr
+		}
+	}
 	<-wc
 	close(wc)
 	return

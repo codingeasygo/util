@@ -43,6 +43,8 @@ type Reader interface {
 	SetReadLengthFieldOffset(value int)
 	SetReadLengthFieldLength(value int)
 	SetReadLengthAdjustment(value int)
+	SetReadDataOffset(value int)
+	WriteTo(writer io.Writer) (w int64, err error)
 }
 
 //Writer is interface for write the raw io as frame mode
@@ -63,6 +65,8 @@ type Writer interface {
 	SetWriteLengthFieldOffset(value int)
 	SetWriteLengthFieldLength(value int)
 	SetWriteLengthAdjustment(value int)
+	SetWriteDataOffset(value int)
+	ReadFrom(reader io.Reader) (w int64, err error)
 }
 
 //ReadWriter is interface for read/write the raw io as frame mode
@@ -81,6 +85,7 @@ type ReadWriter interface {
 	SetLengthFieldOffset(value int)
 	SetLengthFieldLength(value int)
 	SetLengthAdjustment(value int)
+	SetDataOffset(value int)
 }
 
 //ReadWriteCloser is interface for read/write the raw io as frame mode
@@ -185,6 +190,11 @@ func (b *BaseReadWriteCloser) SetLengthAdjustment(value int) {
 	b.BaseWriter.SetWriteLengthAdjustment(value)
 }
 
+func (b *BaseReadWriteCloser) SetDataOffset(value int) {
+	b.BaseReader.SetReadDataOffset(value)
+	b.BaseWriter.SetWriteDataOffset(value)
+}
+
 //NewReadWriter will return new ReadWriteCloser
 func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame *BaseReadWriteCloser) {
 	if bufferSize < 1 {
@@ -219,6 +229,7 @@ type BaseReader struct {
 	LengthFieldOffset int
 	LengthFieldLength int
 	LengthAdjustment  int
+	DataOffset        int
 	Buffer            []byte
 	Raw               io.Reader
 	Timeout           time.Duration
@@ -236,6 +247,7 @@ func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 		ByteOrder:         binary.BigEndian,
 		LengthFieldMagic:  1,
 		LengthFieldLength: 4,
+		DataOffset:        4,
 		Buffer:            make([]byte, bufferSize),
 		Raw:               raw,
 		locker:            sync.RWMutex{},
@@ -269,7 +281,7 @@ func (b *BaseReader) GetReadLengthAdjustment() (value int) {
 }
 
 func (b *BaseReader) GetReadDataOffset() (value int) {
-	value = b.LengthFieldOffset + b.LengthFieldLength
+	value = b.DataOffset
 	return
 }
 
@@ -291,6 +303,10 @@ func (b *BaseReader) SetReadLengthFieldLength(value int) {
 
 func (b *BaseReader) SetReadLengthAdjustment(value int) {
 	b.LengthAdjustment = value
+}
+
+func (b *BaseReader) SetReadDataOffset(value int) {
+	b.DataOffset = value
 }
 
 //readMore will read more data to buffer
@@ -371,10 +387,7 @@ func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 //Read implment the io.Reader
 //it will read the one frame and copy the data to p
 func (b *BaseReader) Read(p []byte) (n int, err error) {
-	data, err := b.ReadFrame()
-	if err == nil {
-		n = copy(p, data[4:])
-	}
+	n, err = Read(b, p)
 	return
 }
 
@@ -383,8 +396,39 @@ func (b *BaseReader) SetReadTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }
 
+func (b *BaseReader) WriteTo(writer io.Writer) (w int64, err error) {
+	w, err = WriteTo(b, writer)
+	return
+}
+
 func (b *BaseReader) String() string {
 	return xio.RemoteAddr(b.Raw)
+}
+
+func Read(reader Reader, p []byte) (n int, err error) {
+	offset := reader.GetReadDataOffset()
+	data, err := reader.ReadFrame()
+	if err == nil {
+		n = copy(p, data[offset:])
+	}
+	return
+}
+
+func WriteTo(reader Reader, writer io.Writer) (w int64, err error) {
+	var n int
+	var buffer []byte
+	offset := reader.GetReadDataOffset()
+	for {
+		buffer, err = reader.ReadFrame()
+		if err == nil {
+			n, err = writer.Write(buffer[offset:])
+		}
+		if err != nil {
+			break
+		}
+		w += int64(n)
+	}
+	return
 }
 
 //BaseWriter implment the frame Writer
@@ -394,6 +438,8 @@ type BaseWriter struct {
 	LengthFieldOffset int
 	LengthFieldLength int
 	LengthAdjustment  int
+	DataOffset        int
+	BufferSize        int //using buffer on ReadFrom
 	Raw               io.Writer
 	Timeout           time.Duration
 	locker            sync.RWMutex
@@ -405,6 +451,8 @@ func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
 		ByteOrder:         binary.BigEndian,
 		LengthFieldMagic:  1,
 		LengthFieldLength: 4,
+		DataOffset:        4,
+		BufferSize:        32 * 1024,
 		Raw:               raw,
 	}
 	return
@@ -436,7 +484,7 @@ func (b *BaseWriter) GetWriteLengthAdjustment() (value int) {
 }
 
 func (b *BaseWriter) GetWriteDataOffset() (value int) {
-	value = b.LengthFieldOffset + b.LengthFieldLength
+	value = b.DataOffset
 	return
 }
 
@@ -458,6 +506,10 @@ func (b *BaseWriter) SetWriteLengthFieldLength(value int) {
 
 func (b *BaseWriter) SetWriteLengthAdjustment(value int) {
 	b.LengthAdjustment = value
+}
+
+func (b *BaseWriter) SetWriteDataOffset(value int) {
+	b.DataOffset = value
 }
 
 //WriteFrame will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
@@ -488,10 +540,7 @@ func (b *BaseWriter) WriteFrame(buffer []byte) (w int, err error) {
 //Write implment the io.Writer, the p is user data buffer.
 //it will make a new []byte with len(p)+4, the copy data to buffer
 func (b *BaseWriter) Write(p []byte) (n int, err error) {
-	buf := make([]byte, len(p)+4)
-	copy(buf[4:], p)
-	n = len(buf)
-	_, err = b.WriteFrame(buf)
+	n, err = Write(b, p)
 	return
 }
 
@@ -500,8 +549,39 @@ func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }
 
+func (b *BaseWriter) ReadFrom(reader io.Reader) (w int64, err error) {
+	w, err = ReadFrom(b, reader, b.BufferSize)
+	return
+}
+
 func (b *BaseWriter) String() string {
 	return xio.RemoteAddr(b.Raw)
+}
+
+func Write(writer Writer, p []byte) (n int, err error) {
+	offset := writer.GetWriteDataOffset()
+	buf := make([]byte, len(p)+offset)
+	copy(buf[offset:], p)
+	n = len(buf)
+	_, err = writer.WriteFrame(buf)
+	return
+}
+
+func ReadFrom(writer Writer, reader io.Reader, bufferSize int) (w int64, err error) {
+	var n int
+	buffer := make([]byte, n+bufferSize)
+	offset := writer.GetWriteDataOffset()
+	for {
+		n, err = reader.Read(buffer[offset:])
+		if err == nil {
+			n, err = writer.WriteFrame(buffer[:offset+n])
+		}
+		if err != nil {
+			break
+		}
+		w += int64(n)
+	}
+	return
 }
 
 type BasePiper struct {
