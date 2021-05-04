@@ -593,6 +593,7 @@ type BasePiper struct {
 	LengthFieldOffset int
 	LengthFieldLength int
 	LengthAdjustment  int
+	DataOffset        int
 }
 
 func NewBasePiper(raw xio.Piper, bufferSize int) (piper *BasePiper) {
@@ -601,6 +602,7 @@ func NewBasePiper(raw xio.Piper, bufferSize int) (piper *BasePiper) {
 		BufferSize:        bufferSize,
 		LengthFieldMagic:  1,
 		LengthFieldLength: 4,
+		DataOffset:        4,
 	}
 	return
 }
@@ -613,6 +615,7 @@ func (b *BasePiper) PipeConn(conn io.ReadWriteCloser, target string) (err error)
 	rwc.SetLengthFieldOffset(b.LengthFieldOffset)
 	rwc.SetLengthFieldLength(b.LengthFieldLength)
 	rwc.SetLengthAdjustment(b.LengthAdjustment)
+	rwc.SetDataOffset(b.DataOffset)
 	err = b.Raw.PipeConn(rwc, target)
 	return
 }
