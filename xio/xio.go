@@ -267,10 +267,10 @@ func (l ListenerF) String() string {
 
 //LocalAddr will return net.Conn.LocalAddr or fmt.Sprintf("%v", target)
 func LocalAddr(target interface{}) string {
-	if conn, ok := target.(net.Conn); ok {
+	if conn, ok := target.(*websocket.Conn); ok {
 		return conn.LocalAddr().String()
 	}
-	if conn, ok := target.(*websocket.Conn); ok {
+	if conn, ok := target.(net.Conn); ok {
 		return conn.LocalAddr().String()
 	}
 	return fmt.Sprintf("%v", target)
@@ -278,11 +278,11 @@ func LocalAddr(target interface{}) string {
 
 //RemoteAddr will return net.Conn.RemoteAddr or fmt.Sprintf("%v", target)
 func RemoteAddr(target interface{}) string {
-	if conn, ok := target.(net.Conn); ok {
-		return conn.RemoteAddr().String()
-	}
 	if conn, ok := target.(*websocket.Conn); ok {
 		return conn.Request().RemoteAddr
+	}
+	if conn, ok := target.(net.Conn); ok {
+		return conn.RemoteAddr().String()
 	}
 	return fmt.Sprintf("%v", target)
 }
