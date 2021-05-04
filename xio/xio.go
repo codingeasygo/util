@@ -7,6 +7,8 @@ import (
 	"net"
 	"reflect"
 	"time"
+
+	"golang.org/x/net/websocket"
 )
 
 //WriteJSON will marshal value to string and write to io.Writer
@@ -268,6 +270,9 @@ func LocalAddr(target interface{}) string {
 	if conn, ok := target.(net.Conn); ok {
 		return conn.LocalAddr().String()
 	}
+	if conn, ok := target.(*websocket.Conn); ok {
+		return conn.LocalAddr().String()
+	}
 	return fmt.Sprintf("%v", target)
 }
 
@@ -275,6 +280,9 @@ func LocalAddr(target interface{}) string {
 func RemoteAddr(target interface{}) string {
 	if conn, ok := target.(net.Conn); ok {
 		return conn.RemoteAddr().String()
+	}
+	if conn, ok := target.(*websocket.Conn); ok {
+		return conn.Request().RemoteAddr
 	}
 	return fmt.Sprintf("%v", target)
 }
