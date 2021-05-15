@@ -20,7 +20,8 @@ type Dialer interface {
 
 //WebsocketDialer is an implementation of Dialer by websocket
 type WebsocketDialer struct {
-	Dialer RawDialer
+	Dialer     RawDialer
+	SkipVerify bool
 }
 
 //NewWebsocketDialer will create new WebsocketDialer
@@ -38,7 +39,7 @@ func (w WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error)
 		return
 	}
 	username, password := targetURL.Query().Get("username"), targetURL.Query().Get("password")
-	skipVerify := targetURL.Query().Get("skip_verify") == "1"
+	skipVerify := targetURL.Query().Get("skip_verify") == "1" || w.SkipVerify
 	timeout, _ := strconv.ParseUint(targetURL.Query().Get("timeout"), 10, 32)
 	if timeout < 1 {
 		timeout = 5
