@@ -45,7 +45,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("测试测试测试测试", "r|s", "l:~10", true)
+	_, err = ValidAttrTemple("测试测试测试测试", "r|s", "l:~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -57,7 +57,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("男ks", "r|s", "o:男~女", true)
+	_, err = ValidAttrTemple("男ks", "r|s", "o:男~女", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -69,7 +69,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("ks", "r|s", "p:^.*\\@.*$", true)
+	_, err = ValidAttrTemple("ks", "r|s", "p:^.*\\@.*$", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -87,7 +87,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("12", "o|i", "r:5~10", true)
+	_, err = ValidAttrTemple("12", "o|i", "r:5~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -105,7 +105,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("12", "o|f", "r:5~10", true)
+	_, err = ValidAttrTemple("12", "o|f", "r:5~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -117,13 +117,13 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("测", "o|s", "l:2~", true)
+	_, err = ValidAttrTemple("测", "o|s", "l:2~", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("测度测度测度测度测度", "o|s", "l:~8", true)
+	_, err = ValidAttrTemple("测度测度测度测度测度", "o|s", "l:~8", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -135,8 +135,13 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("a", "o|s", "l:2~8", true)
+	_, err = ValidAttrTemple("a", "o|s", "l:2~8", true)
 	if err == nil {
+		t.Error("not error")
+		return
+	}
+	_, err = ValidAttrTemple("a", "o|s", "n:", true)
+	if err != nil {
 		t.Error("not error")
 		return
 	}
@@ -147,7 +152,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("ks", "o|s", "p:^.*\\@.*$", true)
+	_, err = ValidAttrTemple("ks", "o|s", "p:^.*\\@.*$", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -159,8 +164,13 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("11", "o|i", "o:1~2~3~4~5", true)
+	_, err = ValidAttrTemple("11", "o|i", "o:1~2~3~4~5", true)
 	if err == nil {
+		t.Error("not error")
+		return
+	}
+	_, err = ValidAttrTemple("11", "o|i", "n:", true)
+	if err != nil {
 		t.Error("not error")
 		return
 	}
@@ -171,123 +181,128 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("11", "o|f", "o:1~2~3~4~5", true)
+	_, err = ValidAttrTemple("11", "o|f", "o:1~2~3~4~5", true)
 	if err == nil {
+		t.Error("not error")
+		return
+	}
+	_, err = ValidAttrTemple("11", "o|f", "n:", true)
+	if err != nil {
 		t.Error("not error")
 		return
 	}
 	//
-	v, err = ValidAttrTemple("测", "o|s", "l:a", true)
+	_, err = ValidAttrTemple("测", "o|s", "l:a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|s", "KK:a", true)
+	_, err = ValidAttrTemple("测", "o|s", "KK:a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("centny@gmail.com", "o|s", "p:*,..", true)
+	_, err = ValidAttrTemple("centny@gmail.com", "o|s", "p:*,..", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|i", "r:8~9", true)
+	_, err = ValidAttrTemple("测", "o|i", "r:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|f", "r:8~9", true)
+	_, err = ValidAttrTemple("测", "o|f", "r:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|f", "o:8~9", true)
+	_, err = ValidAttrTemple("测", "o|f", "o:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|n", "r:8~9", true)
+	_, err = ValidAttrTemple("测", "o|n", "r:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "r:~1", true)
+	_, err = ValidAttrTemple("5", "r|i", "r:~1", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "r:a~10", true)
+	_, err = ValidAttrTemple("5", "r|i", "r:a~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "r:1~a", true)
+	_, err = ValidAttrTemple("5", "r|i", "r:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|f", "r:~1", true)
+	_, err = ValidAttrTemple("5", "r|f", "r:~1", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|f", "r:a~10", true)
+	_, err = ValidAttrTemple("5", "r|f", "r:a~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|f", "r:1~a", true)
+	_, err = ValidAttrTemple("5", "r|f", "r:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "m:1~a", true)
+	_, err = ValidAttrTemple("5", "r|i", "m:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "o:1~a", true)
+	_, err = ValidAttrTemple("5", "r|i", "o:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|f", "o:1~a", true)
+	_, err = ValidAttrTemple("5", "r|f", "o:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|f", "m:1~k", true)
+	_, err = ValidAttrTemple("5", "r|f", "m:1~k", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r|i", "o", true)
+	_, err = ValidAttrTemple("5", "r|i", "o", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "r", "o:1~10", true)
+	_, err = ValidAttrTemple("5", "r", "o:1~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("", "r|i", "o:1~10", true)
+	_, err = ValidAttrTemple("", "r|i", "o:1~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("", "o|i", "o:1~10", true)
+	_, err = ValidAttrTemple("", "o|i", "o:1~10", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	v, err = ValidAttrTemple("a", "o|s", "l:a~8", true)
+	_, err = ValidAttrTemple("a", "o|s", "l:a~8", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("a", "o|s", "l:2~a", true)
+	_, err = ValidAttrTemple("a", "o|s", "l:2~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -301,7 +316,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("测试测试测试测试", "R|S", "L:~10", true)
+	_, err = ValidAttrTemple("测试测试测试测试", "R|S", "L:~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -313,7 +328,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("男ks", "R|S", "O:男~女", true)
+	_, err = ValidAttrTemple("男ks", "R|S", "O:男~女", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -325,7 +340,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("ks", "R|S", "P:^.*\\@.*$", true)
+	_, err = ValidAttrTemple("ks", "R|S", "P:^.*\\@.*$", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -343,7 +358,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("12", "O|I", "R:5~10", true)
+	_, err = ValidAttrTemple("12", "O|I", "R:5~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -361,7 +376,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("12", "O|F", "R:5~10", true)
+	_, err = ValidAttrTemple("12", "O|F", "R:5~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -379,7 +394,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("测度测度测度测度测度", "O|S", "L:~8", true)
+	_, err = ValidAttrTemple("测度测度测度测度测度", "O|S", "L:~8", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -391,7 +406,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("a", "O|S", "L:2~8", true)
+	_, err = ValidAttrTemple("a", "O|S", "L:2~8", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -403,7 +418,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("ks", "O|S", "P:^.*\\@.*$", true)
+	_, err = ValidAttrTemple("ks", "O|S", "P:^.*\\@.*$", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -415,7 +430,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("11", "O|I", "O:1~2~3~4~5", true)
+	_, err = ValidAttrTemple("11", "O|I", "O:1~2~3~4~5", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -427,123 +442,123 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	fmt.Println(v)
-	v, err = ValidAttrTemple("11", "O|F", "O:1~2~3~4~5", true)
+	_, err = ValidAttrTemple("11", "O|F", "O:1~2~3~4~5", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
 	//
-	v, err = ValidAttrTemple("测", "O|S", "L:a", true)
+	_, err = ValidAttrTemple("测", "O|S", "L:a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "O|S", "KK:a", true)
+	_, err = ValidAttrTemple("测", "O|S", "KK:a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("centny@gmail.com", "O|S", "P:*,..", true)
+	_, err = ValidAttrTemple("centny@gmail.com", "O|S", "P:*,..", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "O|I", "R:8~9", true)
+	_, err = ValidAttrTemple("测", "O|I", "R:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "O|F", "R:8~9", true)
+	_, err = ValidAttrTemple("测", "O|F", "R:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "O|F", "O:8~9", true)
+	_, err = ValidAttrTemple("测", "O|F", "O:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("测", "o|n", "R:8~9", true)
+	_, err = ValidAttrTemple("测", "o|n", "R:8~9", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "R:~1", true)
+	_, err = ValidAttrTemple("5", "R|I", "R:~1", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "R:a~10", true)
+	_, err = ValidAttrTemple("5", "R|I", "R:a~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "R:1~a", true)
+	_, err = ValidAttrTemple("5", "R|I", "R:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|F", "R:~1", true)
+	_, err = ValidAttrTemple("5", "R|F", "R:~1", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|F", "R:a~10", true)
+	_, err = ValidAttrTemple("5", "R|F", "R:a~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|F", "R:1~a", true)
+	_, err = ValidAttrTemple("5", "R|F", "R:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "m:1~a", true)
+	_, err = ValidAttrTemple("5", "R|I", "m:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "O:1~a", true)
+	_, err = ValidAttrTemple("5", "R|I", "O:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|F", "O:1~a", true)
+	_, err = ValidAttrTemple("5", "R|F", "O:1~a", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|F", "m:1~k", true)
+	_, err = ValidAttrTemple("5", "R|F", "m:1~k", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R|I", "o", true)
+	_, err = ValidAttrTemple("5", "R|I", "o", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("5", "R", "O:1~10", true)
+	_, err = ValidAttrTemple("5", "R", "O:1~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("", "R|I", "O:1~10", true)
+	_, err = ValidAttrTemple("", "R|I", "O:1~10", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("", "O|I", "O:1~10", true)
+	_, err = ValidAttrTemple("", "O|I", "O:1~10", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	v, err = ValidAttrTemple("a", "O|S", "L:a~8", true)
+	_, err = ValidAttrTemple("a", "O|S", "L:a~8", true)
 	if err == nil {
 		t.Error("not error")
 		return
 	}
-	v, err = ValidAttrTemple("a", "O|S", "L:2~a", true)
+	_, err = ValidAttrTemple("a", "O|S", "L:2~a", true)
 	if err == nil {
 		t.Error("not error")
 		return

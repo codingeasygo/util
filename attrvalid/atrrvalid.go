@@ -212,6 +212,10 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("value(%s) not match regex(%s)", ds, lrs[1])
+		case "n":
+			fallthrough
+		case "N":
+			return ds, nil
 		}
 		//unknow range limit type.
 		return nil, fmt.Errorf("invalid range limit %s for string", lrs[0])
@@ -262,6 +266,10 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("invalid value(%f) for options(%s)", ds, lrs[1])
+		case "n":
+			fallthrough
+		case "N":
+			return ds, nil
 		}
 		//unknow range limit type.
 		return nil, fmt.Errorf("invalid range limit %s for float", lrs[0])
@@ -312,6 +320,10 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("invalid value(%v) for options(%s)", ds, lrs[1])
+		case "n":
+			fallthrough
+		case "N":
+			return ds, nil
 		}
 		//unknow range limit type.
 		return nil, fmt.Errorf("invalid range limit %s for float", lrs[0])
