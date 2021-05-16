@@ -41,12 +41,7 @@ func (s *Server) loopAccept(l net.Listener) {
 		if err != nil {
 			break
 		}
-		go func(c net.Conn) {
-			xerr := s.ProcConn(c)
-			if xerr != xio.ErrAsyncRunning {
-				c.Close()
-			}
-		}(conn)
+		go s.ProcConn(conn)
 	}
 	s.waiter.Done()
 }
@@ -168,6 +163,9 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		return
 	}
 	err = raw.PipeConn(conn, uri)
+	if err != xio.ErrAsyncRunning {
+		raw.Close()
+	}
 	return
 }
 
