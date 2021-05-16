@@ -83,10 +83,10 @@ func (s *Server) Stop() (err error) {
 
 //ProcConn will process connecton as socket protocol
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
-	DebugLog("Server proxy socks connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
+	// DebugLog("Server proxy socks connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
 		if err != xio.ErrAsyncRunning {
-			DebugLog("Server proxy socks connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
+			DebugLog("Server socks proxy connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
 			conn.Close()
 		}
 	}()
@@ -141,7 +141,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			uri = string(buf[5 : buf[4]+5])
 		}
 	}
-	// DebugLog("Server start dial to %v on %v", uri, conn.RemoteAddr())
+	DebugLog("Server socks proxy start dial to %v on %v from %v", uri, xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	raw, err := s.Dialer.DialPiper(uri, s.BufferSize)
 	if err != nil {
 		buf[0], buf[1], buf[2], buf[3] = 0x05, 0x04, 0x00, 0x01
@@ -151,7 +151,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			buf[1] = cerr.Code()
 		}
 		conn.Write(buf[:10])
-		// InfoLog("Server dial to %v on %v fail with %v", uri, conn.RemoteAddr(), err)
+		DebugLog("Server socks proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 		return
 	}
 	buf[0], buf[1], buf[2], buf[3] = 0x05, 0x00, 0x00, 0x01

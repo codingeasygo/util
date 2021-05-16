@@ -85,10 +85,10 @@ func (s *Server) Stop() (err error) {
 
 //ProcConn will processs net connect as http proxy
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
-	DebugLog("Server proxy http connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
+	// DebugLog("Server proxy http connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
 		if err != xio.ErrAsyncRunning {
-			DebugLog("Server proxy socks connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
+			DebugLog("Server http proxy connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
 			conn.Close()
 		}
 	}()
@@ -121,11 +121,13 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	var uri string
 	if req.Method == "CONNECT" {
 		uri = "tcp://" + req.RequestURI
+		DebugLog("Server http proxy start dial to %v on %v from %v", uri, xio.LocalAddr(conn), xio.RemoteAddr(conn))
 		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
+			DebugLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 			return
 		}
 		resp.StatusCode = http.StatusOK
@@ -137,11 +139,13 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			host += ":80"
 		}
 		uri = "tcp://" + host
+		DebugLog("Server http proxy start dial to %v on %v from %v", uri, xio.LocalAddr(conn), xio.RemoteAddr(conn))
 		raw, err = s.Dialer.DialPiper(uri, s.BufferSize)
 		if err != nil {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
+			DebugLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 			return
 		}
 		buffer := bytes.NewBuffer(nil)
