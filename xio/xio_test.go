@@ -17,10 +17,6 @@ func init() {
 	go http.ListenAndServe(":6060", nil)
 }
 
-func TestSimple(t *testing.T) {
-	WriteJSON(ioutil.Discard, map[string]interface{}{})
-}
-
 func TestCopyPacketConn(t *testing.T) {
 	packet1, _ := net.ListenPacket("udp", ":12332")
 	go CopyPacketConn(packet1, packet1)

@@ -1,7 +1,6 @@
 package xio
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -10,15 +9,6 @@ import (
 
 	"golang.org/x/net/websocket"
 )
-
-//WriteJSON will marshal value to string and write to io.Writer
-func WriteJSON(w io.Writer, v interface{}) (n int, err error) {
-	data, err := json.Marshal(v)
-	if err == nil {
-		n, err = w.Write(data)
-	}
-	return
-}
 
 func CopyPacketConn(dst interface{}, src net.PacketConn) (l int64, err error) {
 	buffer := make([]byte, 2*1024)
