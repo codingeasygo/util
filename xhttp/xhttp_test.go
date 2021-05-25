@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/codingeasygo/util/xio"
+	"github.com/codingeasygo/util/xjson"
 	"github.com/codingeasygo/util/xmap"
 )
 
@@ -24,13 +24,13 @@ func TestGet(t *testing.T) {
 		var format = r.URL.Query().Get("format")
 		switch format {
 		case "json":
-			xio.WriteJSON(w, map[string]interface{}{
+			xjson.WriteJSON(w, map[string]interface{}{
 				"abc": 1,
 			})
 		case "text":
 			fmt.Fprintf(w, "1")
 		case "header":
-			fmt.Fprintf(w, r.Header.Get("abc"))
+			fmt.Fprintf(w, "%v", r.Header.Get("abc"))
 		default:
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "error")
@@ -61,7 +61,7 @@ func TestGet(t *testing.T) {
 	//
 	mval, err := GetMap("%v/?format=json", ts.URL)
 	if err != nil {
-		t.Error(err)
+		t.Errorf("%v,%v", mval, err)
 		return
 	}
 	mval, _, err = GetHeaderMap(nil, "%v/?format=json", ts.URL)
@@ -99,21 +99,21 @@ func TestPost(t *testing.T) {
 		var format = r.URL.Query().Get("format")
 		switch format {
 		case "json":
-			xio.WriteJSON(w, map[string]interface{}{
+			xjson.WriteJSON(w, map[string]interface{}{
 				"abc": 1,
 			})
 		case "text":
 			fmt.Fprintf(w, "1")
 		case "header":
-			fmt.Fprintf(w, r.Header.Get("abc"))
+			fmt.Fprintf(w, "%v", r.Header.Get("abc"))
 		case "form":
 			r.ParseForm()
-			xio.WriteJSON(w, map[string]interface{}{
+			xjson.WriteJSON(w, map[string]interface{}{
 				"abc": r.PostForm.Get("abc"),
 			})
 		case "part":
 			r.ParseMultipartForm(1024)
-			xio.WriteJSON(w, map[string]interface{}{
+			xjson.WriteJSON(w, map[string]interface{}{
 				"abc": r.MultipartForm.Value["abc"][0],
 			})
 		case "body":
@@ -125,6 +125,11 @@ func TestPost(t *testing.T) {
 	}))
 	//
 	bval, err := PostBytes(nil, "%v/?format=text", ts.URL)
+	if err != nil || string(bval) != "1" {
+		t.Error(err)
+		return
+	}
+	bval, _, err = MethodBytes("POST", nil, nil, "%v/?format=text", ts.URL)
 	if err != nil || string(bval) != "1" {
 		t.Error(err)
 		return
@@ -145,6 +150,11 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	sval, _, err = MethodText("POST", nil, nil, "%v/?format=text", ts.URL)
+	if err != nil || sval != "1" {
+		t.Error(err)
+		return
+	}
 	sval, err = PostTypeText(ContentTypeForm, nil, "%v/?format=text", ts.URL)
 	if err != nil || sval != "1" {
 		t.Error(err)
@@ -158,6 +168,16 @@ func TestPost(t *testing.T) {
 	//
 	var ival int
 	mval, err := PostMap(nil, "%v?format=json", ts.URL)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = mval.ValidFormat(`abc,r|i,r:0;`, &ival)
+	if err != nil || ival != 1 {
+		t.Error(err)
+		return
+	}
+	mval, _, err = MethodMap("POST", nil, nil, "%v?format=json", ts.URL)
 	if err != nil {
 		t.Error(err)
 		return
@@ -214,7 +234,7 @@ func TestPost(t *testing.T) {
 	}
 	sval, err = PostXMLText(t, "%v?format=body", ts.URL)
 	if err != nil {
-		t.Error(err)
+		t.Errorf("%v,%v", sval, err)
 		return
 	}
 	bval, _, err = PostMultipartBytes(nil, xmap.M{"abc": "123"}, "%v?format=part", ts.URL)
@@ -249,6 +269,16 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	_, _, err = MethodText("POST", nil, nil, "%v/?format=error", ts.URL)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	_, _, err = MethodText("POST", nil, nil, "%v/?format=error", "http://127.0.0.1:32")
+	if err == nil {
+		t.Error(err)
+		return
+	}
 	//
 	_, err = PostMultipartText(nil, xmap.M{"abc": "123"}, "%v?format=error", ts.URL)
 	if err == nil {
@@ -276,7 +306,7 @@ func TestUpload(t *testing.T) {
 			f, _ := r.MultipartForm.File["abc"][0].Open()
 			data, _ := ioutil.ReadAll(f)
 			f.Close()
-			xio.WriteJSON(w, map[string]interface{}{
+			xjson.WriteJSON(w, map[string]interface{}{
 				"abc": string(data),
 			})
 		case "text":

@@ -194,6 +194,21 @@ func PostJSONMap(v interface{}, format string, args ...interface{}) (data xmap.M
 	return Shared.PostJSONMap(v, format, args...)
 }
 
+//MethodBytes will do http request, read reponse and parse to bytes
+func MethodBytes(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data []byte, res *http.Response, err error) {
+	return Shared.MethodBytes(method, header, body, format, args...)
+}
+
+//MethodBytes will do http request, read reponse and parse to string
+func MethodText(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data string, res *http.Response, err error) {
+	return Shared.MethodText(method, header, body, format, args...)
+}
+
+//MethodBytes will do http request, read reponse and parse to map
+func MethodMap(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
+	return Shared.MethodMap(method, header, body, format, args...)
+}
+
 //PostXMLText will get text from remote
 func PostXMLText(v interface{}, format string, args ...interface{}) (data string, err error) {
 	return Shared.PostXMLText(v, format, args...)
@@ -382,6 +397,39 @@ func (c *Client) PostTypeMap(contentType string, body io.Reader, format string, 
 //PostHeaderMap will do http request, read reponse and parse to map
 func (c *Client) PostHeaderMap(header xmap.M, body io.Reader, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
 	text, res, err := c.PostHeaderBytes(header, body, format, args...)
+	if err == nil {
+		data, err = xmap.MapVal(text)
+	}
+	return
+}
+
+//MethodBytes will do http request, read reponse and parse to bytes
+func (c *Client) MethodBytes(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data []byte, res *http.Response, err error) {
+	remote := fmt.Sprintf(format, args...)
+	_, res, err = c.Raw(method, remote, header, body)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	data, err = ioutil.ReadAll(res.Body)
+	if res.StatusCode != 200 {
+		err = fmt.Errorf("status code is %v", res.StatusCode)
+	}
+	return
+}
+
+//MethodBytes will do http request, read reponse and parse to string
+func (c *Client) MethodText(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data string, res *http.Response, err error) {
+	bytes, res, err := c.MethodBytes(method, header, body, format, args...)
+	if err == nil {
+		data = string(bytes)
+	}
+	return
+}
+
+//MethodBytes will do http request, read reponse and parse to map
+func (c *Client) MethodMap(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
+	text, res, err := c.MethodBytes(method, header, body, format, args...)
 	if err == nil {
 		data, err = xmap.MapVal(text)
 	}
