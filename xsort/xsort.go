@@ -11,6 +11,7 @@ type Lesser interface {
 
 type Interface struct {
 	swapper func(x, y int)
+	lesser  func(x, y int) bool
 	value   reflect.Value
 }
 
@@ -27,9 +28,13 @@ func (i *Interface) Len() int {
 }
 
 func (i *Interface) Less(x, y int) bool {
-	a := i.value.Index(x).Interface().(Lesser)
-	b := i.value.Index(y).Interface()
-	return a.Less(b)
+	if i.lesser == nil {
+		a := i.value.Index(x).Interface().(Lesser)
+		b := i.value.Index(y).Interface()
+		return a.Less(b)
+	} else {
+		return i.lesser(x, y)
+	}
 }
 
 func (i *Interface) Swap(x, y int) {
@@ -38,4 +43,10 @@ func (i *Interface) Swap(x, y int) {
 
 func Sort(v interface{}) {
 	sort.Sort(NewInterface(v))
+}
+
+func SortFunc(v interface{}, less func(x, y int) bool) {
+	value := NewInterface(v)
+	value.lesser = less
+	sort.Sort(value)
 }
