@@ -107,6 +107,8 @@ type Valuable interface {
 	ArrayFloat64Val(path ...string) ([]float64, error)
 	//Value will convert path value to interface{}
 	Value(path ...string) interface{}
+	//ReplaceAll will replace all value by ${path}
+	ReplaceAll(in string, usingEnv, keepEmpty bool) (out string)
 }
 
 type impl struct {
@@ -489,7 +491,29 @@ func (m M) pathValue(path string) (interface{}, error) {
 		return v, nil
 	}
 	path = strings.TrimPrefix(path, "/")
-	keys := strings.Split(path, "/")
+	keys := []string{}
+	key := strings.Builder{}
+	wrapped := false
+	for _, c := range path {
+		switch c {
+		case '\\':
+			wrapped = true
+		case '/':
+			if wrapped {
+				key.WriteRune(c)
+				wrapped = false
+			} else {
+				keys = append(keys, key.String())
+				key = strings.Builder{}
+			}
+		default:
+			key.WriteRune(c)
+		}
+	}
+	if key.Len() > 0 {
+		keys = append(keys, key.String())
+		key = strings.Builder{}
+	}
 	return m.valP(keys...)
 }
 

@@ -1,6 +1,9 @@
 package xmap
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 type rawMap map[string]interface{}
 
@@ -11,6 +14,13 @@ func (r rawMap) RawMap() map[string]interface{} {
 type baseMap map[string]interface{}
 
 func (b baseMap) ValueVal(path ...string) (v interface{}, err error) {
+	for _, p := range path {
+		if val, ok := b[p]; ok {
+			v = val
+			return
+		}
+	}
+	err = fmt.Errorf("not exists")
 	return
 }
 

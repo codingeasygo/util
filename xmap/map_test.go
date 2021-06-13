@@ -34,88 +34,88 @@ func testMap(t *testing.T, m Valuable) {
 	assert(nil != m.MapDef(nil, "x"))
 	assert(nil == m.MapDef(nil, "not"))
 	//
-	assert("123" == m.Str("abc"))
-	assert("123" == m.StrDef("", "abc"))
-	assert("" == m.StrDef("", "not"))
+	assert(m.Str("abc") == "123")
+	assert(m.StrDef("", "abc") == "123")
+	assert(m.StrDef("", "not") == "")
 	//
-	assert(123 == m.Int("int"))
-	assert(123 == m.Int64("int"))
-	assert(123 == m.Uint64("int"))
-	assert(123 == m.Float64("int"))
-	assert(123 == m.Int("x/a"))
-	assert(123 == m.Int64("x/a"))
-	assert(123 == m.Uint64("x/a"))
-	assert(123 == m.Float64("x/a"))
+	assert(m.Int("int") == 123)
+	assert(m.Int64("int") == 123)
+	assert(m.Uint64("int") == 123)
+	assert(m.Float64("int") == 123)
+	assert(m.Int("x/a") == 123)
+	assert(m.Int64("x/a") == 123)
+	assert(m.Uint64("x/a") == 123)
+	assert(m.Float64("x/a") == 123)
 	//
-	assert(123 == m.IntDef(0, "int"))
-	assert(123 == m.Int64Def(0, "int"))
-	assert(123 == m.Uint64Def(0, "int"))
-	assert(123 == m.Float64Def(0, "int"))
+	assert(m.IntDef(0, "int") == 123)
+	assert(m.Int64Def(0, "int") == 123)
+	assert(m.Uint64Def(0, "int") == 123)
+	assert(m.Float64Def(0, "int") == 123)
 	//
-	assert(0 == m.IntDef(0, "not"))
-	assert(0 == m.Int64Def(0, "not"))
-	assert(0 == m.Uint64Def(0, "not"))
-	assert(0 == m.Float64Def(0, "not"))
+	assert(m.IntDef(0, "not") == 0)
+	assert(m.Int64Def(0, "not") == 0)
+	assert(m.Uint64Def(0, "not") == 0)
+	assert(m.Float64Def(0, "not") == 0)
 	//
-	assert(3 == len(m.ArrayDef(nil, "/ary")))
-	assert(3 == len(m.ArrayMapDef(nil, "/arm")))
-	assert(3 == len(m.ArrayIntDef(nil, "/ary")))
-	assert(3 == len(m.ArrayInt64Def(nil, "/ary")))
-	assert(3 == len(m.ArrayUint64Def(nil, "/ary")))
-	assert(3 == len(m.ArrayFloat64Def(nil, "/ary")))
-	assert(3 == len(m.ArrayStrDef(nil, "/ary")))
+	assert(len(m.ArrayDef(nil, "/ary")) == 3)
+	assert(len(m.ArrayMapDef(nil, "/arm")) == 3)
+	assert(len(m.ArrayIntDef(nil, "/ary")) == 3)
+	assert(len(m.ArrayInt64Def(nil, "/ary")) == 3)
+	assert(len(m.ArrayUint64Def(nil, "/ary")) == 3)
+	assert(len(m.ArrayFloat64Def(nil, "/ary")) == 3)
+	assert(len(m.ArrayStrDef(nil, "/ary")) == 3)
 	//
-	assert(0 == len(m.ArrayDef(nil, "/not")))
-	assert(0 == len(m.ArrayMapDef(nil, "/not")))
-	assert(0 == len(m.ArrayIntDef(nil, "/not")))
-	assert(0 == len(m.ArrayInt64Def(nil, "/not")))
-	assert(0 == len(m.ArrayUint64Def(nil, "/v")))
-	assert(0 == len(m.ArrayFloat64Def(nil, "/not")))
-	assert(0 == len(m.ArrayStrDef(nil, "/not")))
+	assert(len(m.ArrayDef(nil, "/not")) == 0)
+	assert(len(m.ArrayMapDef(nil, "/not")) == 0)
+	assert(len(m.ArrayIntDef(nil, "/not")) == 0)
+	assert(len(m.ArrayInt64Def(nil, "/not")) == 0)
+	assert(len(m.ArrayUint64Def(nil, "/v")) == 0)
+	assert(len(m.ArrayFloat64Def(nil, "/not")) == 0)
+	assert(len(m.ArrayStrDef(nil, "/not")) == 0)
 	//
 	//
 	if v, err := m.StrVal("int"); true {
-		assert("123" == v && err == nil)
+		assert(v == "123" && err == nil)
 	}
 	if v, err := m.IntVal("int"); true {
-		assert(123 == v && err == nil)
+		assert(v == 123 && err == nil)
 	}
 	if v, err := m.Int64Val("int"); true {
-		assert(123 == v && err == nil)
+		assert(v == 123 && err == nil)
 	}
 	if v, err := m.Uint64Val("int"); true {
-		assert(123 == v && err == nil)
+		assert(v == 123 && err == nil)
 	}
 	if v, err := m.Float64Val("int"); true {
-		assert(123 == v && err == nil)
+		assert(v == 123 && err == nil)
 	}
 	if v, err := m.MapVal("x"); true {
-		assert(nil != v && err == nil)
+		assert(v != nil && err == nil)
 	}
 	if v, err := m.ValueVal("x"); true {
-		assert(nil != v && err == nil)
+		assert(v != nil && err == nil)
 	}
 	//
 	if v, err := m.ArrayVal("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayStrVal("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayIntVal("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayInt64Val("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayUint64Val("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayFloat64Val("ary"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	if v, err := m.ArrayMapVal("arm"); true {
-		assert(3 == len(v) && err == nil)
+		assert(len(v) == 3 && err == nil)
 	}
 	//
 	//test remove
@@ -338,7 +338,7 @@ func TestValidFormat(t *testing.T) {
 		/map/x1,R|I,R:0;
 		not|ab1,R|I,R:0;
 	`, &v1, &v2, &v3, &v4)
-	if v1 != 1 || v2 != "xxx" || v3 != 100 || v4 != 1 {
+	if err != nil || v1 != 1 || v2 != "xxx" || v3 != 100 || v4 != 1 {
 		t.Error("error")
 		return
 	}
@@ -430,4 +430,52 @@ func TestValuableSorter(t *testing.T) {
 	sort.Sort(NewValuableSorter(newall(), 1, true, "f"))
 	sort.Sort(NewValuableSorter(newall(), 2, false, "s"))
 	sort.Sort(NewValuableSorter(newall(), 2, true, "s"))
+}
+
+func TestReplaceAll(t *testing.T) {
+	val := M{
+		"x1": 100,
+		"x2": M{
+			"a": 100,
+		},
+	}
+	if val.ReplaceAll("${x1}", true, true) != "100" {
+		t.Error("error")
+		return
+	}
+	val2, _ := Parse(baseMap{"a": 100})
+	if val2.ReplaceAll("${a}", true, true) != "100" {
+		t.Error("error")
+		return
+	}
+	if val2.ReplaceAll("${b}", true, true) != "" {
+		t.Error("error")
+		return
+	}
+	val3, _ := ParseSafe(`{"a":100}`)
+	if val3.ReplaceAll("${a}", true, true) != "100" {
+		t.Error("error")
+		return
+	}
+	if val3.ReplaceAll("${b}", true, true) != "" {
+		t.Error("error")
+		return
+	}
+}
+
+func TestEscapeValue(t *testing.T) {
+	val := M{
+		"x1/1": 100,
+		"x1/2": M{
+			"a": 100,
+		},
+	}
+	if val.IntDef(0, "/x1\\/1") != 100 {
+		t.Error("error")
+		return
+	}
+	if val.IntDef(0, "/x1\\/2/a") != 100 {
+		t.Error("error")
+		return
+	}
 }

@@ -12,7 +12,7 @@ import (
 //if usingEnv is true, xx will check use env when vals is not having xx,
 //if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
 func ReplaceAll(vals func(key string) interface{}, in string, usingEnv, usingEmpty bool) (out string) {
-	reg := regexp.MustCompile("\\$\\{[^\\}]*\\}")
+	reg := regexp.MustCompile(`\$\{[^\}]*\}`)
 	var rval string
 	out = reg.ReplaceAllStringFunc(in, func(m string) string {
 		keys := strings.Split(strings.Trim(m, "${}\t "), ",")
