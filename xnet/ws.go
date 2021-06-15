@@ -33,7 +33,7 @@ func NewWebsocketDialer() (dialer *WebsocketDialer) {
 }
 
 //Dial dial to remote by websocket
-func (w WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error) {
+func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error) {
 	targetURL, err := url.Parse(remote)
 	if err != nil {
 		return
@@ -89,7 +89,7 @@ func tlsHandshake(rawConn net.Conn, timeout time.Duration, config *tls.Config) (
 	return
 }
 
-func (w WebsocketDialer) dial(config *websocket.Config, timeout time.Duration) (conn net.Conn, err error) {
+func (w *WebsocketDialer) dial(config *websocket.Config, timeout time.Duration) (conn net.Conn, err error) {
 	remote := parseAuthority(config.Location)
 	rawConn, err := w.Dialer.Dial("tcp", remote)
 	if err == nil {
