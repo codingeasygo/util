@@ -1,9 +1,8 @@
 package xnet
 
 import (
-	"fmt"
 	"io"
-	"strings"
+	"net/url"
 )
 
 type Transporter interface {
@@ -23,6 +22,7 @@ func transportCopy(a, b io.ReadWriteCloser) (aerr, berr error) {
 func (w *WebsocketDialer) Transport(conn io.ReadWriteCloser, remote string) (err error) {
 	raw, err := w.Dial(remote)
 	if err != nil {
+		conn.Close()
 		return
 	}
 	aerr, berr := transportCopy(conn, raw)
@@ -35,13 +35,14 @@ func (w *WebsocketDialer) Transport(conn io.ReadWriteCloser, remote string) (err
 }
 
 func (d RawDialerF) Transport(conn io.ReadWriteCloser, remote string) (err error) {
-	parts := strings.SplitN(remote, "://", 2)
-	if len(parts) < 2 {
-		err = fmt.Errorf("invalid remote %v", remote)
+	u, err := url.Parse(remote)
+	if err != nil {
+		conn.Close()
 		return
 	}
-	raw, err := d.Dial(parts[0], parts[1])
+	raw, err := d.Dial(u.Scheme, u.Host)
 	if err != nil {
+		conn.Close()
 		return
 	}
 	aerr, berr := transportCopy(conn, raw)
