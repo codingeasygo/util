@@ -39,6 +39,10 @@ func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error
 		return
 	}
 	username, password := targetURL.Query().Get("username"), targetURL.Query().Get("password")
+	if len(username) < 1 {
+		username = targetURL.User.Username()
+		password, _ = targetURL.User.Password()
+	}
 	skipVerify := targetURL.Query().Get("skip_verify") == "1" || w.SkipVerify
 	timeout, _ := strconv.ParseUint(targetURL.Query().Get("timeout"), 10, 32)
 	if timeout < 1 {
