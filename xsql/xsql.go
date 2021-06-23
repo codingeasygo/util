@@ -78,6 +78,10 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return
 }
 
+func (t Time) AsTime() time.Time {
+	return time.Time(t)
+}
+
 //M is database value to parse json data to map value
 type M map[string]interface{}
 
