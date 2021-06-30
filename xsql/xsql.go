@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/codingeasygo/util/xtime"
 )
 
 //Time is database value to parse data from database and parset time.Time to timestamp on json mashal
@@ -30,14 +32,17 @@ func TimeNow() Time {
 
 // TimeStartOfToday return 00:00:00 of today
 func TimeStartOfToday() Time {
-	now := time.Now()
-	return Time(time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()))
+	return Time(xtime.TimeStartOfToday())
+}
+
+// TimeStartOfWeek return 00:00:00 of week
+func TimeStartOfWeek() Time {
+	return Time(xtime.TimeStartOfWeek())
 }
 
 // TimeStartOfMonth return 00:00:00 of today
 func TimeStartOfMonth() Time {
-	now := time.Now()
-	return Time(time.Date(now.Year(), now.Month(), 0, 0, 0, 0, 0, now.Location()))
+	return Time(xtime.TimeStartOfMonth())
 }
 
 //Timestamp return timestamp
@@ -80,6 +85,10 @@ func (t *Time) Scan(src interface{}) (err error) {
 
 func (t Time) AsTime() time.Time {
 	return time.Time(t)
+}
+
+func (t Time) String() string {
+	return time.Time(t).String()
 }
 
 //M is database value to parse json data to map value

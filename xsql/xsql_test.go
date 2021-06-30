@@ -3,6 +3,7 @@ package xsql
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -15,7 +16,7 @@ import (
 var Pool func() *pgxpool.Pool
 
 func init() {
-	pool, err := pgxpool.Connect(context.Background(), "postgresql://cny:123@dev.loc:5432/dev")
+	pool, err := pgxpool.Connect(context.Background(), "postgresql://dev:123@pg.loc:5432/dev")
 	if err != nil {
 		panic(err)
 	}
@@ -74,11 +75,12 @@ func TestTime(t *testing.T) {
 	}
 	//
 	//
-	TimeZero()
-	TimeNow()
-	TimeStartOfToday()
-	TimeStartOfMonth()
-	TimeUnix(0)
+	fmt.Printf("TimeZero--->%v\n", TimeZero())
+	fmt.Printf("TimeNow--->%v\n", TimeNow())
+	fmt.Printf("TimeStartOfToday--->%v\n", TimeStartOfToday())
+	fmt.Printf("TimeStartOfWeek--->%v\n", TimeStartOfWeek())
+	fmt.Printf("TimeStartOfMonth--->%v\n", TimeStartOfMonth())
+	fmt.Printf("TimeUnix--->%v\n", TimeUnix(0))
 }
 
 func TestIntArray(t *testing.T) {
