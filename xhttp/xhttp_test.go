@@ -1,6 +1,7 @@
 package xhttp
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,10 @@ import (
 func init() {
 	EnableInsecureVerify()
 	DisableInsecureVerify()
+	DisableCookie()
+	ClearCookie()
+	EnableCookie()
+	ClearCookie()
 }
 
 func TestGet(t *testing.T) {
@@ -74,6 +79,22 @@ func TestGet(t *testing.T) {
 	if err != nil || ival != 1 {
 		t.Error(err)
 		return
+	}
+	{ //get json
+		var jval xmap.M
+		jval = xmap.New()
+		err := GetJSON(&jval, "%v/?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Errorf("%v,%v", mval, err)
+			return
+		}
+		jval = xmap.New()
+		_, err = GetHeaderJSON(&jval, nil, "%v/?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Error(err)
+			return
+		}
+
 	}
 	//
 	//test error
@@ -251,6 +272,38 @@ func TestPost(t *testing.T) {
 	if err != nil || mval.Str("abc") != "123" {
 		t.Errorf("err:%v,text:%v", err, sval)
 		return
+	}
+	{ //json result
+		var jval xmap.M
+		jval = xmap.New()
+		err = PostJSON(&jval, bytes.NewBufferString("{}"), "%v?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Error(err)
+			return
+		}
+		jval = xmap.New()
+		err = PostTypeJSON(&jval, ContentTypeJSON, bytes.NewBufferString("{}"), "%v?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Error(err)
+			return
+		}
+		jval = xmap.New()
+		_, err = PostHeaderJSON(&jval, nil, bytes.NewBufferString("{}"), "%v?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Error(err)
+			return
+		}
+		jval = xmap.New()
+		err = PostJSONJSON(&jval, xmap.New(), "%v?format=json", ts.URL)
+		if err != nil || len(jval) < 1 {
+			t.Error(err)
+			return
+		}
+		err = PostJSONJSON(&jval, t.Error, "%v?format=json", ts.URL)
+		if err == nil {
+			t.Error(err)
+			return
+		}
 	}
 	//
 	//test error
