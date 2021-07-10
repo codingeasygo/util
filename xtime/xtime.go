@@ -25,3 +25,12 @@ func TimeStartOfMonth() time.Time {
 	now := time.Now()
 	return time.Date(now.Year(), now.Month(), 0, 0, 0, 0, 0, now.Location()).Add(24 * time.Hour)
 }
+
+func Timestamp(t time.Time) int64 {
+	return t.Local().UnixNano() / 1e6
+}
+
+// TimeUnix will return time by timestamp
+func TimeUnix(timestamp int64) time.Time {
+	return time.Unix(0, timestamp*1e6)
+}
