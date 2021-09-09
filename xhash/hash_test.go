@@ -16,4 +16,6 @@ func TestFileHash(t *testing.T) {
 		t.Error("error")
 		return
 	}
+	SHA256([]byte("abc"))
+	SHA512([]byte("abc"))
 }

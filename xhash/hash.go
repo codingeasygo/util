@@ -3,6 +3,7 @@ package xhash
 import (
 	"crypto/md5"
 	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,18 @@ func MD5(data []byte) string {
 
 func SHA1(data []byte) string {
 	h := sha1.New()
+	h.Write(data)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func SHA256(data []byte) string {
+	h := sha256.New()
+	h.Write(data)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func SHA512(data []byte) string {
+	h := sha256.New()
 	h.Write(data)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
