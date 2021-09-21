@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -59,7 +60,12 @@ func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error
 		if len(username) > 0 && len(password) > 0 {
 			config.Header.Set("Authorization", "Basic "+basicAuth(username, password))
 		}
-		config.TlsConfig = &tls.Config{}
+		colonPos := strings.LastIndex(config.Location.Host, ":")
+		if colonPos == -1 {
+			colonPos = len(config.Location.Host)
+		}
+		hostname := config.Location.Host[:colonPos]
+		config.TlsConfig = &tls.Config{ServerName: hostname}
 		config.TlsConfig.InsecureSkipVerify = skipVerify
 		raw, err = w.dial(config, time.Duration(timeout)*time.Second)
 	}
