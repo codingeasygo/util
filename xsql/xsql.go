@@ -153,7 +153,7 @@ func (i *IntArray) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), i)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -233,7 +233,7 @@ func (i *IntPtrArray) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), i)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -317,7 +317,7 @@ func (i *Int64Array) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), i)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -397,7 +397,7 @@ func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), i)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -481,7 +481,7 @@ func (f *Float64Array) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), f)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -561,7 +561,7 @@ func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 		if jsonSrc, ok := src.(string); ok {
 			err = json.Unmarshal([]byte(jsonSrc), f)
 			if err != nil {
-				err = fmt.Errorf("Unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
