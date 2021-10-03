@@ -63,7 +63,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	//
-	v, err = ValidAttrTemple("centny@gmail.com", "r|s", "p:^.*\\@.*$", true)
+	v, err = ValidAttrTemple("test@gmail.com", "r|s", "p:^.*\\@.*$", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -146,7 +146,7 @@ func TestValidAttrTemple(t *testing.T) {
 		return
 	}
 	//
-	v, err = ValidAttrTemple("centny@gmail.com", "o|s", "p:^.*\\@.*$", true)
+	v, err = ValidAttrTemple("test@gmail.com", "o|s", "p:^.*\\@.*$", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -202,7 +202,7 @@ func TestValidAttrTemple(t *testing.T) {
 		t.Error("not error")
 		return
 	}
-	_, err = ValidAttrTemple("centny@gmail.com", "o|s", "p:*,..", true)
+	_, err = ValidAttrTemple("test@gmail.com", "o|s", "p:*,..", true)
 	if err == nil {
 		t.Error("not error")
 		return
@@ -334,7 +334,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	//
-	v, err = ValidAttrTemple("centny@gmail.com", "R|S", "P:^.*\\@.*$", true)
+	v, err = ValidAttrTemple("test@gmail.com", "R|S", "P:^.*\\@.*$", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -412,7 +412,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		return
 	}
 	//
-	v, err = ValidAttrTemple("centny@gmail.com", "O|S", "P:^.*\\@.*$", true)
+	v, err = ValidAttrTemple("test@gmail.com", "O|S", "P:^.*\\@.*$", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -458,7 +458,7 @@ func TestValidAttrTemple2(t *testing.T) {
 		t.Error("not error")
 		return
 	}
-	_, err = ValidAttrTemple("centny@gmail.com", "O|S", "P:*,..", true)
+	_, err = ValidAttrTemple("test@gmail.com", "O|S", "P:*,..", true)
 	if err == nil {
 		t.Error("not error")
 		return
