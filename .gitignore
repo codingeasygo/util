@@ -5,3 +5,10 @@ coverage.json
 coverage.xml
 *.log
 *.exe
+.DS_Store
+xcrypto/ca.key
+xcrypto/ca.pem
+xcrypto/ca.srl
+xcrypto/server.csr
+xcrypto/server.key
+xcrypto/server.pem
