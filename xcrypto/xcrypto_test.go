@@ -7,9 +7,14 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os/exec"
 	"testing"
 	"time"
 )
+
+func init() {
+	exec.Command("bash", "-c", "./openssl.sh").Output()
+}
 
 func testWebCert(t *testing.T, cert tls.Certificate, certPEM []byte) {
 	var server *http.Server
@@ -123,4 +128,22 @@ func TestOpensslRoot(t *testing.T) {
 		return
 	}
 	testWebCert(t, cert, certPEM)
+}
+
+func TestLoadX509KeyPair(t *testing.T) {
+	_, _, err := LoadX509KeyPair("ca.pem", "ca.key")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, _, err = LoadX509KeyPair("ca.pem", "ca.keyxx")
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	_, _, err = LoadX509KeyPair("ca.pemxx", "ca.key")
+	if err == nil {
+		t.Error(err)
+		return
+	}
 }

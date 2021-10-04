@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"io/ioutil"
 	"math/big"
 	"net"
 	"strings"
@@ -102,6 +103,25 @@ func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, domain, ip s
 	_, _, certPEM, privPEM, err = GenerateCert(parent, rootKey, domain, domains, ipAddress, bits)
 	if err == nil {
 		cert, err = tls.X509KeyPair(certPEM, privPEM)
+	}
+	return
+}
+
+func LoadX509KeyPair(certFile, keyFile string) (cert *x509.Certificate, priv *rsa.PrivateKey, err error) {
+	certPEM, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		return
+	}
+	keyPEM, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return
+	}
+	//
+	certBlock, _ := pem.Decode(certPEM)
+	keyBlock, _ := pem.Decode(keyPEM)
+	cert, err = x509.ParseCertificate(certBlock.Bytes)
+	if err == nil {
+		priv, err = x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 	}
 	return
 }
