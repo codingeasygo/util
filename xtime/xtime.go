@@ -34,3 +34,7 @@ func Timestamp(t time.Time) int64 {
 func TimeUnix(timestamp int64) time.Time {
 	return time.Unix(0, timestamp*1e6)
 }
+
+func TimeNow() int64 {
+	return Timestamp(time.Now())
+}
