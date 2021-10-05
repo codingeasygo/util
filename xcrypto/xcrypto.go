@@ -58,7 +58,7 @@ func GenerateRootCA(name string, bits int) (cert *x509.Certificate, privKey *rsa
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Hour * 24 * 365 * 10),
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 		MaxPathLen:            2,
@@ -72,7 +72,13 @@ func GenerateRootCA(name string, bits int) (cert *x509.Certificate, privKey *rsa
 // 	return
 // }
 
-func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, commonName string, dnsNames []string, ipAddresses []net.IP, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
+func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool, commonName string, dnsNames []string, ipAddresses []net.IP, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
+	keyUsage := []x509.ExtKeyUsage{}
+	if client {
+		keyUsage = append(keyUsage, x509.ExtKeyUsageClientAuth)
+	} else {
+		keyUsage = append(keyUsage, x509.ExtKeyUsageServerAuth)
+	}
 	template := &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
@@ -82,7 +88,7 @@ func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, commonName 
 		NotBefore:      time.Now(),
 		NotAfter:       time.Now().Add(time.Hour * 24 * 365 * 10),
 		KeyUsage:       x509.KeyUsageCRLSign,
-		ExtKeyUsage:    []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:    keyUsage,
 		IsCA:           false,
 		MaxPathLenZero: true,
 		DNSNames:       dnsNames,
@@ -93,14 +99,16 @@ func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, commonName 
 }
 
 //GenerateWeb will generate web cert
-func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, domain, ip string, bits int) (cert tls.Certificate, certPEM, privPEM []byte, err error) {
+func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool, domain, ip string, bits int) (cert tls.Certificate, certPEM, privPEM []byte, err error) {
 	domains := strings.Split(domain, ",")
 	ipAddress := []net.IP{}
-	ips := strings.Split(ip, ",")
-	for _, v := range ips {
-		ipAddress = append(ipAddress, net.ParseIP(v))
+	if len(ip) > 0 {
+		ips := strings.Split(ip, ",")
+		for _, v := range ips {
+			ipAddress = append(ipAddress, net.ParseIP(v))
+		}
 	}
-	_, _, certPEM, privPEM, err = GenerateCert(parent, rootKey, domain, domains, ipAddress, bits)
+	_, _, certPEM, privPEM, err = GenerateCert(parent, rootKey, client, domain, domains, ipAddress, bits)
 	if err == nil {
 		cert, err = tls.X509KeyPair(certPEM, privPEM)
 	}
