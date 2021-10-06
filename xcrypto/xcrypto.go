@@ -115,6 +115,24 @@ func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool,
 	return
 }
 
+func GenerateWebServerClient(ca, domain, ip string, bits int) (
+	rootCert *x509.Certificate, rootKey *rsa.PrivateKey, rootCertPEM, rootKeyPEM []byte,
+	server tls.Certificate, serverCertPEM, serverKeyPEM []byte,
+	client tls.Certificate, clientCertPEM, clientKeyPEM []byte,
+	err error,
+) {
+	rootCert, rootKey, rootCertPEM, rootKeyPEM, err = GenerateRootCA(ca, bits)
+	if err != nil {
+		return
+	}
+	server, serverCertPEM, serverKeyPEM, err = GenerateWeb(rootCert, rootKey, false, domain, ip, bits)
+	if err != nil {
+		return
+	}
+	client, clientCertPEM, clientKeyPEM, err = GenerateWeb(rootCert, rootKey, true, domain, ip, bits)
+	return
+}
+
 func LoadX509KeyPair(certFile, keyFile string) (cert *x509.Certificate, priv *rsa.PrivateKey, err error) {
 	certPEM, err := ioutil.ReadFile(certFile)
 	if err != nil {

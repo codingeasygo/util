@@ -135,6 +135,14 @@ func TestGenerateRoot(t *testing.T) {
 // 	testWebCert(t, cert, certPEM)
 // }
 
+func TestGenerateWebServerClient(t *testing.T) {
+	_, _, _, _, _, _, _, _, _, _, err := GenerateWebServerClient("ca", "test", "", 2048)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
 func TestLoadX509KeyPair(t *testing.T) {
 	_, _, err := LoadX509KeyPair("ca.pem", "ca.key")
 	if err != nil {

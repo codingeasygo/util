@@ -12,3 +12,8 @@ xcrypto/ca.srl
 xcrypto/server.csr
 xcrypto/server.key
 xcrypto/server.pem
+tools/xcrypto/ca.key
+tools/xcrypto/ca.pem
+tools/xcrypto/client.pem
+tools/xcrypto/server.pem
+tools/xcrypto/xcrypto
