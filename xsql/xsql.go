@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codingeasygo/util/converter"
+	"github.com/codingeasygo/util/xmap"
 	"github.com/codingeasygo/util/xtime"
 )
 
@@ -54,7 +56,7 @@ func (t Time) Timestamp() int64 {
 func (t *Time) MarshalJSON() ([]byte, error) {
 	raw := t.Timestamp()
 	if raw < 0 {
-		return []byte("null"), nil
+		return []byte("0"), nil
 	}
 	stamp := fmt.Sprintf("%v", raw)
 	return []byte(stamp), nil
@@ -120,6 +122,8 @@ func (m M) Value() (driver.Value, error) {
 	return string(bys), err
 }
 
+func (m M) AsMap() xmap.M { return xmap.M(m) }
+
 //MArray is database value to parse json data to map value
 type MArray []M
 
@@ -150,10 +154,16 @@ type IntArray []int
 //Scan is sql.Sanner
 func (i *IntArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), i)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				*i, err = converter.ArrayIntVal(str)
+				return
+			}
+			err = json.Unmarshal([]byte(str), i)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -210,6 +220,12 @@ func (i IntArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i IntArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (i IntArray) RemoveDuplicate() IntArray {
 	var arr IntArray
@@ -224,16 +240,34 @@ func (i IntArray) RemoveDuplicate() IntArray {
 	return arr
 }
 
+//AsPtrArray will convet normla to ptr
+func (i IntArray) AsPtrArray() (vals IntPtrArray) {
+	for _, v := range i {
+		vals = append(vals, converter.IntPtr(v))
+	}
+	return
+}
+
 //IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
 
 //Scan is sql.Sanner
 func (i *IntPtrArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), i)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				var vals IntArray
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				vals, err = converter.ArrayIntVal(str)
+				if err == nil {
+					*i = vals.AsPtrArray()
+				}
+				return
+			}
+			err = json.Unmarshal([]byte(str), i)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -294,6 +328,12 @@ func (i IntPtrArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i IntPtrArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (i IntPtrArray) RemoveDuplicate() IntPtrArray {
 	var arr IntPtrArray
@@ -308,16 +348,33 @@ func (i IntPtrArray) RemoveDuplicate() IntPtrArray {
 	return arr
 }
 
+//AsArray will convet ptr to normal, skip nil
+func (i IntPtrArray) AsArray() (vals IntArray) {
+	for _, v := range i {
+		if v == nil {
+			continue
+		}
+		vals = append(vals, *v)
+	}
+	return
+}
+
 //Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
 //Scan is sql.Sanner
 func (i *Int64Array) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), i)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				*i, err = converter.ArrayInt64Val(str)
+				return
+			}
+			err = json.Unmarshal([]byte(str), i)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -374,6 +431,12 @@ func (i Int64Array) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i Int64Array) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (i Int64Array) RemoveDuplicate() Int64Array {
 	var arr Int64Array
@@ -388,16 +451,34 @@ func (i Int64Array) RemoveDuplicate() Int64Array {
 	return arr
 }
 
+//AsPtrArray will convet normla to ptr
+func (i Int64Array) AsPtrArray() (vals Int64PtrArray) {
+	for _, v := range i {
+		vals = append(vals, converter.Int64Ptr(v))
+	}
+	return
+}
+
 //Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
 
 //Scan is sql.Sanner
 func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), i)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				var vals Int64Array
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				vals, err = converter.ArrayInt64Val(str)
+				if err == nil {
+					*i = vals.AsPtrArray()
+				}
+				return
+			}
+			err = json.Unmarshal([]byte(str), i)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -458,6 +539,12 @@ func (i Int64PtrArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i Int64PtrArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (i Int64PtrArray) RemoveDuplicate() Int64PtrArray {
 	var arr Int64PtrArray
@@ -472,16 +559,33 @@ func (i Int64PtrArray) RemoveDuplicate() Int64PtrArray {
 	return arr
 }
 
+//AsArray will convet ptr to normal, skip nil
+func (i Int64PtrArray) AsArray() (vals Int64Array) {
+	for _, v := range i {
+		if v == nil {
+			continue
+		}
+		vals = append(vals, *v)
+	}
+	return
+}
+
 //Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
 //Scan is sql.Sanner
 func (f *Float64Array) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), f)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				*f, err = converter.ArrayFloat64Val(str)
+				return
+			}
+			err = json.Unmarshal([]byte(str), f)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -538,6 +642,12 @@ func (f Float64Array) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i Float64Array) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (f Float64Array) RemoveDuplicate() Float64Array {
 	var arr Float64Array
@@ -552,16 +662,34 @@ func (f Float64Array) RemoveDuplicate() Float64Array {
 	return arr
 }
 
+//AsPtrArray will convet normla to ptr
+func (f Float64Array) AsPtrArray() (vals Float64PtrArray) {
+	for _, v := range f {
+		vals = append(vals, converter.Float64Ptr(v))
+	}
+	return
+}
+
 //Float64PtrArray is database value to parse data to []int64 value
 type Float64PtrArray []*float64
 
 //Scan is sql.Sanner
 func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), f)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				var vals Float64Array
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				vals, err = converter.ArrayFloat64Val(str)
+				if err == nil {
+					*f = vals.AsPtrArray()
+				}
+				return
+			}
+			err = json.Unmarshal([]byte(str), f)
 			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, jsonSrc)
+				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
 			}
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
@@ -622,6 +750,12 @@ func (f Float64PtrArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i Float64PtrArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (f Float64PtrArray) RemoveDuplicate() Float64PtrArray {
 	var arr Float64PtrArray
@@ -636,14 +770,31 @@ func (f Float64PtrArray) RemoveDuplicate() Float64PtrArray {
 	return arr
 }
 
+//AsArray will convet ptr to normal, skip nil
+func (f Float64PtrArray) AsArray() (vals Float64Array) {
+	for _, v := range f {
+		if v == nil {
+			continue
+		}
+		vals = append(vals, *v)
+	}
+	return
+}
+
 //StringArray is database value to parse data to []string value
 type StringArray []string
 
 //Scan is sql.Sanner
 func (s *StringArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), s)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				*s, err = converter.ArrayStringVal(str)
+				return
+			}
+			err = json.Unmarshal([]byte(str), s)
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
 		}
@@ -694,6 +845,12 @@ func (s StringArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i StringArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (s StringArray) RemoveDuplicate(trim, empty bool) StringArray {
 	var arr StringArray
@@ -731,14 +888,32 @@ func (s StringArray) RemoveEmpty(trim bool) StringArray {
 	return arr
 }
 
+//AsPtrArray will convet normla to ptr
+func (s StringArray) AsPtrArray() (vals StringPtrArray) {
+	for _, v := range s {
+		vals = append(vals, converter.StringPtr(v))
+	}
+	return
+}
+
 //StringPtrArray is database value to parse data to []string value
 type StringPtrArray []*string
 
 //Scan is sql.Sanner
 func (s *StringPtrArray) Scan(src interface{}) (err error) {
 	if src != nil {
-		if jsonSrc, ok := src.(string); ok {
-			err = json.Unmarshal([]byte(jsonSrc), s)
+		if str, ok := src.(string); ok {
+			if strings.HasPrefix(str, ",") {
+				var vals StringArray
+				str = strings.TrimSpace(str)
+				str = strings.Trim(str, ",")
+				vals, err = converter.ArrayStringVal(str)
+				if err == nil {
+					*s = vals.AsPtrArray()
+				}
+				return
+			}
+			err = json.Unmarshal([]byte(str), s)
 		} else {
 			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
 		}
@@ -798,6 +973,12 @@ func (s StringPtrArray) DbArray() (res string) {
 	return
 }
 
+//StrArray will join value to string array by comma
+func (i StringPtrArray) StrArray() (res string) {
+	res = "," + i.Join(",") + ","
+	return
+}
+
 //RemoveDuplicate will remove duplicate and copy item to new array
 func (s StringPtrArray) RemoveDuplicate(trim, empty bool) StringPtrArray {
 	var arr StringPtrArray
@@ -841,4 +1022,15 @@ func (s StringPtrArray) RemoveEmpty(trim bool) StringPtrArray {
 		arr = append(arr, nv)
 	}
 	return arr
+}
+
+//AsArray will convet ptr to normal, skip nil
+func (s StringPtrArray) AsArray() (vals StringArray) {
+	for _, v := range s {
+		if v == nil {
+			continue
+		}
+		vals = append(vals, *v)
+	}
+	return
 }
