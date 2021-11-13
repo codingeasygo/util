@@ -190,6 +190,34 @@ package xsql
 // 	}
 // }
 
+// func TestSQLScan(t *testing.T) {
+// 	err := sqlScan(nil, nil, nil)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	err = sqlScan("xx", nil, nil)
+// 	if err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	err = sqlScan("[xx", nil, nil)
+// 	if err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	err = sqlScan("", nil, nil)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	err = sqlScan("null", nil, nil)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// }
+
 // func TestIntArray(t *testing.T) {
 // 	var ary IntArray
 // 	err := ary.Scan(1)

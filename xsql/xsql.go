@@ -148,27 +148,46 @@ func (m MArray) Value() (driver.Value, error) {
 	return string(bys), err
 }
 
+func sqlScan(src, dst interface{}, strConvert func(str string) (xerr error)) (err error) {
+	if src == nil {
+		return
+	}
+	str, ok := src.(string)
+	if !ok {
+		err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+		return
+	}
+	if len(str) < 1 || str == "null" {
+		return
+	}
+	if strings.HasPrefix(str, "[") {
+		err = json.Unmarshal([]byte(str), dst)
+		if err != nil {
+			err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
+		}
+		return
+	}
+	if strings.HasPrefix(str, ",") {
+		str = strings.TrimSpace(str)
+		str = strings.Trim(str, ",")
+		if len(str) > 0 {
+			err = strConvert(str)
+		}
+		return
+	}
+	err = fmt.Errorf("the %v,%v is not invalid format", reflect.TypeOf(src), src)
+	return
+}
+
 //IntArray is database value to parse data to []int64 value
 type IntArray []int
 
 //Scan is sql.Sanner
 func (i *IntArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				*i, err = converter.ArrayIntVal(str)
-				return
-			}
-			err = json.Unmarshal([]byte(str), i)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
-		}
-	}
+	err = sqlScan(src, i, func(str string) (xerr error) {
+		*i, xerr = converter.ArrayIntVal(str)
+		return
+	})
 	return
 }
 
@@ -253,26 +272,13 @@ type IntPtrArray []*int
 
 //Scan is sql.Sanner
 func (i *IntPtrArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				var vals IntArray
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				vals, err = converter.ArrayIntVal(str)
-				if err == nil {
-					*i = vals.AsPtrArray()
-				}
-				return
-			}
-			err = json.Unmarshal([]byte(str), i)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+	err = sqlScan(src, i, func(str string) (xerr error) {
+		vals, xerr := converter.ArrayIntVal(str)
+		if xerr == nil {
+			*i = IntArray(vals).AsPtrArray()
 		}
-	}
+		return
+	})
 	return
 }
 
@@ -364,22 +370,10 @@ type Int64Array []int64
 
 //Scan is sql.Sanner
 func (i *Int64Array) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				*i, err = converter.ArrayInt64Val(str)
-				return
-			}
-			err = json.Unmarshal([]byte(str), i)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
-		}
-	}
+	err = sqlScan(src, i, func(str string) (xerr error) {
+		*i, xerr = converter.ArrayInt64Val(str)
+		return
+	})
 	return
 }
 
@@ -464,26 +458,13 @@ type Int64PtrArray []*int64
 
 //Scan is sql.Sanner
 func (i *Int64PtrArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				var vals Int64Array
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				vals, err = converter.ArrayInt64Val(str)
-				if err == nil {
-					*i = vals.AsPtrArray()
-				}
-				return
-			}
-			err = json.Unmarshal([]byte(str), i)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+	err = sqlScan(src, i, func(str string) (xerr error) {
+		vals, xerr := converter.ArrayInt64Val(str)
+		if xerr == nil {
+			*i = Int64Array(vals).AsPtrArray()
 		}
-	}
+		return
+	})
 	return
 }
 
@@ -575,22 +556,10 @@ type Float64Array []float64
 
 //Scan is sql.Sanner
 func (f *Float64Array) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				*f, err = converter.ArrayFloat64Val(str)
-				return
-			}
-			err = json.Unmarshal([]byte(str), f)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
-		}
-	}
+	err = sqlScan(src, f, func(str string) (xerr error) {
+		*f, xerr = converter.ArrayFloat64Val(str)
+		return
+	})
 	return
 }
 
@@ -675,26 +644,13 @@ type Float64PtrArray []*float64
 
 //Scan is sql.Sanner
 func (f *Float64PtrArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				var vals Float64Array
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				vals, err = converter.ArrayFloat64Val(str)
-				if err == nil {
-					*f = vals.AsPtrArray()
-				}
-				return
-			}
-			err = json.Unmarshal([]byte(str), f)
-			if err != nil {
-				err = fmt.Errorf("unmarshal fail with %v by :%v", err, str)
-			}
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+	err = sqlScan(src, f, func(str string) (xerr error) {
+		vals, xerr := converter.ArrayFloat64Val(str)
+		if xerr == nil {
+			*f = Float64Array(vals).AsPtrArray()
 		}
-	}
+		return
+	})
 	return
 }
 
@@ -786,19 +742,10 @@ type StringArray []string
 
 //Scan is sql.Sanner
 func (s *StringArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				*s, err = converter.ArrayStringVal(str)
-				return
-			}
-			err = json.Unmarshal([]byte(str), s)
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
-		}
-	}
+	err = sqlScan(src, s, func(str string) (xerr error) {
+		*s, xerr = converter.ArrayStringVal(str)
+		return
+	})
 	return
 }
 
@@ -901,23 +848,13 @@ type StringPtrArray []*string
 
 //Scan is sql.Sanner
 func (s *StringPtrArray) Scan(src interface{}) (err error) {
-	if src != nil {
-		if str, ok := src.(string); ok {
-			if strings.HasPrefix(str, ",") {
-				var vals StringArray
-				str = strings.TrimSpace(str)
-				str = strings.Trim(str, ",")
-				vals, err = converter.ArrayStringVal(str)
-				if err == nil {
-					*s = vals.AsPtrArray()
-				}
-				return
-			}
-			err = json.Unmarshal([]byte(str), s)
-		} else {
-			err = fmt.Errorf("the %v,%v is not string", reflect.TypeOf(src), src)
+	err = sqlScan(src, s, func(str string) (xerr error) {
+		vals, xerr := converter.ArrayStringVal(str)
+		if xerr == nil {
+			*s = StringArray(vals).AsPtrArray()
 		}
-	}
+		return
+	})
 	return
 }
 
