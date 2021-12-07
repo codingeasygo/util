@@ -19,46 +19,41 @@ func Int(v interface{}) (val int) {
 	return
 }
 
+var _intType = reflect.TypeOf(0)
+
 func IntVal(v interface{}) (int, error) {
+	ret, err := val(v, _intType, 0, func(s string) (interface{}, error) {
+		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	})
+	if err != nil {
+		return 0, err
+	}
+	return ret.(int), nil
+}
+
+func val(v interface{}, targetType reflect.Type, defaultRet interface{}, s2 func(string) (interface{}, error)) (interface{}, error) {
 	if v == nil {
-		return 0, ErrNil
+		return defaultRet, ErrNil
 	}
-	k := reflect.TypeOf(v)
-	if k.Name() == "Time" {
+	dv := reflect.ValueOf(v)
+	if dv.Type().Name() == "Time" {
 		t := v.(time.Time)
-		return int(t.Local().UnixNano() / 1e6), nil
+		v = int(t.Local().UnixNano() / 1e6)
+		dv = reflect.ValueOf(v)
 	}
-	switch k.Kind() {
-	case reflect.Int:
-		return int(v.(int)), nil
-	case reflect.Int8:
-		return int(v.(int8)), nil
-	case reflect.Int16:
-		return int(v.(int16)), nil
-	case reflect.Int32:
-		return int(v.(int32)), nil
-	case reflect.Int64:
-		return int(v.(int64)), nil
-	case reflect.Uint:
-		return int(v.(uint)), nil
-	case reflect.Uint8:
-		return int(v.(uint8)), nil
-	case reflect.Uint16:
-		return int(v.(uint16)), nil
-	case reflect.Uint32:
-		return int(v.(uint32)), nil
-	case reflect.Uint64:
-		return int(v.(uint64)), nil
-	case reflect.Float32:
-		return int(v.(float32)), nil
-	case reflect.Float64:
-		return int(v.(float64)), nil
-	case reflect.String:
-		fv, err := strconv.ParseInt(strings.TrimSpace(v.(string)), 10, 64)
-		return int(fv), err
-	default:
-		return 0, fmt.Errorf("incompactable kind(%v)", k.Kind())
+	if dv.Kind() == reflect.String {
+		var err error
+		v, err = s2(dv.String())
+		if err != nil {
+			return defaultRet, err
+		}
+		dv = reflect.ValueOf(v)
 	}
+	if dv.CanConvert(targetType) {
+		return dv.Convert(targetType).Interface(), nil
+	}
+
+	return defaultRet, fmt.Errorf("incompactable kind(%v)", dv.Kind())
 }
 
 func Int64(v interface{}) int64 {
@@ -66,46 +61,16 @@ func Int64(v interface{}) int64 {
 	return val
 }
 
+var _int64Type = reflect.TypeOf(int64(0))
+
 func Int64Val(v interface{}) (int64, error) {
-	if v == nil {
-		return 0, ErrNil
+	ret, err := val(v, _int64Type, 0, func(s string) (interface{}, error) {
+		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	})
+	if err != nil {
+		return 0, err
 	}
-	k := reflect.TypeOf(v)
-	if k.Name() == "Time" {
-		t := v.(time.Time)
-		return int64(t.Local().UnixNano() / 1e6), nil
-	}
-	switch k.Kind() {
-	case reflect.Int:
-		return int64(v.(int)), nil
-	case reflect.Int8:
-		return int64(v.(int8)), nil
-	case reflect.Int16:
-		return int64(v.(int16)), nil
-	case reflect.Int32:
-		return int64(v.(int32)), nil
-	case reflect.Int64:
-		return int64(v.(int64)), nil
-	case reflect.Uint:
-		return int64(v.(uint)), nil
-	case reflect.Uint8:
-		return int64(v.(uint8)), nil
-	case reflect.Uint16:
-		return int64(v.(uint16)), nil
-	case reflect.Uint32:
-		return int64(v.(uint32)), nil
-	case reflect.Uint64:
-		return int64(v.(uint64)), nil
-	case reflect.Float32:
-		return int64(v.(float32)), nil
-	case reflect.Float64:
-		return int64(v.(float64)), nil
-	case reflect.String:
-		fv, err := strconv.ParseInt(strings.TrimSpace(v.(string)), 10, 64)
-		return int64(fv), err
-	default:
-		return 0, fmt.Errorf("incompactable kind(%v)", k.Kind())
-	}
+	return ret.(int64), nil
 }
 
 func Uint64(v interface{}) uint64 {
@@ -113,46 +78,16 @@ func Uint64(v interface{}) uint64 {
 	return val
 }
 
+var _uint64Type = reflect.TypeOf(uint64(0))
+
 func Uint64Val(v interface{}) (uint64, error) {
-	if v == nil {
-		return 0, ErrNil
+	ret, err := val(v, _uint64Type, 0, func(s string) (interface{}, error) {
+		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+	})
+	if err != nil {
+		return 0, err
 	}
-	k := reflect.TypeOf(v)
-	if k.Name() == "Time" {
-		t := v.(time.Time)
-		return uint64(t.Local().UnixNano() / 1e6), nil
-	}
-	switch k.Kind() {
-	case reflect.Int:
-		return uint64(v.(int)), nil
-	case reflect.Int8:
-		return uint64(v.(int8)), nil
-	case reflect.Int16:
-		return uint64(v.(int16)), nil
-	case reflect.Int32:
-		return uint64(v.(int32)), nil
-	case reflect.Int64:
-		return uint64(v.(int64)), nil
-	case reflect.Uint:
-		return uint64(v.(uint)), nil
-	case reflect.Uint8:
-		return uint64(v.(uint8)), nil
-	case reflect.Uint16:
-		return uint64(v.(uint16)), nil
-	case reflect.Uint32:
-		return uint64(v.(uint32)), nil
-	case reflect.Uint64:
-		return uint64(v.(uint64)), nil
-	case reflect.Float32:
-		return uint64(v.(float32)), nil
-	case reflect.Float64:
-		return uint64(v.(float64)), nil
-	case reflect.String:
-		fv, err := strconv.ParseInt(strings.TrimSpace(v.(string)), 10, 64)
-		return uint64(fv), err
-	default:
-		return 0, fmt.Errorf("incompactable kind(%v)", k.Kind())
-	}
+	return ret.(uint64), nil
 }
 
 func Float64(v interface{}) float64 {
@@ -160,45 +95,16 @@ func Float64(v interface{}) float64 {
 	return val
 }
 
+var _float64Type = reflect.TypeOf(float64(0))
+
 func Float64Val(v interface{}) (float64, error) {
-	if v == nil {
-		return 0, ErrNil
+	ret, err := val(v, _float64Type, 0, func(s string) (interface{}, error) {
+		return strconv.ParseFloat(strings.TrimSpace(s), 64)
+	})
+	if err != nil {
+		return 0, err
 	}
-	k := reflect.TypeOf(v)
-	if k.Name() == "Time" {
-		return float64(v.(time.Time).Local().UnixNano() / 1e6), nil
-	}
-	switch k.Kind() {
-	case reflect.Int:
-		return float64(v.(int)), nil
-	case reflect.Int8:
-		return float64(v.(int8)), nil
-	case reflect.Int16:
-		return float64(v.(int16)), nil
-	case reflect.Int32:
-		return float64(v.(int32)), nil
-	case reflect.Int64:
-		return float64(v.(int64)), nil
-	case reflect.Uint:
-		return float64(v.(uint)), nil
-	case reflect.Uint8:
-		return float64(v.(uint8)), nil
-	case reflect.Uint16:
-		return float64(v.(uint16)), nil
-	case reflect.Uint32:
-		return float64(v.(uint32)), nil
-	case reflect.Uint64:
-		return float64(v.(uint64)), nil
-	case reflect.Float32:
-		return float64(v.(float32)), nil
-	case reflect.Float64:
-		return float64(v.(float64)), nil
-	case reflect.String:
-		fv, err := strconv.ParseFloat(strings.TrimSpace(v.(string)), 10)
-		return float64(fv), err
-	default:
-		return 0, fmt.Errorf("incompactable kind(%v)", k.Kind())
-	}
+	return ret.(float64), nil
 }
 
 func String(v interface{}) string {
@@ -212,15 +118,17 @@ func StringVal(v interface{}) (res string, err error) {
 	}
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.String:
-		return v.(string), nil
+		ret, ok := v.(string)
+		if ok {
+			return ret, nil
+		}
 	case reflect.Slice:
 		if bys, ok := v.([]byte); ok {
 			return string(bys), nil
 		}
-		fallthrough
-	default:
-		return fmt.Sprintf("%v", v), nil
 	}
+
+	return fmt.Sprintf("%v", v), nil
 }
 
 //ArrayVal will convert value to array, if v is string will split it by comma, if v is slice will loop element to array, other will error
