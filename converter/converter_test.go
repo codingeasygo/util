@@ -9,11 +9,13 @@ import (
 )
 
 func TestNumber(t *testing.T) {
+	type MyInt int
 	var m map[string]interface{}
 	//test all type
 	m = map[string]interface{}{}
 	m["abc"] = "123"
 	m["abc2"] = int(1)
+	m["myint"] = MyInt(1)
 	m["float32"] = float32(1)
 	m["float64"] = float64(1)
 	m["int"] = int(1)
@@ -30,7 +32,7 @@ func TestNumber(t *testing.T) {
 	for key, val := range m {
 		intA, err := IntVal(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		intB := Int(val)
@@ -102,7 +104,9 @@ func TestString(t *testing.T) {
 	var m map[string]interface{}
 	//test all type
 	m = map[string]interface{}{}
+	type myString string
 	m["abd"] = "a123"
+	m["my_str"] = myString("jdldklal")
 	m["str1"] = []byte("akkkk")
 	m["other"] = 111
 	m["arr1"] = []int{1}
