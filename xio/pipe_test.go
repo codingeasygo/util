@@ -74,3 +74,36 @@ func TestPipedConne(t *testing.T) {
 	fmt.Printf("-->%v\n", a)
 	b.Close()
 }
+
+func TestPipedListener(t *testing.T) {
+	listener := NewPipedListener()
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				break
+			}
+			go io.Copy(conn, conn)
+		}
+	}()
+	conn, err := listener.Dial()
+	if err != nil {
+		return
+	}
+	fmt.Fprintf(conn, "abc")
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	if err != nil {
+		return
+	}
+	if string(buf[0:n]) != "abc" {
+		t.Error("error")
+		return
+	}
+	conn.Close()
+	listener.Close()
+	time.Sleep(100 * time.Millisecond)
+	listener.Addr()
+	listener.Network()
+	fmt.Printf("listener %v\n", listener)
+}

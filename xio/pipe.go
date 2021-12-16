@@ -175,3 +175,51 @@ func (p *PipedConn) Network() string {
 func (p *PipedConn) String() string {
 	return p.PipeReadWriteCloser.String()
 }
+
+type PipedListener struct {
+	queue chan *PipedConn
+}
+
+func NewPipedListener() (listener *PipedListener) {
+	listener = &PipedListener{
+		queue: make(chan *PipedConn, 8),
+	}
+	return
+}
+
+func (p *PipedListener) Dial() (conn net.Conn, err error) {
+	conna, connb, err := CreatePipedConn()
+	if err == nil {
+		p.queue <- conna
+		conn = connb
+	}
+	return
+}
+
+func (p *PipedListener) Accept() (conn net.Conn, err error) {
+	c := <-p.queue
+	if c == nil {
+		err = fmt.Errorf("closed")
+	} else {
+		conn = c
+	}
+	return
+}
+
+func (p *PipedListener) Close() (err error) {
+	p.queue <- nil
+	return
+}
+
+func (p *PipedListener) Addr() net.Addr {
+	return p
+}
+
+//Network return "piped"
+func (p *PipedListener) Network() string {
+	return "piped"
+}
+
+func (p *PipedListener) String() string {
+	return fmt.Sprintf("%p", p)
+}
