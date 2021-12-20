@@ -15,7 +15,7 @@ func transportCopy(a, b io.ReadWriteCloser) (aerr, berr error) {
 		a.Close()
 	}()
 	_, aerr = io.Copy(b, a)
-	a.Close()
+	b.Close()
 	return
 }
 
