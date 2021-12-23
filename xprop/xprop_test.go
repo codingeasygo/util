@@ -328,3 +328,26 @@ func TestPrintMask(t *testing.T) {
 	config.Print()
 	config.PrintSection("loc")
 }
+
+func TestSetValue(t *testing.T) {
+	conf := NewConfig()
+	conf.SetValue("xxx/a", "123")
+	if conf.StrDef("", "xxx/a") != "123" {
+		t.Error("error")
+		return
+	}
+	if conf.StrDef("", "/xxx/a") != "123" {
+		t.Error("error")
+		return
+	}
+	conf.SetValue("/xxx/b", "456")
+	if conf.StrDef("", "xxx/b") != "456" {
+		t.Error("error")
+		return
+	}
+	if conf.StrDef("", "/xxx/b") != "456" {
+		t.Error("error")
+		return
+	}
+
+}

@@ -50,6 +50,8 @@ func (s sconf) ValueVal(path ...string) (v interface{}, err error) {
 
 //SetValue will set value to path
 func (s sconf) SetValue(path string, val interface{}) (err error) {
+	path = strings.TrimPrefix(path, "/")
+	path = strings.TrimSpace(path)
 	s[path] = converter.String(val)
 	return
 }
