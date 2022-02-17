@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xio"
 )
 
@@ -112,6 +113,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString("not supported"), nil, nil)
 			resp.Write(conn)
+			WarnLog("Server http proxy received not supported connect by method:%v,url:%v,header:%v", req.Method, req.URL, converter.JSON(req.Header))
 		}
 		return
 	}
@@ -127,7 +129,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
-			DebugLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
+			InfoLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 			return
 		}
 		resp.StatusCode = http.StatusOK
@@ -145,7 +147,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			resp.StatusCode = http.StatusInternalServerError
 			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString(err.Error()), nil, nil)
 			resp.Write(conn)
-			DebugLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
+			InfoLog("Server http proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 			return
 		}
 		buffer := bytes.NewBuffer(nil)
