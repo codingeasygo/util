@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ type Dialer interface {
 //WebsocketDialer is an implementation of Dialer by websocket
 type WebsocketDialer struct {
 	Dialer     RawDialer
+	HeaderGen  func(remote string) (header http.Header)
 	SkipVerify bool
 }
 
@@ -57,6 +59,9 @@ func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error
 	}
 	config, err := websocket.NewConfig(targetURL.String(), origin)
 	if err == nil {
+		if w.HeaderGen != nil {
+			config.Header = w.HeaderGen(remote)
+		}
 		if len(username) > 0 && len(password) > 0 {
 			config.Header.Set("Authorization", "Basic "+basicAuth(username, password))
 		}
