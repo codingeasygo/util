@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xio"
 )
 
@@ -104,19 +103,19 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		Header:     http.Header{},
 	}
 	resp.Header.Add("Proxy-Agent", s.Agent)
-	if req.Method != http.MethodConnect && len(req.Header.Get("Proxy-Connection")) < 1 {
-		DebugLog("Server sending proxy server info on %v to %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
-		if req.Method == http.MethodHead {
-			resp.StatusCode = http.StatusOK
-			resp.Write(conn)
-		} else {
-			resp.StatusCode = http.StatusInternalServerError
-			resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString("not supported"), nil, nil)
-			resp.Write(conn)
-			WarnLog("Server http proxy received not supported connect by method:%v,url:%v,header:%v", req.Method, req.URL, converter.JSON(req.Header))
-		}
-		return
-	}
+	// if req.Method != http.MethodConnect && len(req.Header.Get("Proxy-Connection")) < 1 {
+	// 	DebugLog("Server sending proxy server info on %v to %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
+	// 	if req.Method == http.MethodHead {
+	// 		resp.StatusCode = http.StatusOK
+	// 		resp.Write(conn)
+	// 	} else {
+	// 		resp.StatusCode = http.StatusInternalServerError
+	// 		resp.Body = xio.NewCombinedReadWriteCloser(bytes.NewBufferString("not supported"), nil, nil)
+	// 		resp.Write(conn)
+	// 		WarnLog("Server http proxy received not supported connect by method:%v,url:%v,header:%v", req.Method, req.URL, converter.JSON(req.Header))
+	// 	}
+	// 	return
+	// }
 	req.Header.Del("Proxy-Authorization")
 	req.Header.Del("Proxy-Connection")
 	var raw xio.Piper
