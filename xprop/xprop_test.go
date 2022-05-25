@@ -24,8 +24,18 @@ func assert(v bool) {
 func TestEnvReplace(t *testing.T) {
 	f := NewConfig()
 	f.Base = "."
-	f.SetValue("a", "b111111")
-	fmt.Println(f.EnvReplace("sss${a} ${abc} ${da} ${HOME} ${} ${CONF_DIR}"))
+	f.SetValue("a", "123")
+	f.SetValue("b", "456")
+	fmt.Println(f.EnvReplace("sss${a}${b} ${abc} ${da} ${HOME} ${} ${CONF_DIR}"))
+	if v := f.EnvReplace("${a}"); v != "123" {
+		t.Error(v)
+	}
+	if v := f.EnvReplace("${xxxx,@:123}"); v != "123" {
+		t.Error(v)
+	}
+	if v := f.EnvReplace("${xxxx,@:}"); v != "" {
+		t.Error(v)
+	}
 	f.Clear()
 	if f.Length() != 0 {
 		t.Error("error")
@@ -90,19 +100,19 @@ func TestValue(t *testing.T) {
 		return
 	}
 	//
-	assert(0 != f.IntDef(0, "inta"))
-	assert(0 != f.Int64Def(0, "inta"))
-	assert(0 != f.Uint64Def(0, "inta"))
-	assert(0 != f.Float64Def(0, "floata"))
-	assert("0" != f.StrDef("0", "floata"))
-	assert(nil != f.MapDef(nil, "json"))
+	assert(f.IntDef(0, "inta") != 0)
+	assert(f.Int64Def(0, "inta") != 0)
+	assert(f.Uint64Def(0, "inta") != 0)
+	assert(f.Float64Def(0, "floata") != 0)
+	assert(f.StrDef("0", "floata") != "0")
+	assert(f.MapDef(nil, "json") != nil)
 	//
-	assert(0 == f.IntDef(0, "notxxx"))
-	assert(0 == f.Int64Def(0, "notxxx"))
-	assert(0 == f.Uint64Def(0, "notxxx"))
-	assert(0 == f.Float64Def(0, "notxxx"))
-	assert("0" == f.StrDef("0", "notxxx"))
-	assert(nil == f.MapDef(nil, "notxxx"))
+	assert(f.IntDef(0, "notxxx") == 0)
+	assert(f.Int64Def(0, "notxxx") == 0)
+	assert(f.Uint64Def(0, "notxxx") == 0)
+	assert(f.Float64Def(0, "notxxx") == 0)
+	assert(f.StrDef("0", "notxxx") == "0")
+	assert(f.MapDef(nil, "notxxx") == nil)
 	//
 	assert(nil != f.ArrayIntDef(nil, "inta"))
 	assert(nil != f.ArrayInt64Def(nil, "inta"))

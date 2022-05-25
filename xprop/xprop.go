@@ -477,12 +477,17 @@ func (c *Config) EnvReplace(val string) string {
 
 //EnvReplaceEmpty will replace tartget patter by ${key} with value in configure map or system environment value.
 func (c *Config) EnvReplaceEmpty(val string, empty bool) string {
-	reg := regexp.MustCompile("\\$\\{[^\\}]*\\}")
-	var rval string
+	reg := regexp.MustCompile(`\$\{[^\}]*\}`)
 	val = reg.ReplaceAllStringFunc(val, func(m string) string {
+		keepEmpty := empty
+		rval := ""
 		keys := strings.Split(strings.Trim(m, "${}\t "), ",")
 		for _, key := range keys {
-			if c.Exist(key) {
+			if strings.HasPrefix(key, "@:") {
+				keepEmpty = true
+				rval = strings.TrimPrefix(key, "@:")
+				break
+			} else if c.Exist(key) {
 				rval = c.Str(key)
 			} else if key == "CONF_DIR" {
 				rval = c.Base
@@ -493,11 +498,8 @@ func (c *Config) EnvReplaceEmpty(val string, empty bool) string {
 				break
 			}
 		}
-		if len(rval) > 0 {
+		if len(rval) > 0 || keepEmpty {
 			return rval
-		}
-		if empty {
-			return ""
 		}
 		return m
 	})
@@ -579,7 +581,7 @@ func (c *Config) String() string {
 			keys = append(keys, k)
 		}
 	}
-	sort.Sort(sort.StringSlice(keys))
+	sort.Strings(keys)
 	for _, k := range keys {
 		val := fmt.Sprintf("%v", c.config[k])
 		for maskKey, maskVal := range mask {
