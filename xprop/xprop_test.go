@@ -30,10 +30,10 @@ func TestEnvReplace(t *testing.T) {
 	if v := f.EnvReplace("${a}"); v != "123" {
 		t.Error(v)
 	}
-	if v := f.EnvReplace("${xxxx,@:123}"); v != "123" {
+	if v := f.EnvReplace("${xxxx,@/123}"); v != "123" {
 		t.Error(v)
 	}
-	if v := f.EnvReplace("${xxxx,@:}"); v != "" {
+	if v := f.EnvReplace("${xxxx,@/}"); v != "" {
 		t.Error(v)
 	}
 	f.Clear()

@@ -483,9 +483,9 @@ func (c *Config) EnvReplaceEmpty(val string, empty bool) string {
 		rval := ""
 		keys := strings.Split(strings.Trim(m, "${}\t "), ",")
 		for _, key := range keys {
-			if strings.HasPrefix(key, "@:") {
+			if strings.HasPrefix(key, "@/") {
 				keepEmpty = true
-				rval = strings.TrimPrefix(key, "@:")
+				rval = strings.TrimPrefix(key, "@/")
 				break
 			} else if c.Exist(key) {
 				rval = c.Str(key)
