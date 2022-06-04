@@ -489,6 +489,53 @@ func Join(v interface{}, sep string) string {
 	return val
 }
 
+const (
+	JoinPolicyNotSliceEmpty  = 1 << 0
+	JoinPolicyNotSliceString = 1 << 1
+	JoinPolicyNilSkip        = 1 << 5
+	JoinPolicyNilString      = 1 << 6
+	JoinPolicyDefault        = JoinPolicyNotSliceEmpty | JoinPolicyNilSkip
+)
+
+func JoinSafe(v interface{}, sep string, policy int) string {
+	vtype := reflect.TypeOf(v)
+	if vtype.Kind() != reflect.Slice {
+		if policy&JoinPolicyNotSliceString == JoinPolicyNotSliceString {
+			return fmt.Sprintf("%v", v)
+		} else {
+			return ""
+		}
+	}
+	vval := reflect.ValueOf(v)
+	if vval.Len() < 1 {
+		return ""
+	}
+	stringVal := func(v reflect.Value) (string, bool) {
+		if v.Kind() == reflect.Ptr && v.IsNil() {
+			if policy&JoinPolicyNilString == JoinPolicyNilString {
+				return fmt.Sprintf("%v", v), true
+			} else {
+				return "", false
+			}
+		}
+		v = reflect.Indirect(v)
+		return fmt.Sprintf("%v", v.Interface()), true
+	}
+	val := ""
+	for i := 0; i < vval.Len(); i++ {
+		s, ok := stringVal(vval.Index(i))
+		if !ok {
+			continue
+		}
+		if len(val) > 0 {
+			val += fmt.Sprintf("%v%v", sep, s)
+		} else {
+			val = s
+		}
+	}
+	return val
+}
+
 func IndirectString(val interface{}) string {
 	if val == nil {
 		return "nil"

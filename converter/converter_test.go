@@ -344,6 +344,53 @@ func TestJoin(t *testing.T) {
 	}()
 }
 
+func TestJoinSafe(t *testing.T) {
+	if JoinSafe([]int{}, ",", JoinPolicyDefault) != "" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]int{1, 2, 3}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*int{IntPtr(1), IntPtr(2), IntPtr(3)}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*int{IntPtr(1), IntPtr(2), nil, IntPtr(3)}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*int{IntPtr(1), IntPtr(2), nil, IntPtr(3)}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*int{IntPtr(1), IntPtr(2), nil, IntPtr(3)}, ",", JoinPolicyNilString) != "1,2,<nil>,3" {
+		t.Error(JoinSafe([]*int{IntPtr(1), IntPtr(2), nil, IntPtr(3)}, ",", JoinPolicyNilString))
+		return
+	}
+	if JoinSafe([]*string{StringPtr("1"), StringPtr("2"), StringPtr("3")}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*string{StringPtr("1"), StringPtr("2"), nil, StringPtr("3")}, ",", JoinPolicyDefault) != "1,2,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe([]*string{StringPtr("1"), StringPtr("2"), nil, StringPtr("3")}, ",", JoinPolicyNilString) != "1,2,<nil>,3" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe("xx", ",", JoinPolicyDefault) != "" {
+		t.Error("error")
+		return
+	}
+	if JoinSafe("xx", ",", JoinPolicyNotSliceString) != "xx" {
+		t.Error("error")
+		return
+	}
+}
+
 func TestIndirectString(t *testing.T) {
 	var x *int
 	fmt.Println(IndirectString(x))
