@@ -16,7 +16,7 @@ package xsql
 // var Pool func() *pgxpool.Pool
 
 // func init() {
-// 	pool, err := pgxpool.Connect(context.Background(), "postgresql://dev:123@pg.loc:5432/dev")
+// 	pool, err := pgxpool.Connect(context.Background(), "postgresql://dev:123@psql.loc:5432/dev")
 // 	if err != nil {
 // 		panic(err)
 // 	}
@@ -340,6 +340,7 @@ package xsql
 // 	ary = append(ary, &v0)
 // 	ary = append(ary, &v1)
 // 	ary = append(ary, &v2)
+// 	ary = append(ary, nil)
 // 	sort.Sort(ary)
 // 	//
 // 	_, err = Pool().Exec(context.Background(), `drop table if exists xsql_test_int`)
@@ -378,7 +379,8 @@ package xsql
 // 			return
 // 		}
 // 		if ary1.Join(",") != "1,2,3" {
-// 			t.Error("error")
+// 			t.Errorf("%v", ary1)
+// 			return
 // 		}
 // 		if ary1.DbArray() != "{1,2,3}" {
 // 			t.Error("error")
@@ -428,7 +430,7 @@ package xsql
 // 			ary1 = append(ary1, nil)
 // 			ary1 = append(ary1, &v2)
 // 			sort.Sort(ary1)
-// 			if ary1.Join(",") != "nil,1,3" {
+// 			if ary1.Join(",") != "1,3" {
 // 				t.Error(ary1.Join(","))
 // 				return
 // 			}
@@ -649,7 +651,7 @@ package xsql
 // 			ary1 = append(ary1, nil)
 // 			ary1 = append(ary1, &v2)
 // 			sort.Sort(ary1)
-// 			if ary1.Join(",") != "nil,1,3" {
+// 			if ary1.Join(",") != "1,3" {
 // 				t.Error(ary1.Join(","))
 // 				return
 // 			}
@@ -871,7 +873,7 @@ package xsql
 // 		ary1 = append(ary1, nil)
 // 		ary1 = append(ary1, &v2)
 // 		sort.Sort(ary1)
-// 		if ary1.Join(",") != "nil,1,3" {
+// 		if ary1.Join(",") != "1,3" {
 // 			t.Error(ary1.Join(","))
 // 			return
 // 		}
@@ -1100,7 +1102,7 @@ package xsql
 // 		ary1 = append(ary1, nil)
 // 		ary1 = append(ary1, &v2)
 // 		sort.Sort(ary1)
-// 		if ary1.Join(",") != "nil,1,3" {
+// 		if ary1.Join(",") != "1,3" {
 // 			t.Error(ary1.Join(","))
 // 			return
 // 		}

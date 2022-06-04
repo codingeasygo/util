@@ -194,10 +194,9 @@ func (i *IntArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i IntArray) Value() (driver.Value, error) {
 	if i == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(i)
-	return string(bys), err
+	return "," + converter.JoinSafe(i, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (i IntArray) Len() int {
@@ -224,12 +223,7 @@ func (i IntArray) HavingOne(vals ...int) bool {
 
 //Join will parset to database array
 func (i IntArray) Join(sep string) (res string) {
-	for i, v := range i {
-		if i > 0 {
-			res += sep
-		}
-		res += fmt.Sprintf("%v", v)
-	}
+	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -285,10 +279,9 @@ func (i *IntPtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i IntPtrArray) Value() (driver.Value, error) {
 	if i == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(i)
-	return string(bys), err
+	return "," + converter.JoinSafe(i, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (i IntPtrArray) Len() int {
@@ -315,16 +308,7 @@ func (i IntPtrArray) HavingOne(vals ...int) bool {
 
 //Join will parset to database array
 func (i IntPtrArray) Join(sep string) (res string) {
-	for i, v := range i {
-		if i > 0 {
-			res += sep
-		}
-		if v == nil {
-			res += "nil"
-		} else {
-			res += fmt.Sprintf("%v", *v)
-		}
-	}
+	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -380,10 +364,9 @@ func (i *Int64Array) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i Int64Array) Value() (driver.Value, error) {
 	if i == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(i)
-	return string(bys), err
+	return "," + converter.JoinSafe(i, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (i Int64Array) Len() int {
@@ -410,12 +393,7 @@ func (i Int64Array) HavingOne(vals ...int64) bool {
 
 //Join will parset to database array
 func (i Int64Array) Join(sep string) (res string) {
-	for i, v := range i {
-		if i > 0 {
-			res += sep
-		}
-		res += fmt.Sprintf("%v", v)
-	}
+	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -471,10 +449,9 @@ func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (i Int64PtrArray) Value() (driver.Value, error) {
 	if i == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(i)
-	return string(bys), err
+	return "," + converter.JoinSafe(i, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (i Int64PtrArray) Len() int {
@@ -501,16 +478,7 @@ func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 
 //Join will parset to database array
 func (i Int64PtrArray) Join(sep string) (res string) {
-	for i, v := range i {
-		if i > 0 {
-			res += sep
-		}
-		if v == nil {
-			res += "nil"
-		} else {
-			res += fmt.Sprintf("%v", *v)
-		}
-	}
+	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -566,10 +534,9 @@ func (f *Float64Array) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (f Float64Array) Value() (driver.Value, error) {
 	if f == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(f)
-	return string(bys), err
+	return "," + converter.JoinSafe(f, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (f Float64Array) Len() int {
@@ -596,12 +563,7 @@ func (f Float64Array) HavingOne(vals ...float64) bool {
 
 //Join will parset to database array
 func (f Float64Array) Join(sep string) (res string) {
-	for i, v := range f {
-		if i > 0 {
-			res += sep
-		}
-		res += fmt.Sprintf("%v", v)
-	}
+	res = converter.JoinSafe(f, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -657,10 +619,9 @@ func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 //Value is driver.Valuer
 func (f Float64PtrArray) Value() (driver.Value, error) {
 	if f == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(f)
-	return string(bys), err
+	return "," + converter.JoinSafe(f, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (f Float64PtrArray) Len() int {
@@ -687,16 +648,7 @@ func (f Float64PtrArray) HavingOne(vals ...float64) bool {
 
 //Join will parset to database array
 func (f Float64PtrArray) Join(sep string) (res string) {
-	for i, v := range f {
-		if i > 0 {
-			res += sep
-		}
-		if v == nil {
-			res += "nil"
-		} else {
-			res += fmt.Sprintf("%v", *v)
-		}
-	}
+	res = converter.JoinSafe(f, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -752,10 +704,9 @@ func (s *StringArray) Scan(src interface{}) (err error) {
 //Value will parse to json value
 func (s StringArray) Value() (driver.Value, error) {
 	if s == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(s)
-	return string(bys), err
+	return "," + converter.JoinSafe(s, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (s StringArray) Len() int {
@@ -782,7 +733,7 @@ func (s StringArray) HavingOne(vals ...string) bool {
 
 //Join will parset to database array
 func (s StringArray) Join(sep string) (res string) {
-	res = strings.Join(s, sep)
+	res = converter.JoinSafe(s, ",", converter.JoinPolicyDefault)
 	return
 }
 
@@ -861,10 +812,9 @@ func (s *StringPtrArray) Scan(src interface{}) (err error) {
 //Value will parse to json value
 func (s StringPtrArray) Value() (driver.Value, error) {
 	if s == nil {
-		return "[]", nil
+		return ",", nil
 	}
-	bys, err := json.Marshal(s)
-	return string(bys), err
+	return "," + converter.JoinSafe(s, ",", converter.JoinPolicyDefault) + ",", nil
 }
 
 func (s StringPtrArray) Len() int {
@@ -891,16 +841,7 @@ func (s StringPtrArray) HavingOne(vals ...string) bool {
 
 //Join will parset to database array
 func (s StringPtrArray) Join(sep string) (res string) {
-	for i, v := range s {
-		if i > 0 {
-			res += sep
-		}
-		if v == nil {
-			res += "nil"
-		} else {
-			res += *v
-		}
-	}
+	res = converter.JoinSafe(s, ",", converter.JoinPolicyDefault)
 	return
 }
 
