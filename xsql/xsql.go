@@ -223,7 +223,7 @@ func (i IntArray) HavingOne(vals ...int) bool {
 
 //Join will parset to database array
 func (i IntArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -308,7 +308,7 @@ func (i IntPtrArray) HavingOne(vals ...int) bool {
 
 //Join will parset to database array
 func (i IntPtrArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -393,7 +393,7 @@ func (i Int64Array) HavingOne(vals ...int64) bool {
 
 //Join will parset to database array
 func (i Int64Array) Join(sep string) (res string) {
-	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -478,7 +478,7 @@ func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 
 //Join will parset to database array
 func (i Int64PtrArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(i, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -563,7 +563,7 @@ func (f Float64Array) HavingOne(vals ...float64) bool {
 
 //Join will parset to database array
 func (f Float64Array) Join(sep string) (res string) {
-	res = converter.JoinSafe(f, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(f, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -648,7 +648,7 @@ func (f Float64PtrArray) HavingOne(vals ...float64) bool {
 
 //Join will parset to database array
 func (f Float64PtrArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(f, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(f, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -733,7 +733,7 @@ func (s StringArray) HavingOne(vals ...string) bool {
 
 //Join will parset to database array
 func (s StringArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(s, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(s, sep, converter.JoinPolicyDefault)
 	return
 }
 
@@ -841,7 +841,7 @@ func (s StringPtrArray) HavingOne(vals ...string) bool {
 
 //Join will parset to database array
 func (s StringPtrArray) Join(sep string) (res string) {
-	res = converter.JoinSafe(s, ",", converter.JoinPolicyDefault)
+	res = converter.JoinSafe(s, sep, converter.JoinPolicyDefault)
 	return
 }
 
