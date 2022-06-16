@@ -993,6 +993,8 @@ func TestValidNoArray2Array(t *testing.T) {
 }
 
 type testSubStruct struct {
+	_      string                 `xxx:"not exported"`
+	xint   int                    `xxx:"not exported"`
 	Int    int                    `json:"int"`
 	Float  float64                `json:"float"`
 	String string                 `json:"string"`
@@ -1024,6 +1026,7 @@ func TestValidStruct(t *testing.T) {
 		Raw:    map[string]interface{}{"abc": 400},
 		Map:    M{"abc": 500},
 		Sub1: testSubStruct{
+			xint:   100,
 			Int:    100,
 			Float:  200,
 			String: "300",

@@ -403,7 +403,7 @@ func (v ValueGetterF) Get(key string) (interface{}, error) {
 //	ValidAttrFormat(format,getter,&arg1,&arg2)
 //
 func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args ...interface{}) error {
-	format = regexp.MustCompile("\\/\\/.*").ReplaceAllString(format, "")
+	format = regexp.MustCompile(`\/\/.*`).ReplaceAllString(format, "")
 	format = strings.Replace(format, "\n", "", -1)
 	format = strings.Trim(format, " \t;")
 	if len(format) < 1 {
@@ -653,6 +653,9 @@ func (s *Struct) Get(key string) (value interface{}, err error) {
 		for i := 0; i < vtype.NumField(); i++ {
 			valueField := value.Field(i)
 			typeField := vtype.Field(i)
+			if !typeField.IsExported() {
+				continue
+			}
 			tag := strings.SplitN(typeField.Tag.Get("json"), ",", 2)[0]
 			targetValue := valueField.Interface()
 			if mv, ok := targetValue.(map[string]interface{}); ok {
@@ -672,7 +675,7 @@ func (s *Struct) Get(key string) (value interface{}, err error) {
 	}
 	key = strings.Trim(key, "/")
 	parts := strings.SplitN(key, "/", 2)
-	value, _ = s.loaded[parts[0]]
+	value = s.loaded[parts[0]]
 	if len(parts) < 2 || value == nil {
 		return
 	}
