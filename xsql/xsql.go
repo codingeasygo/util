@@ -85,6 +85,10 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return
 }
 
+func (t *Time) IsNil() bool { return t == nil }
+
+func (t *Time) IsZero() bool { return t == nil || t.Timestamp() <= 0 }
+
 func (t Time) AsTime() time.Time {
 	return time.Time(t)
 }
@@ -124,6 +128,10 @@ func (m M) Value() (driver.Value, error) {
 
 func (m M) AsMap() xmap.M { return xmap.M(m) }
 
+func (m M) IsNil() bool { return m == nil }
+
+func (m M) IsZero() bool { return m == nil || len(m) == 0 }
+
 //MArray is database value to parse json data to map value
 type MArray []M
 
@@ -147,6 +155,10 @@ func (m MArray) Value() (driver.Value, error) {
 	bys, err := json.Marshal(m)
 	return string(bys), err
 }
+
+func (m MArray) IsNil() bool { return m == nil }
+
+func (m MArray) IsZero() bool { return m == nil || len(m) == 0 }
 
 func sqlScan(src, dst interface{}, strConvert func(str string) (xerr error)) (err error) {
 	if src == nil {
@@ -262,6 +274,10 @@ func (i IntArray) AsPtrArray() (vals IntPtrArray) {
 	return
 }
 
+func (i IntArray) IsNil() bool { return i == nil }
+
+func (i IntArray) IsZero() bool { return i == nil || len(i) == 0 }
+
 //IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
 
@@ -351,6 +367,10 @@ func (i IntPtrArray) AsArray() (vals IntArray) {
 	return
 }
 
+func (i IntPtrArray) IsNil() bool { return i == nil }
+
+func (i IntPtrArray) IsZero() bool { return i == nil || len(i) == 0 }
+
 //Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
@@ -433,6 +453,10 @@ func (i Int64Array) AsPtrArray() (vals Int64PtrArray) {
 	}
 	return
 }
+
+func (i Int64Array) IsNil() bool { return i == nil }
+
+func (i Int64Array) IsZero() bool { return i == nil || len(i) == 0 }
 
 //Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
@@ -523,6 +547,10 @@ func (i Int64PtrArray) AsArray() (vals Int64Array) {
 	return
 }
 
+func (i Int64PtrArray) IsNil() bool { return i == nil }
+
+func (i Int64PtrArray) IsZero() bool { return i == nil || len(i) == 0 }
+
 //Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
@@ -605,6 +633,10 @@ func (f Float64Array) AsPtrArray() (vals Float64PtrArray) {
 	}
 	return
 }
+
+func (f Float64Array) IsNil() bool { return f == nil }
+
+func (f Float64Array) IsZero() bool { return f == nil || len(f) == 0 }
 
 //Float64PtrArray is database value to parse data to []int64 value
 type Float64PtrArray []*float64
@@ -694,6 +726,10 @@ func (f Float64PtrArray) AsArray() (vals Float64Array) {
 	}
 	return
 }
+
+func (f Float64PtrArray) IsNil() bool { return f == nil }
+
+func (f Float64PtrArray) IsZero() bool { return f == nil || len(f) == 0 }
 
 //StringArray is database value to parse data to []string value
 type StringArray []string
@@ -800,6 +836,10 @@ func (s StringArray) AsPtrArray() (vals StringPtrArray) {
 	}
 	return
 }
+
+func (s StringArray) IsNil() bool { return s == nil }
+
+func (s StringArray) IsZero() bool { return s == nil || len(s) == 0 }
 
 //StringPtrArray is database value to parse data to []string value
 type StringPtrArray []*string
@@ -920,3 +960,7 @@ func (s StringPtrArray) AsArray() (vals StringArray) {
 	}
 	return
 }
+
+func (s StringPtrArray) IsNil() bool { return s == nil }
+
+func (s StringPtrArray) IsZero() bool { return s == nil || len(s) == 0 }
