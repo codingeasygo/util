@@ -47,12 +47,12 @@ func TestFilterField(t *testing.T) {
 		C1: converter.Float64Ptr(100),
 	}
 	{
-		if !Default.CheckValue(reflect.ValueOf(nil), true, true) {
+		if !CheckValue(reflect.ValueOf(nil), true, true) {
 			t.Error("error")
 			return
 		}
 		var intPtr *int
-		if Default.CheckValue(reflect.ValueOf(intPtr), false, false) {
+		if CheckValue(reflect.ValueOf(intPtr), false, false) {
 			t.Error("error")
 			return
 		}
