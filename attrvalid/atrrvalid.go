@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/codingeasygo/util/attrscan"
 	"github.com/codingeasygo/util/converter"
 )
 
@@ -716,4 +717,42 @@ func Valid(format string, target interface{}, args ...interface{}) error {
 		return M(mv.RawMap()).ValidFormat(format, args...)
 	}
 	return NewStruct(target).ValidFormat(format, args...)
+}
+
+type Valider struct {
+	attrscan.Scanner
+}
+
+var Default = &Valider{
+	Scanner: attrscan.Scanner{
+		Tag: "json",
+		NameConv: func(on, name string, field reflect.StructField) string {
+			return name
+		},
+	},
+}
+
+func ValidArgs(target interface{}, filter string, args ...interface{}) (format string, args_ []interface{}) {
+	format, args_ = Default.ValidArgs(target, filter, args...)
+	return
+}
+
+func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface{}) (format string, args_ []interface{}) {
+	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+		valid := field.Tag.Get("valid")
+		if len(valid) < 1 {
+			return
+		}
+		format += valid + "\n"
+		args_ = append(args_, value)
+	})
+	for _, arg := range args {
+		if arg, ok := arg.(string); ok {
+			format += arg + "\n"
+		} else {
+			args_ = append(args_, arg)
+		}
+	}
+	format = strings.TrimSpace(format)
+	return
 }

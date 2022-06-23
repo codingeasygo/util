@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/codingeasygo/util/converter"
@@ -1100,4 +1101,22 @@ func TestCheck(t *testing.T) {
 		t.Error(err)
 		return
 	}
+}
+
+type Simple struct {
+	A0 int64   `json:"a0" valid:"a0,r|i,r:0;"`
+	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
+	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
+	XX string  `json:"xx"`
+}
+
+func TestValidArgs(t *testing.T) {
+	simple := &Simple{}
+	var b0, c0 string
+	formats, args := ValidArgs(simple, "#all", `b0,r|s,l:0;`, &b0, `c0,r|s,l:0;`, &c0)
+	if len(formats) < 1 || strings.Count(formats, ";") != 5 || len(args) != 5 {
+		t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
+		return
+	}
+	fmt.Println(formats)
 }
