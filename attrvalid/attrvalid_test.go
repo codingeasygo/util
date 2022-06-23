@@ -1118,5 +1118,11 @@ func TestValidArgs(t *testing.T) {
 		t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
 		return
 	}
-	fmt.Println(formats)
+	err := ValidAttrFormat(formats, ValueGetterF(func(key string) (interface{}, error) {
+		return "1", nil
+	}), true, args...)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
