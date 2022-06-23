@@ -27,7 +27,11 @@ var Default = &Scanner{
 	},
 }
 
-func (s *Scanner) checkValue(val reflect.Value, incNil, incZero bool) bool {
+func CheckValue(val reflect.Value, incNil, incZero bool) bool {
+	return Default.CheckValue(val, incNil, incZero)
+}
+
+func (s *Scanner) CheckValue(val reflect.Value, incNil, incZero bool) bool {
 	if !val.IsValid() {
 		return incNil
 	}
