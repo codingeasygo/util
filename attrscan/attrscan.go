@@ -101,7 +101,7 @@ func (s *Scanner) FilterFieldCall(on string, v interface{}, filter string, call 
 			fieldIncNil = strings.Contains(","+filter+",", ",nil,") || strings.Contains(","+filter+",", ",all,")
 			fieldIncZero = strings.Contains(","+filter+",", ",zero,") || strings.Contains(","+filter+",", ",all,")
 		}
-		if !s.checkValue(fieldValue, fieldIncNil, fieldIncZero) {
+		if !s.CheckValue(fieldValue, fieldIncNil, fieldIncZero) {
 			continue
 		}
 		fieldName = s.NameConv(on, fieldName, fieldType)
