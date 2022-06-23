@@ -14,6 +14,10 @@ import (
 	"github.com/codingeasygo/util/converter"
 )
 
+type EnumValider interface {
+	EnumValid(v interface{}) error
+}
+
 //Validable is interface to define object can be valid by valid temple
 type Validable interface {
 	ValidFormat(format string, args ...interface{}) error
@@ -96,7 +100,7 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 }
 
 func checkTemplateRequired(data interface{}, required bool, lts []string) (bool, error) {
-	if v := reflect.ValueOf(data); v.Kind() == reflect.Ptr && v.IsZero() {
+	if v := reflect.ValueOf(data); v.Kind() == reflect.Invalid || (v.Kind() == reflect.Ptr && v.IsZero()) {
 		if (lts[0] == "R" || lts[0] == "r") && required {
 			return true, errors.New("data is empty")
 		}
@@ -148,7 +152,7 @@ func checkTemplateRequired(data interface{}, required bool, lts []string) (bool,
 //
 //required: if true, ValidAttrTemple will return fail when require value is empty or nil,
 //if false, ValidAttrTemple will return success although setting required for emppty/nil value
-func ValidAttrTemple(data interface{}, valueType string, valueRange string, required bool) (interface{}, error) {
+func ValidAttrTemple(data interface{}, valueType string, valueRange string, required bool, enum EnumValider) (interface{}, error) {
 	valueRange = strings.Replace(valueRange, "%N", ",", -1)
 	valueRange = strings.Replace(valueRange, "%%", "%", -1)
 	lts := strings.SplitN(valueType, "|", 2) //valid required type
@@ -166,17 +170,13 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	validStr := func(ds string) (interface{}, error) {
 		//check range limit.
 		switch lrs[0] {
-		case "o":
-			fallthrough
-		case "O": //option limit.
+		case "o", "O": //option limit.
 			options := strings.Split(lrs[1], "~")
 			if converter.ArrayHaving(options, ds) {
 				return ds, nil
 			}
 			return nil, fmt.Errorf("invalid value(%s) for options(%s)", ds, lrs[1])
-		case "l":
-			fallthrough
-		case "L": //length limit
+		case "l", "L": //length limit
 			slen := int64(len(ds))
 			rgs := strings.Split(lrs[1], "~")
 			var beg, end int64 = 0, 0
@@ -201,9 +201,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("string length must match %d<len<%d, but %d", beg, end, slen)
-		case "p":
-			fallthrough
-		case "P": //regex pattern limit
+		case "p", "P": //regex pattern limit
 			mched, err := regexp.MatchString(lrs[1], ds)
 			if err != nil {
 				return nil, err
@@ -212,9 +210,12 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("value(%s) not match regex(%s)", ds, lrs[1])
-		case "n":
-			fallthrough
-		case "N":
+		case "e", "E":
+			if enum == nil {
+				return nil, fmt.Errorf("target is not enum able")
+			}
+			return ds, enum.EnumValid(ds)
+		case "n", "N":
 			return ds, nil
 		}
 		//unknow range limit type.
@@ -224,9 +225,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	validNum := func(ds float64) (interface{}, error) {
 		//check range limit.
 		switch lrs[0] {
-		case "r":
-			fallthrough
-		case "R":
+		case "r", "R":
 			var beg, end float64 = 0, 0
 			var err error = nil
 			rgs := strings.Split(lrs[1], "~")
@@ -250,9 +249,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("value must match %f<val<%f, but %v", beg, end, ds)
-		case "o":
-			fallthrough
-		case "O":
+		case "o", "O":
 			options := strings.Split(lrs[1], "~")
 			var oary []float64
 			for _, o := range options { //covert to float array.
@@ -266,9 +263,12 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("invalid value(%f) for options(%s)", ds, lrs[1])
-		case "n":
-			fallthrough
-		case "N":
+		case "e", "E":
+			if enum == nil {
+				return nil, fmt.Errorf("target is not enum able")
+			}
+			return ds, enum.EnumValid(ds)
+		case "n", "N":
 			return ds, nil
 		}
 		//unknow range limit type.
@@ -278,9 +278,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	validInt := func(ds int64) (interface{}, error) {
 		//check range limit.
 		switch lrs[0] {
-		case "r":
-			fallthrough
-		case "R":
+		case "r", "R":
 			var beg, end int64 = 0, 0
 			var err error = nil
 			rgs := strings.Split(lrs[1], "~")
@@ -304,9 +302,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("value must match %v<val<%v, but %v", beg, end, ds)
-		case "o":
-			fallthrough
-		case "O":
+		case "o", "O":
 			options := strings.Split(lrs[1], "~")
 			var oary []int64
 			for _, o := range options { //covert to float array.
@@ -320,9 +316,12 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 				return ds, nil
 			}
 			return nil, fmt.Errorf("invalid value(%v) for options(%s)", ds, lrs[1])
-		case "n":
-			fallthrough
-		case "N":
+		case "e", "E":
+			if enum == nil {
+				return nil, fmt.Errorf("target is not enum able")
+			}
+			return ds, enum.EnumValid(ds)
+		case "n", "N":
 			return ds, nil
 		}
 		//unknow range limit type.
@@ -331,22 +330,16 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	//define value type function
 	validValeuType := func(ds interface{}) (interface{}, error) {
 		switch lts[1] {
-		case "s":
-			fallthrough
-		case "S":
+		case "s", "S":
 			sval, _ := converter.StringVal(ds)
 			return validStr(sval)
-		case "i":
-			fallthrough
-		case "I":
+		case "i", "I":
 			ids, err := converter.Int64Val(ds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid value(%s) for type(%s):%v", ds, lts[1], err)
 			}
 			return validInt(ids)
-		case "f":
-			fallthrough
-		case "F":
+		case "f", "F":
 			fds, err := converter.Float64Val(ds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid value(%s) for type(%s):%v", ds, lts[1], err)
@@ -358,8 +351,8 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	return validValeuType(data)
 }
 
-func validAttrTemple(data interface{}, temple string, parts []string, required bool) (val interface{}, err error) {
-	val, err = ValidAttrTemple(data, parts[1], parts[2], required)
+func validAttrTemple(data interface{}, temple string, parts []string, required bool, enum EnumValider) (val interface{}, err error) {
+	val, err = ValidAttrTemple(data, parts[1], parts[2], required, enum)
 	if err != nil {
 		err = fmt.Errorf("limit(%s),%s", temple, err.Error())
 		if len(parts) > 3 {
@@ -431,11 +424,13 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			sval = reflect.Indirect(reflect.ValueOf(sval)).Interface()
 		}
 		var pval reflect.Value
+		var enum EnumValider
 		if args[idx] != nil {
 			pval = reflect.Indirect(reflect.ValueOf(args[idx]))
+			enum, _ = args[idx].(EnumValider)
 		}
 		if pval.Kind() != reflect.Slice {
-			rval, err := validAttrTemple(sval, temple, parts, required)
+			rval, err := validAttrTemple(sval, temple, parts, required, enum)
 			if err != nil {
 				return err
 			}
@@ -450,10 +445,10 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			continue
 		}
-		svals, err := converter.ArrayValAll(sval, true)
-		if err != nil && err != converter.ErrNil {
-			return err
-		}
+		svals, _ := converter.ArrayValAll(sval, true) //ignore error
+		// if err != nil && err != converter.ErrNil {
+		// 	return err
+		// }
 		if ret, err := checkTemplateRequired(svals, required, strings.SplitN(parts[1], "|", 2)); ret { //check required
 			if err != nil {
 				return err
@@ -462,7 +457,7 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		}
 		array := pval
 		for _, sval = range svals {
-			rval, err := validAttrTemple(sval, temple, parts, required)
+			rval, err := validAttrTemple(sval, temple, parts, required, enum)
 			if err != nil {
 				return err
 			}
@@ -484,17 +479,22 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 
 //ValidSetValue will convert src value to dst type and set it
 func ValidSetValue(dst reflect.Value, src interface{}) error {
-	tval, err := ValidValue(dst.Type(), src)
+	val, err := ValidValue(dst.Type(), src)
 	if err == nil {
-		dst.Set(reflect.ValueOf(tval))
+		targetValue := reflect.ValueOf(val)
+		if targetValue.Type() == dst.Type() {
+			dst.Set(targetValue)
+		} else {
+			dst.Set(targetValue.Convert(dst.Type()))
+		}
 	}
 	return err
 }
 
 //ValidValue will convert src value to dst type and return it
 func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) {
-	sk := reflect.TypeOf(src)
-	if sk.Kind() == dst.Kind() {
+	srcType := reflect.TypeOf(src)
+	if srcType.Kind() == dst.Kind() {
 		return src, nil
 	}
 	var isptr = false
@@ -618,7 +618,7 @@ func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) 
 	if err == nil {
 		return val, err
 	}
-	return nil, fmt.Errorf("parse kind(%v) value to kind(%v) value->%v", sk.Kind(), dst, err)
+	return nil, fmt.Errorf("parse kind(%v) value to kind(%v) value->%v", srcType.Kind(), dst, err)
 }
 
 type rawMapable interface {
@@ -681,7 +681,6 @@ func (s *Struct) Get(key string) (value interface{}, err error) {
 	}
 	if getter, ok := value.(ValueGetter); ok {
 		value, err = getter.Get(parts[1])
-		return
 	}
 	return
 }
