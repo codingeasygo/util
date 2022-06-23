@@ -1104,7 +1104,7 @@ func TestCheck(t *testing.T) {
 }
 
 type Simple struct {
-	A0 int64   `json:"a0" valid:"a0,r|i,r:0;"`
+	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
 	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
 	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
 	XX string  `json:"xx"`
