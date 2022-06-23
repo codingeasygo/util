@@ -753,7 +753,12 @@ func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface
 	})
 	for _, arg := range args {
 		if arg, ok := arg.(string); ok {
-			format += arg + "\n"
+			arg = strings.TrimSpace(arg)
+			if strings.HasSuffix(arg, ";") {
+				format += arg + "\n"
+			} else {
+				format += arg + ";\n"
+			}
 		} else {
 			args_ = append(args_, arg)
 		}

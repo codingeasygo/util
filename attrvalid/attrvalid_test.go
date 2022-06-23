@@ -1113,7 +1113,7 @@ type Simple struct {
 func TestValidArgs(t *testing.T) {
 	simple := &Simple{}
 	var b0, c0 string
-	formats, args := ValidArgs(simple, "#all", `b0,r|s,l:0;`, &b0, `c0,r|s,l:0;`, &c0)
+	formats, args := ValidArgs(simple, "#all", `b0,r|s,l:0`, &b0, `c0,r|s,l:0;`, &c0)
 	if len(formats) < 1 || strings.Count(formats, ";") != 5 || len(args) != 5 {
 		t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
 		return
