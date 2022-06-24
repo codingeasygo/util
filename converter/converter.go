@@ -461,6 +461,14 @@ func JSON(v interface{}) string {
 	return string(data)
 }
 
+func XML(v interface{}) string {
+	data, err := xml.Marshal(v)
+	if err != nil {
+		return err.Error()
+	}
+	return string(data)
+}
+
 //UnmarshalJSON will read bytes from reader and unmarshal to object
 func UnmarshalJSON(r io.Reader, v interface{}) (data []byte, err error) {
 	data, err = ioutil.ReadAll(r)

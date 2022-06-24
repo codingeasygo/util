@@ -315,6 +315,19 @@ func TestJSON(t *testing.T) {
 	}
 }
 
+func TestXML(t *testing.T) {
+	v1 := XML("v")
+	if v1 != "<string>v</string>" {
+		t.Error(v1)
+		return
+	}
+	v2 := XML(TestJSON)
+	if !strings.Contains(v2, "unsupported") {
+		t.Error(v2)
+		return
+	}
+}
+
 type xmlObj struct {
 }
 
