@@ -803,13 +803,25 @@ func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface
 	return
 }
 
-func Valid(target interface{}, filter string) (err error) {
-	err = Default.Valid(target, filter)
+func Valid(target interface{}, filter, optional string) (err error) {
+	err = Default.Valid(target, filter, optional)
 	return
 }
 
-func (v *Valider) Valid(target interface{}, filter string) (err error) {
+func (v *Valider) Valid(target interface{}, filter, optional string) (err error) {
 	errList := []string{}
+	optional = strings.TrimSpace(optional)
+	isExc := strings.HasPrefix(optional, "^")
+	optional = strings.TrimPrefix(optional, "^")
+	optional = strings.Trim(optional, ",")
+	optional = "," + optional + ","
+	isRequired := func(fieldName string) bool {
+		if isExc {
+			return strings.Contains(optional, ","+fieldName+",")
+		} else {
+			return !strings.Contains(optional, ","+fieldName+",")
+		}
+	}
 	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
 		format := field.Tag.Get("valid")
 		if len(format) < 1 {
@@ -829,16 +841,16 @@ func (v *Valider) Valid(target interface{}, filter string) (err error) {
 			n := targetValue.Len()
 			for i := 0; i < n; i++ {
 				targetItem := targetValue.Index(i)
-				_, xerr = validAttrTemple(targetItem.Interface(), format, parts, true, enum)
+				_, xerr = validAttrTemple(targetItem.Interface(), format, parts, isRequired(fieldName), enum)
 				if xerr != nil {
 					break
 				}
 			}
 			if xerr == nil && n < 1 {
-				_, xerr = validAttrTemple(nil, format, parts, true, enum)
+				_, xerr = validAttrTemple(nil, format, parts, isRequired(fieldName), enum)
 			}
 		} else {
-			_, xerr = validAttrTemple(targetValue.Interface(), format, parts, true, enum)
+			_, xerr = validAttrTemple(targetValue.Interface(), format, parts, isRequired(fieldName), enum)
 		}
 		if xerr != nil {
 			errList = append(errList, xerr.Error())

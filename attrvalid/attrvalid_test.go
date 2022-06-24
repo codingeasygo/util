@@ -1117,12 +1117,12 @@ func TestValid(t *testing.T) {
 		A2: converter.Int64Ptr(0),
 		AY: []int64{0, 1},
 	}
-	err = Valid(&errObject, "#all")
+	err = Valid(&errObject, "#all", "")
 	if err == nil {
 		t.Error(err)
 		return
 	}
-	okObject := struct {
+	ok0Object := struct {
 		A0 int64    `json:"a0" valid:"a0,r|i,r:0"`
 		A1 *int64   `json:"a1" valid:"a1,r|i,r:0;"`
 		AX []int64  `json:"ax" valid:"ax,r|i,r:0;"`
@@ -1134,7 +1134,27 @@ func TestValid(t *testing.T) {
 		AX: []int64{1, 2, 3},
 		AY: []*int64{converter.Int64Ptr(1), converter.Int64Ptr(2), converter.Int64Ptr(3)},
 	}
-	err = Valid(&okObject, "#all")
+	err = Valid(&ok0Object, "#all", "")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	ok1Object := struct {
+		A0 int64    `json:"a0" valid:"a0,r|i,r:0"`
+		A1 *int64   `json:"a1" valid:"a1,r|i,r:0;"`
+		AX []int64  `json:"ax" valid:"ax,r|i,r:0;"`
+		AY []*int64 `json:"ay" valid:"ay,r|i,r:0;"`
+		XX string   `json:"xx"`
+	}{
+		A0: 100,
+		AX: []int64{1, 2, 3},
+	}
+	err = Valid(&ok1Object, "#all", "a1,ay")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = Valid(&ok1Object, "#all", "^a0,ax")
 	if err != nil {
 		t.Error(err)
 		return
