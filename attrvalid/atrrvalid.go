@@ -15,6 +15,7 @@ import (
 	"github.com/codingeasygo/util/converter"
 )
 
+//EnumValider is interface to enum valid
 type EnumValider interface {
 	EnumValid(v interface{}) error
 }
@@ -363,6 +364,18 @@ func validAttrTemple(data interface{}, temple string, parts []string, required b
 	return
 }
 
+//ValueSetter is interface to set value to target arg
+type ValueSetter interface {
+	//Set the value
+	Set(value interface{}) error
+}
+
+//ValueSetterF is func for implment ValueSetter
+type ValueSetterF func(interface{}) error
+
+//Set will set value to arg
+func (v ValueSetterF) Set(value interface{}) error { return v(value) }
+
 //ValueGetter is inteface for using get the value by key
 type ValueGetter interface {
 	//Get the value by key
@@ -373,9 +386,7 @@ type ValueGetter interface {
 type ValueGetterF func(key string) (interface{}, error)
 
 //Get will call the func
-func (v ValueGetterF) Get(key string) (interface{}, error) {
-	return v(key)
-}
+func (v ValueGetterF) Get(key string) (interface{}, error) { return v(key) }
 
 //ValidAttrFormat will valid multi value by foramt template, return error if fail
 //
@@ -420,17 +431,28 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		if err != nil {
 			return fmt.Errorf("get value by key %v fail with %v", parts[0], err)
 		}
+		var target interface{}
+		var targetValue reflect.Value
+		var targetKind reflect.Kind
+		var enum EnumValider
+		if args[idx] != nil {
+			if setter, ok := args[idx].(ValueSetter); ok {
+				err = setter.Set(sval)
+				if err != nil {
+					return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(args[idx]), parts[0], reflect.TypeOf(sval), err)
+				}
+				continue
+			}
+			target = args[idx]
+			targetValue = reflect.Indirect(reflect.ValueOf(target))
+			targetKind = targetValue.Kind()
+			enum, _ = args[idx].(EnumValider)
+		}
 		checkValue := reflect.ValueOf(sval)
 		if checkValue.Kind() == reflect.Ptr && !checkValue.IsZero() {
 			sval = reflect.Indirect(reflect.ValueOf(sval)).Interface()
 		}
-		var pval reflect.Value
-		var enum EnumValider
-		if args[idx] != nil {
-			pval = reflect.Indirect(reflect.ValueOf(args[idx]))
-			enum, _ = args[idx].(EnumValider)
-		}
-		if pval.Kind() != reflect.Slice {
+		if targetKind != reflect.Slice {
 			rval, err := validAttrTemple(sval, temple, parts, required, enum)
 			if err != nil {
 				return err
@@ -438,8 +460,8 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			if rval == nil {
 				continue
 			}
-			if args[idx] != nil {
-				err = ValidSetValue(pval, rval)
+			if target != nil {
+				err = ValidSetValue(target, rval)
 			}
 			if err != nil {
 				return err
@@ -456,7 +478,10 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			continue
 		}
-		array := pval
+		var targetArray reflect.Value
+		if target != nil {
+			targetArray = targetValue
+		}
 		for _, sval = range svals {
 			rval, err := validAttrTemple(sval, temple, parts, required, enum)
 			if err != nil {
@@ -465,28 +490,35 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			if rval == nil {
 				continue
 			}
-			tval, err := ValidValue(pval.Type().Elem(), rval)
-			if err != nil {
-				return err
+			if targetArray.IsValid() {
+				tval, err := ValidValue(targetValue.Type().Elem(), rval)
+				if err != nil {
+					return err
+				}
+				targetArray = reflect.Append(targetArray, reflect.ValueOf(tval))
 			}
-			array = reflect.Append(array, reflect.ValueOf(tval))
 		}
-		if args[idx] != nil {
-			pval.Set(array)
+		if targetArray.IsValid() {
+			targetValue.Set(targetArray)
 		}
 	}
 	return nil
 }
 
 //ValidSetValue will convert src value to dst type and set it
-func ValidSetValue(dst reflect.Value, src interface{}) error {
-	val, err := ValidValue(dst.Type(), src)
+func ValidSetValue(dst, src interface{}) error {
+	setter, ok := dst.(ValueSetter)
+	if ok {
+		return setter.Set(src)
+	}
+	dstValue := reflect.Indirect(reflect.ValueOf(dst))
+	val, err := ValidValue(dstValue.Type(), src)
 	if err == nil {
 		targetValue := reflect.ValueOf(val)
-		if targetValue.Type() == dst.Type() {
-			dst.Set(targetValue)
+		if targetValue.Type() == dstValue.Type() {
+			dstValue.Set(targetValue)
 		} else {
-			dst.Set(targetValue.Convert(dst.Type()))
+			dstValue.Set(targetValue.Convert(dstValue.Type()))
 		}
 	}
 	return err
@@ -615,6 +647,8 @@ func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) 
 		} else {
 			val = tsv
 		}
+	default:
+		err = fmt.Errorf("not supported")
 	}
 	if err == nil {
 		return val, err

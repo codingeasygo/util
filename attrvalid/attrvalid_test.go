@@ -1126,3 +1126,53 @@ func TestValidArgs(t *testing.T) {
 		return
 	}
 }
+
+type SetterTest struct {
+	A0 int64
+}
+
+func (s *SetterTest) Set(v interface{}) (err error) {
+	s.A0, err = converter.Int64Val(v)
+	return
+}
+
+func TestSetter(t *testing.T) {
+	var err error
+	//setter
+	var setter SetterTest
+	err = ValidSetValue(&setter, "1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = ValidAttrFormat(`x,R|I,R:0;x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "1", nil
+	}), true, &setter, ValueSetterF(func(i interface{}) error {
+		if v, err := converter.Int64Val(i); err != nil || v != 1 {
+			return fmt.Errorf("error")
+		}
+		return nil
+	}))
+	if err != nil || setter.A0 != 1 {
+		t.Error(err)
+		return
+	}
+	//not supported
+	simple := &Simple{}
+	err = ValidAttrFormat(`x,R|I,R:0`, ValueGetterF(func(key string) (interface{}, error) {
+		return "1", nil
+	}), true, simple)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//set error
+	err = ValidAttrFormat(`x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+}
