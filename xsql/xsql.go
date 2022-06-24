@@ -230,6 +230,14 @@ func sqlScan(src, dst interface{}, strConvert func(str string) (xerr error)) (er
 //IntArray is database value to parse data to []int64 value
 type IntArray []int
 
+func AsIntArray(v interface{}) IntArray {
+	vals, err := converter.ArrayIntVal(v)
+	if err != nil {
+		panic(err)
+	}
+	return IntArray(vals)
+}
+
 //Scan is sql.Sanner
 func (i *IntArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
@@ -316,6 +324,10 @@ func (i IntArray) IsZero() bool { return i == nil || len(i) == 0 }
 
 //IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
+
+func AsIntPtrArray(v interface{}) (array IntPtrArray) {
+	return AsIntArray(v).AsPtrArray()
+}
 
 //Scan is sql.Sanner
 func (i *IntPtrArray) Scan(src interface{}) (err error) {
@@ -410,6 +422,14 @@ func (i IntPtrArray) IsZero() bool { return i == nil || len(i) == 0 }
 //Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
+func AsInt64Array(v interface{}) Int64Array {
+	vals, err := converter.ArrayInt64Val(v)
+	if err != nil {
+		panic(err)
+	}
+	return Int64Array(vals)
+}
+
 //Scan is sql.Sanner
 func (i *Int64Array) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
@@ -496,6 +516,10 @@ func (i Int64Array) IsZero() bool { return i == nil || len(i) == 0 }
 
 //Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
+
+func AsInt64PtrArray(v interface{}) Int64PtrArray {
+	return AsInt64Array(v).AsPtrArray()
+}
 
 //Scan is sql.Sanner
 func (i *Int64PtrArray) Scan(src interface{}) (err error) {
@@ -590,6 +614,14 @@ func (i Int64PtrArray) IsZero() bool { return i == nil || len(i) == 0 }
 //Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
+func AsFloat64Array(v interface{}) Float64Array {
+	vals, err := converter.ArrayFloat64Val(v)
+	if err != nil {
+		panic(err)
+	}
+	return Float64Array(vals)
+}
+
 //Scan is sql.Sanner
 func (f *Float64Array) Scan(src interface{}) (err error) {
 	err = sqlScan(src, f, func(str string) (xerr error) {
@@ -676,6 +708,10 @@ func (f Float64Array) IsZero() bool { return f == nil || len(f) == 0 }
 
 //Float64PtrArray is database value to parse data to []int64 value
 type Float64PtrArray []*float64
+
+func AsFloat64PtrArray(v interface{}) Float64PtrArray {
+	return AsFloat64Array(v).AsPtrArray()
+}
 
 //Scan is sql.Sanner
 func (f *Float64PtrArray) Scan(src interface{}) (err error) {
@@ -769,6 +805,14 @@ func (f Float64PtrArray) IsZero() bool { return f == nil || len(f) == 0 }
 
 //StringArray is database value to parse data to []string value
 type StringArray []string
+
+func AsStringArray(v interface{}) StringArray {
+	vals, err := converter.ArrayStringVal(v)
+	if err != nil {
+		panic(err)
+	}
+	return StringArray(vals)
+}
 
 //Scan is sql.Sanner
 func (s *StringArray) Scan(src interface{}) (err error) {
@@ -879,6 +923,10 @@ func (s StringArray) IsZero() bool { return s == nil || len(s) == 0 }
 
 //StringPtrArray is database value to parse data to []string value
 type StringPtrArray []*string
+
+func AsStringPtrArray(v interface{}) StringPtrArray {
+	return AsStringArray(v).AsPtrArray()
+}
 
 //Scan is sql.Sanner
 func (s *StringPtrArray) Scan(src interface{}) (err error) {

@@ -1172,7 +1172,7 @@ package xsql
 // 	}
 // }
 
-// func TestValid(t *testing.T) {
+// func TestValidFormat(t *testing.T) {
 // 	data := attrvalid.M{
 // 		"json":      converter.JSON(M{"abc": 123}),
 // 		"json_list": converter.JSON([]M{{"abc": 123}}),
@@ -1234,4 +1234,80 @@ package xsql
 // 		t.Error(err)
 // 		return
 // 	}
+// }
+
+// func TestValid(t *testing.T) {
+// 	var err error
+// 	errObject := struct {
+// 		Map      M      `json:"map" valid:"map,r|s,l:0;"`
+// 		MapArray MArray `json:"map_array" valid:"map_array,r|s,l:0;"`
+// 	}{}
+// 	err = attrvalid.Valid(&errObject, "#all", "")
+// 	if err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	okObject := struct {
+// 		Map      M      `json:"map" valid:"map,r|s,l:0;"`
+// 		MapArray MArray `json:"map_array" valid:"map_array,r|s,l:0;"`
+// 	}{
+// 		Map:      M{},
+// 		MapArray: MArray{M{}},
+// 	}
+// 	err = attrvalid.Valid(&okObject, "#all", "")
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// }
+
+// func TestAs(t *testing.T) {
+// 	if len(AsIntArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	if len(AsIntPtrArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	func() {
+// 		defer func() {
+// 			recover()
+// 		}()
+// 		AsIntArray("xxx")
+// 	}()
+// 	if len(AsInt64Array([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	if len(AsInt64PtrArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	func() {
+// 		defer func() {
+// 			recover()
+// 		}()
+// 		AsInt64Array("xxx")
+// 	}()
+// 	if len(AsFloat64Array([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	if len(AsFloat64PtrArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	func() {
+// 		defer func() {
+// 			recover()
+// 		}()
+// 		AsFloat64Array("xxx")
+// 	}()
+// 	if len(AsStringArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	if len(AsStringPtrArray([]int{1})) != 1 {
+// 		t.Error("eror")
+// 	}
+// 	func() {
+// 		defer func() {
+// 			recover()
+// 		}()
+// 		AsStringArray(nil)
+// 	}()
 // }
