@@ -1021,12 +1021,12 @@ func TestValidStruct(t *testing.T) {
 		return
 	}
 	valuePtr2 := testStructPtr{}
-	err = Valid(`string,R|S,L:0;`, &valuePtr2, &intValue)
+	err = ValidFormat(`string,R|S,L:0;`, &valuePtr2, &intValue)
 	if err == nil {
 		t.Errorf("%v", err)
 		return
 	}
-	err = Valid(`string,R|S,L:0;`, &valuePtr2)
+	err = ValidFormat(`string,R|S,L:0;`, &valuePtr2)
 	if err == nil {
 		t.Errorf("%v", err)
 		return
@@ -1047,42 +1047,42 @@ func (x xxx) RawMap() map[string]interface{} {
 	return x
 }
 
-func TestValid(t *testing.T) {
+func TestValidFormat(t *testing.T) {
 	var err error
 	var intValue int
 	//
-	err = Valid(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}), &intValue)
+	err = ValidFormat(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}), &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
 	req, _ := http.NewRequest("GET", "http://test/?int=100", nil)
-	err = Valid(`int,R|I,R:0`, req, &intValue)
+	err = ValidFormat(`int,R|I,R:0`, req, &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:0`, req.URL.Query(), &intValue)
+	err = ValidFormat(`int,R|I,R:0`, req.URL.Query(), &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:0`, map[string]string{"int": "100"}, &intValue)
+	err = ValidFormat(`int,R|I,R:0`, map[string]string{"int": "100"}, &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:0`, map[string]interface{}{"int": "100"}, &intValue)
+	err = ValidFormat(`int,R|I,R:0`, map[string]interface{}{"int": "100"}, &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:0`, xxx(map[string]interface{}{"int": 100}), &intValue)
+	err = ValidFormat(`int,R|I,R:0`, xxx(map[string]interface{}{"int": 100}), &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:0`, &testStruct{Int: 100}, &intValue)
+	err = ValidFormat(`int,R|I,R:0`, &testStruct{Int: 100}, &intValue)
 	if err != nil || intValue != 100 {
 		t.Error(err)
 		return
@@ -1091,13 +1091,51 @@ func TestValid(t *testing.T) {
 
 func TestCheck(t *testing.T) {
 	var err error
-	err = Valid(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}))
+	err = ValidFormat(`int,R|I,R:0`, M(map[string]interface{}{"int": 100}))
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	err = Valid(`int,R|I,R:1000`, M(map[string]interface{}{"int": 100}))
+	err = ValidFormat(`int,R|I,R:1000`, M(map[string]interface{}{"int": 100}))
 	if err == nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestValid(t *testing.T) {
+	var err error
+	errObject := struct {
+		A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
+		A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
+		A2 *int64  `json:"a2" valid:"a2,r|i,r:0;"`
+		A3 int64   `json:"a3" valid:"|i,r:0;"`
+		AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
+		AY []int64 `json:"ay" valid:"ay,r|i,r:0;"`
+		XX string  `json:"xx"`
+	}{
+		A2: converter.Int64Ptr(0),
+		AY: []int64{0, 1},
+	}
+	err = Valid(&errObject, "#all")
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	okObject := struct {
+		A0 int64    `json:"a0" valid:"a0,r|i,r:0"`
+		A1 *int64   `json:"a1" valid:"a1,r|i,r:0;"`
+		AX []int64  `json:"ax" valid:"ax,r|i,r:0;"`
+		AY []*int64 `json:"ay" valid:"ay,r|i,r:0;"`
+		XX string   `json:"xx"`
+	}{
+		A0: 100,
+		A1: converter.Int64Ptr(100),
+		AX: []int64{1, 2, 3},
+		AY: []*int64{converter.Int64Ptr(1), converter.Int64Ptr(2), converter.Int64Ptr(3)},
+	}
+	err = Valid(&okObject, "#all")
+	if err != nil {
 		t.Error(err)
 		return
 	}

@@ -664,6 +664,7 @@ type rawMapable interface {
 type Struct struct {
 	Target   interface{}
 	Required bool
+	Tag      string
 	loaded   map[string]interface{}
 }
 
@@ -675,6 +676,7 @@ func NewStruct(target interface{}) (s *Struct) {
 	s = &Struct{
 		Target:   target,
 		Required: true,
+		Tag:      "json",
 		loaded:   map[string]interface{}{},
 	}
 	return
@@ -691,7 +693,7 @@ func (s *Struct) Get(key string) (value interface{}, err error) {
 			if !typeField.IsExported() {
 				continue
 			}
-			tag := strings.SplitN(typeField.Tag.Get("json"), ",", 2)[0]
+			tag := strings.SplitN(typeField.Tag.Get(s.Tag), ",", 2)[0]
 			targetValue := valueField.Interface()
 			if mv, ok := targetValue.(map[string]interface{}); ok {
 				targetValue = M(mv)
@@ -730,8 +732,8 @@ func ValidStructAttrFormat(format string, target interface{}, required bool, arg
 	return ValidAttrFormat(format, NewStruct(target), required, args...)
 }
 
-//Valid will check all supported type and run valid format
-func Valid(format string, target interface{}, args ...interface{}) error {
+//ValidFormat will check all supported type and run valid format
+func ValidFormat(format string, target interface{}, args ...interface{}) error {
 	if getter, ok := target.(ValueGetter); ok {
 		return ValidAttrFormat(format, getter, true, args...)
 	}
@@ -798,5 +800,52 @@ func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface
 		}
 	}
 	format = strings.TrimSpace(format)
+	return
+}
+
+func Valid(target interface{}, filter string) (err error) {
+	err = Default.Valid(target, filter)
+	return
+}
+
+func (v *Valider) Valid(target interface{}, filter string) (err error) {
+	errList := []string{}
+	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+		format := field.Tag.Get("valid")
+		if len(format) < 1 {
+			return
+		}
+		format = strings.TrimSpace(format)
+		format = strings.TrimSuffix(format, ";")
+		parts := strings.SplitN(format, ",", 4)
+		if len(parts) < 3 {
+			errList = append(errList, fmt.Sprintf("valid error:%s", format))
+			return
+		}
+		var xerr error
+		enum, _ := value.(EnumValider)
+		targetValue := reflect.Indirect(reflect.ValueOf(value))
+		if targetValue.Kind() == reflect.Slice {
+			n := targetValue.Len()
+			for i := 0; i < n; i++ {
+				targetItem := targetValue.Index(i)
+				_, xerr = validAttrTemple(targetItem.Interface(), format, parts, true, enum)
+				if xerr != nil {
+					break
+				}
+			}
+			if xerr == nil && n < 1 {
+				_, xerr = validAttrTemple(nil, format, parts, true, enum)
+			}
+		} else {
+			_, xerr = validAttrTemple(targetValue.Interface(), format, parts, true, enum)
+		}
+		if xerr != nil {
+			errList = append(errList, xerr.Error())
+		}
+	})
+	if len(errList) > 0 {
+		err = fmt.Errorf("%v", strings.Join(errList, "\n"))
+	}
 	return
 }

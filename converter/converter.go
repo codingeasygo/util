@@ -14,6 +14,35 @@ import (
 
 var ErrNil = fmt.Errorf("nil value")
 
+func valueConvert(v interface{}, targetType reflect.Type, defaultRet interface{}, parse func(string) (interface{}, error)) (result interface{}, err error) {
+	targetValue := reflect.ValueOf(v)
+	if !targetValue.IsValid() {
+		return defaultRet, ErrNil
+	}
+	if v, ok := v.(time.Time); ok {
+		targetValue = reflect.ValueOf(v.Local().UnixNano() / 1e6)
+	}
+	if targetValue.Kind() == reflect.String {
+		result, err = parse(targetValue.String())
+		if err != nil {
+			return defaultRet, err
+		}
+		targetValue = reflect.ValueOf(result)
+	}
+	if targetValue.CanConvert(targetType) {
+		return targetValue.Convert(targetType).Interface(), nil
+	}
+	if targetValue.Kind() == reflect.Ptr {
+		targetValue = reflect.Indirect(targetValue)
+		if !targetValue.IsValid() {
+			return defaultRet, ErrNil
+		}
+		result, err = valueConvert(targetValue.Interface(), targetType, defaultRet, parse)
+		return
+	}
+	return defaultRet, fmt.Errorf("incompactable kind(%v)", targetValue.Kind())
+}
+
 func Int(v interface{}) (val int) {
 	val, _ = IntVal(v)
 	return
@@ -22,38 +51,13 @@ func Int(v interface{}) (val int) {
 var _intType = reflect.TypeOf(0)
 
 func IntVal(v interface{}) (int, error) {
-	ret, err := val(v, _intType, 0, func(s string) (interface{}, error) {
+	ret, err := valueConvert(v, _intType, 0, func(s string) (interface{}, error) {
 		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
 	})
 	if err != nil {
 		return 0, err
 	}
 	return ret.(int), nil
-}
-
-func val(v interface{}, targetType reflect.Type, defaultRet interface{}, s2 func(string) (interface{}, error)) (interface{}, error) {
-	if v == nil {
-		return defaultRet, ErrNil
-	}
-	dv := reflect.ValueOf(v)
-	if dv.Type().Name() == "Time" {
-		t := v.(time.Time)
-		v = int(t.Local().UnixNano() / 1e6)
-		dv = reflect.ValueOf(v)
-	}
-	if dv.Kind() == reflect.String {
-		var err error
-		v, err = s2(dv.String())
-		if err != nil {
-			return defaultRet, err
-		}
-		dv = reflect.ValueOf(v)
-	}
-	if dv.CanConvert(targetType) {
-		return dv.Convert(targetType).Interface(), nil
-	}
-
-	return defaultRet, fmt.Errorf("incompactable kind(%v)", dv.Kind())
 }
 
 func Int64(v interface{}) int64 {
@@ -64,7 +68,7 @@ func Int64(v interface{}) int64 {
 var _int64Type = reflect.TypeOf(int64(0))
 
 func Int64Val(v interface{}) (int64, error) {
-	ret, err := val(v, _int64Type, 0, func(s string) (interface{}, error) {
+	ret, err := valueConvert(v, _int64Type, 0, func(s string) (interface{}, error) {
 		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
 	})
 	if err != nil {
@@ -81,7 +85,7 @@ func Uint64(v interface{}) uint64 {
 var _uint64Type = reflect.TypeOf(uint64(0))
 
 func Uint64Val(v interface{}) (uint64, error) {
-	ret, err := val(v, _uint64Type, 0, func(s string) (interface{}, error) {
+	ret, err := valueConvert(v, _uint64Type, 0, func(s string) (interface{}, error) {
 		return strconv.ParseInt(strings.TrimSpace(s), 10, 64)
 	})
 	if err != nil {
@@ -98,7 +102,7 @@ func Float64(v interface{}) float64 {
 var _float64Type = reflect.TypeOf(float64(0))
 
 func Float64Val(v interface{}) (float64, error) {
-	ret, err := val(v, _float64Type, 0, func(s string) (interface{}, error) {
+	ret, err := valueConvert(v, _float64Type, 0, func(s string) (interface{}, error) {
 		return strconv.ParseFloat(strings.TrimSpace(s), 64)
 	})
 	if err != nil {
@@ -116,19 +120,18 @@ func StringVal(v interface{}) (res string, err error) {
 	if v == nil {
 		return "", ErrNil
 	}
-	switch reflect.TypeOf(v).Kind() {
-	case reflect.String:
-		ret, ok := v.(string)
-		if ok {
-			return ret, nil
-		}
-	case reflect.Slice:
-		if bys, ok := v.([]byte); ok {
-			return string(bys), nil
-		}
+	switch v := v.(type) {
+	case string:
+		return v, nil
+	case *string:
+		return *v, nil
+	case []byte:
+		return string(v), nil
+	case *[]byte:
+		return string(*v), nil
+	default:
+		return fmt.Sprintf("%v", v), nil
 	}
-
-	return fmt.Sprintf("%v", v), nil
 }
 
 //ArrayVal will convert value to array, if v is string will split it by comma, if v is slice will loop element to array, other will error
@@ -147,6 +150,16 @@ func ArrayValAll(v interface{}, all bool) ([]interface{}, error) {
 	if sval, ok := v.(string); ok {
 		vals := []interface{}{}
 		for _, val := range strings.Split(sval, ",") {
+			vals = append(vals, val)
+		}
+		return vals, nil
+	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		vals := []interface{}{}
+		for _, val := range strings.Split(*sval, ",") {
 			vals = append(vals, val)
 		}
 		return vals, nil
@@ -182,6 +195,13 @@ func ArrayStringVal(v interface{}) (svals []string, err error) {
 	}
 	if sval, ok := v.(string); ok {
 		svals = strings.Split(sval, ",")
+		return
+	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		svals = strings.Split(*sval, ",")
 		return
 	}
 	vals := reflect.ValueOf(v)
@@ -220,6 +240,19 @@ func ArrayIntVal(v interface{}) (ivals []int, err error) {
 	}
 	if sval, ok := v.(string); ok {
 		for _, val := range strings.Split(sval, ",") {
+			ival, err = IntVal(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		for _, val := range strings.Split(*sval, ",") {
 			ival, err = IntVal(val)
 			if err != nil {
 				return
@@ -268,6 +301,19 @@ func ArrayInt64Val(v interface{}) (ivals []int64, err error) {
 		}
 		return
 	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		for _, val := range strings.Split(*sval, ",") {
+			ival, err = Int64Val(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
 		err = fmt.Errorf("incompactable kind(%v)", vals.Kind())
@@ -308,6 +354,19 @@ func ArrayUint64Val(v interface{}) (ivals []uint64, err error) {
 		}
 		return
 	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		for _, val := range strings.Split(*sval, ",") {
+			ival, err = Uint64Val(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
 	vals := reflect.ValueOf(v)
 	if vals.Kind() != reflect.Slice {
 		err = fmt.Errorf("incompactable kind(%v)", vals.Kind())
@@ -340,6 +399,19 @@ func ArrayFloat64Val(v interface{}) (ivals []float64, err error) {
 	}
 	if sval, ok := v.(string); ok {
 		for _, val := range strings.Split(sval, ",") {
+			ival, err = Float64Val(val)
+			if err != nil {
+				return
+			}
+			ivals = append(ivals, ival)
+		}
+		return
+	}
+	if sval, ok := v.(*string); ok {
+		if sval == nil {
+			return nil, ErrNil
+		}
+		for _, val := range strings.Split(*sval, ",") {
 			ival, err = Float64Val(val)
 			if err != nil {
 				return

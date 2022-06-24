@@ -105,9 +105,13 @@ func TestString(t *testing.T) {
 	//test all type
 	m = map[string]interface{}{}
 	type myString string
+	var sbyte = []byte("akkkk")
+	var sstr = "a123"
 	m["abd"] = "a123"
 	m["my_str"] = myString("jdldklal")
 	m["str1"] = []byte("akkkk")
+	m["str2"] = &sbyte
+	m["str3"] = &sstr
 	m["other"] = 111
 	m["arr1"] = []int{1}
 	m["arr1"] = []interface{}{nil, nil}
@@ -136,52 +140,62 @@ func TestString(t *testing.T) {
 }
 
 func TestArray(t *testing.T) {
+	var i0, i1 = 1, 2
+	var s0 = "1,2,3"
 	var m map[string]interface{}
 	//test all type
 	m = map[string]interface{}{}
 	m["str1"] = []byte("123")
 	m["str2"] = "1,2,3"
+	m["str3"] = &s0
 	m["arr1"] = []int{1, 1}
 	m["arr2"] = []interface{}{1, 1}
+	m["arr3"] = []*int{&i0, &i1}
+	m["arr4"] = []interface{}{&i0, &i1}
 	for key, val := range m {
 		_, err := ArrayVal(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		_, err = ArrayStringVal(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		_, err = ArrayIntVal(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		_, err = ArrayInt64Val(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		_, err = ArrayUint64Val(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 		_, err = ArrayFloat64Val(val)
 		if err != nil {
-			t.Error(key)
+			t.Error(key, err)
 			return
 		}
 	}
 	//test error
+	var snil *string
+	var serr string = "xx"
 	m = map[string]interface{}{}
 	m["nil"] = nil
 	m["int"] = 1
-	m["str"] = "xx"
+	m["str1"] = "xx"
+	m["str2"] = snil
+	m["str3"] = &serr
 	m["i1"] = []interface{}{"aaa"}
 	m["i2"] = []*testing.T{nil}
+	// m["nil"] = []interface{}{"1", snil}
 	for key, val := range m {
 		_, err := ArrayIntVal(val)
 		if err == nil {
@@ -209,6 +223,11 @@ func TestArray(t *testing.T) {
 		t.Error("xx")
 		return
 	}
+	_, err = ArrayStringVal(snil)
+	if err == nil {
+		t.Error("xx")
+		return
+	}
 	_, err = ArrayStringVal(t)
 	if err == nil {
 		t.Error("xx")
@@ -224,7 +243,17 @@ func TestArray(t *testing.T) {
 		t.Error("xx")
 		return
 	}
+	_, err = ArrayValAll(t, true)
+	if err != nil {
+		t.Error("xx")
+		return
+	}
 	_, err = ArrayVal(nil)
+	if err == nil {
+		t.Error("xx")
+		return
+	}
+	_, err = ArrayVal(snil)
 	if err == nil {
 		t.Error("xx")
 		return
