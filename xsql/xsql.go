@@ -89,6 +89,24 @@ func (t *Time) IsNil() bool { return t == nil }
 
 func (t *Time) IsZero() bool { return t == nil || t.Timestamp() <= 0 }
 
+func (t *Time) Set(v interface{}) (err error) {
+	switch v := v.(type) {
+	case int64:
+		*t = TimeUnix(v)
+	case Time:
+		*t = v
+	case *Time:
+		*t = *v
+	case time.Time:
+		*t = Time(v)
+	case *time.Time:
+		*t = Time(*v)
+	default:
+		err = fmt.Errorf("%v=>%v is not supported", reflect.TypeOf(v), reflect.TypeOf(t))
+	}
+	return
+}
+
 func (t Time) AsTime() time.Time {
 	return time.Time(t)
 }
@@ -132,6 +150,14 @@ func (m M) IsNil() bool { return m == nil }
 
 func (m M) IsZero() bool { return m == nil || len(m) == 0 }
 
+func (m *M) Set(v interface{}) (err error) {
+	value, err := xmap.MapVal(v)
+	if err == nil {
+		*m = M(value)
+	}
+	return
+}
+
 //MArray is database value to parse json data to map value
 type MArray []M
 
@@ -159,6 +185,16 @@ func (m MArray) Value() (driver.Value, error) {
 func (m MArray) IsNil() bool { return m == nil }
 
 func (m MArray) IsZero() bool { return m == nil || len(m) == 0 }
+
+func (m *MArray) Set(v interface{}) (err error) {
+	valueList, err := xmap.ArrayMapVal(v)
+	if err == nil {
+		for _, value := range valueList {
+			*m = append(*m, M(value))
+		}
+	}
+	return
+}
 
 func sqlScan(src, dst interface{}, strConvert func(str string) (xerr error)) (err error) {
 	if src == nil {

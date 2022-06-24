@@ -8,8 +8,10 @@ package xsql
 // 	"testing"
 // 	"time"
 
+// 	"github.com/codingeasygo/util/attrvalid"
 // 	"github.com/codingeasygo/util/converter"
 // 	"github.com/codingeasygo/util/xmap"
+// 	"github.com/codingeasygo/util/xtime"
 // 	"github.com/jackc/pgx/v4/pgxpool"
 // )
 
@@ -366,8 +368,8 @@ package xsql
 // 		}
 // 		var ary1 IntPtrArray
 // 		err = Pool().QueryRow(context.Background(), `select iarry from xsql_test_int where tid=$1`, 1).Scan(&ary1)
-// 		if err != nil || len(ary1) != 3 {
-// 			t.Error(err)
+// 		if err != nil || len(ary1) != 4 {
+// 			t.Errorf("%v,%v", err, ary1)
 // 			return
 // 		}
 // 		if !ary1.HavingOne(3) {
@@ -1110,4 +1112,126 @@ package xsql
 // 	ary.AsArray()
 // 	ary[0] = nil
 // 	ary.AsArray()
+// }
+
+// func TestIsNilZero(t *testing.T) {
+// 	var smap M
+// 	if !smap.IsNil() || !smap.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var smapArray MArray
+// 	if !smapArray.IsNil() || !smapArray.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var stime Time
+// 	if stime.IsNil() || !stime.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sint IntArray
+// 	if !sint.IsNil() || !sint.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sintPtr IntPtrArray
+// 	if !sintPtr.IsNil() || !sintPtr.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sint64 Int64Array
+// 	if !sint64.IsNil() || !sint64.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sint64Ptr Int64PtrArray
+// 	if !sint64Ptr.IsNil() || !sint64Ptr.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sfloat64 Float64Array
+// 	if !sfloat64.IsNil() || !sfloat64.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sfloat64Ptr Float64PtrArray
+// 	if !sfloat64Ptr.IsNil() || !sfloat64Ptr.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sstr StringArray
+// 	if !sstr.IsNil() || !sstr.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// 	var sstrPtr StringPtrArray
+// 	if !sstrPtr.IsNil() || !sstrPtr.IsZero() {
+// 		t.Error("error")
+// 		return
+// 	}
+// }
+
+// func TestValid(t *testing.T) {
+// 	data := attrvalid.M{
+// 		"json":      converter.JSON(M{"abc": 123}),
+// 		"json_list": converter.JSON([]M{{"abc": 123}}),
+// 		"time":      xtime.TimeNow(),
+// 	}
+// 	var smap M
+// 	var smapArray MArray
+// 	var stime Time
+// 	var sint IntArray
+// 	var sintPtr IntPtrArray
+// 	var sint64 Int64Array
+// 	var sint64Ptr Int64PtrArray
+// 	var sfloat64 Float64Array
+// 	var sfloat64Ptr Float64PtrArray
+// 	var sstr StringArray
+// 	var sstrPtr StringPtrArray
+// 	err := data.ValidFormat(`
+// 		json,R|S,L:0;json_list,R|S,L:0;
+// 		time,R|I,R:0;
+// 		time,R|I,R:0;time,R|I,R:0;
+// 		time,R|I,R:0;time,R|I,R:0;
+// 		time,R|I,R:0;time,R|I,R:0;
+// 		time,R|I,R:0;time,R|I,R:0;
+// 		`,
+// 		&smap, &smapArray,
+// 		&stime,
+// 		&sint, &sintPtr,
+// 		&sint64, &sint64Ptr,
+// 		&sfloat64, &sfloat64Ptr,
+// 		&sstr, &sstrPtr,
+// 	)
+// 	if err != nil || stime.Timestamp() < 1 || len(sint) < 1 || len(sintPtr) < 1 {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	fmt.Println("-->", stime, sint, sintPtr)
+// 	if err = stime.Set(int64(0)); err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	if err = stime.Set(Time{}); err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	if err = stime.Set(&stime); err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	if err = stime.Set(time.Now()); err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	ntime := time.Now()
+// 	if err = stime.Set(&ntime); err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	if err = stime.Set("xxx"); err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
 // }
