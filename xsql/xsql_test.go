@@ -1254,9 +1254,11 @@ package xsql
 // 	okObject := struct {
 // 		Map      M      `json:"map" valid:"map,r|s,l:0;"`
 // 		MapArray MArray `json:"map_array" valid:"map_array,r|s,l:0;"`
+// 		Time     Time   `json:"time" valid:"time,r|i,r:0;"`
 // 	}{
 // 		Map:      M{},
 // 		MapArray: MArray{M{}},
+// 		Time:     TimeNow(),
 // 	}
 // 	err = attrvalid.Valid(&okObject, "#all", "")
 // 	if err != nil {

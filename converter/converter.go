@@ -22,6 +22,9 @@ func valueConvert(v interface{}, targetType reflect.Type, defaultRet interface{}
 	if v, ok := v.(time.Time); ok {
 		targetValue = reflect.ValueOf(v.Local().UnixNano() / 1e6)
 	}
+	if targetValue.CanConvert(reflect.TypeOf(time.Time{})) {
+		targetValue = reflect.ValueOf(targetValue.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Local().UnixNano() / 1e6)
+	}
 	if targetValue.Kind() == reflect.String {
 		result, err = parse(targetValue.String())
 		if err != nil {
