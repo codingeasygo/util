@@ -1177,6 +1177,7 @@ package xsql
 // 		"json":      converter.JSON(M{"abc": 123}),
 // 		"json_list": converter.JSON([]M{{"abc": 123}}),
 // 		"time":      xtime.TimeNow(),
+// 		"empty":     "",
 // 	}
 // 	var smap M
 // 	var smapArray MArray
@@ -1189,6 +1190,7 @@ package xsql
 // 	var sfloat64Ptr Float64PtrArray
 // 	var sstr StringArray
 // 	var sstrPtr StringPtrArray
+// 	var etime Time
 // 	err := data.ValidFormat(`
 // 		json,R|S,L:0;json_list,R|S,L:0;
 // 		time,R|I,R:0;
@@ -1196,6 +1198,7 @@ package xsql
 // 		time,R|I,R:0;time,R|I,R:0;
 // 		time,R|I,R:0;time,R|I,R:0;
 // 		time,R|I,R:0;time,R|I,R:0;
+// 		empty,O|I,R:0;
 // 		`,
 // 		&smap, &smapArray,
 // 		&stime,
@@ -1203,6 +1206,7 @@ package xsql
 // 		&sint64, &sint64Ptr,
 // 		&sfloat64, &sfloat64Ptr,
 // 		&sstr, &sstrPtr,
+// 		&etime,
 // 	)
 // 	if err != nil || stime.Timestamp() < 1 || len(sint) < 1 || len(sintPtr) < 1 {
 // 		t.Error(err)

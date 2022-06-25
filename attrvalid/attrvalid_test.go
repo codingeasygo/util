@@ -1185,33 +1185,44 @@ func TestValidArgs(t *testing.T) {
 	}
 }
 
-type SetterTest struct {
+type SetterTestObject struct {
 	A0 int64
 }
 
-func (s *SetterTest) Set(v interface{}) (err error) {
-	s.A0, err = converter.Int64Val(v)
+func (s *SetterTestObject) Set(v interface{}) (err error) {
+	s.A0 = v.(int64)
+	return
+}
+
+type SetterTestArray []int64
+
+func (s *SetterTestArray) Set(v interface{}) (err error) {
+	value, err := converter.Int64Val(v)
+	if err == nil {
+		*s = append(*s, value)
+	}
 	return
 }
 
 func TestSetter(t *testing.T) {
 	var err error
 	//setter
-	var setter SetterTest
-	err = ValidSetValue(&setter, "1")
+	var setter0 SetterTestObject
+	var setter1 SetterTestArray
+	err = ValidSetValue(&setter0, int64(0))
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	err = ValidAttrFormat(`x,R|I,R:0;x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+	err = ValidAttrFormat(`x,R|I,R:0;x,R|I,R:0;x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
 		return "1", nil
-	}), true, &setter, ValueSetterF(func(i interface{}) error {
+	}), true, &setter0, &setter1, ValueSetterF(func(i interface{}) error {
 		if v, err := converter.Int64Val(i); err != nil || v != 1 {
 			return fmt.Errorf("error")
 		}
 		return nil
 	}))
-	if err != nil || setter.A0 != 1 {
+	if err != nil || setter0.A0 != 1 {
 		t.Error(err)
 		return
 	}
@@ -1227,7 +1238,25 @@ func TestSetter(t *testing.T) {
 	//set error
 	err = ValidAttrFormat(`x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
 		return "x", nil
-	}), true, &setter)
+	}), true, &setter0)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+	//set error
+	err = ValidAttrFormat(`x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter1)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+	//set error
+	err = ValidAttrFormat(`x,R|S,L:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter1)
 	if err == nil {
 		t.Error(err)
 		return

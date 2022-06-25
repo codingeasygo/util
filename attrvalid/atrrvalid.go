@@ -436,13 +436,6 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 		var targetKind reflect.Kind
 		var enum EnumValider
 		if args[idx] != nil {
-			if setter, ok := args[idx].(ValueSetter); ok {
-				err = setter.Set(sval)
-				if err != nil {
-					return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(args[idx]), parts[0], reflect.TypeOf(sval), err)
-				}
-				continue
-			}
 			target = args[idx]
 			targetValue = reflect.Indirect(reflect.ValueOf(target))
 			targetKind = targetValue.Kind()
@@ -460,11 +453,24 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			if rval == nil {
 				continue
 			}
-			if target != nil {
+			if setter, ok := target.(ValueSetter); ok {
+				err = setter.Set(rval)
+			} else if target != nil {
 				err = ValidSetValue(target, rval)
 			}
 			if err != nil {
+				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
+			}
+			continue
+		}
+		if setter, ok := target.(ValueSetter); ok {
+			_, err = validAttrTemple(sval, temple, parts, required, enum)
+			if err != nil {
 				return err
+			}
+			err = setter.Set(sval)
+			if err != nil {
+				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
 			}
 			continue
 		}
