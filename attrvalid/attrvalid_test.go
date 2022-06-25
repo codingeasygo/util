@@ -1168,21 +1168,42 @@ type Simple struct {
 	XX string  `json:"xx"`
 }
 
+type SimpleArgs struct {
+	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
+	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
+	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
+	XX struct {
+		B0 int64  `json:"b0" valid:"b0,r|i,r:0"`
+		B1 *int64 `json:"b1" valid:"b1,r|i,r:0;"`
+	} `json:"xx" valid:"ax,r|i,r:0;"`
+}
+
 func TestValidArgs(t *testing.T) {
-	simple := &Simple{}
-	var b0, c0 string
-	formats, args := ValidArgs(simple, "#all", `b0,r|s,l:0`, &b0, `c0,r|s,l:0;`, &c0)
-	if len(formats) < 1 || strings.Count(formats, ";") != 5 || len(args) != 5 {
-		t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
-		return
+	{
+		simple := &Simple{}
+		var b0, c0 string
+		formats, args := ValidArgs(simple, "#all", `b0,r|s,l:0`, &b0, `c0,r|s,l:0;`, &c0)
+		if len(formats) < 1 || strings.Count(formats, ";") != 5 || len(args) != 5 {
+			t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
+			return
+		}
+		err := ValidAttrFormat(formats, ValueGetterF(func(key string) (interface{}, error) {
+			return "1", nil
+		}), true, args...)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	}
-	err := ValidAttrFormat(formats, ValueGetterF(func(key string) (interface{}, error) {
-		return "1", nil
-	}), true, args...)
-	if err != nil {
-		t.Error(err)
-		return
+	{
+		simpleArgs := &SimpleArgs{}
+		formats, args := ValidArgs(simpleArgs, "#all")
+		if len(formats) < 1 || strings.Count(formats, ";") != 5 || len(args) != 5 {
+			t.Errorf("%v,%v,%v", formats, strings.Count(formats, ";"), len(args))
+			return
+		}
 	}
+
 }
 
 type SetterTestObject struct {

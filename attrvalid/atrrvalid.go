@@ -779,20 +779,30 @@ func ValidArgs(target interface{}, filter string, args ...interface{}) (format s
 	return
 }
 
-func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface{}) (format string, args_ []interface{}) {
+func (v *Valider) addValidArgs(target interface{}, filter string, format string, args []interface{}) (format_ string, args_ []interface{}) {
+	format_, args_ = format, args
 	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+		if field.Type.Kind() == reflect.Struct {
+			format_, args_ = v.addValidArgs(value, filter, format_, args_)
+			return
+		}
 		valid := field.Tag.Get("valid")
 		if len(valid) < 1 {
 			return
 		}
 		valid = strings.TrimSpace(valid)
 		if strings.HasSuffix(valid, ";") {
-			format += valid + "\n"
+			format_ += valid + "\n"
 		} else {
-			format += valid + ";\n"
+			format_ += valid + ";\n"
 		}
 		args_ = append(args_, value)
 	})
+	return
+}
+
+func (v *Valider) ValidArgs(target interface{}, filter string, args ...interface{}) (format string, args_ []interface{}) {
+	format, args_ = v.addValidArgs(target, filter, "", nil)
 	for _, arg := range args {
 		if v, ok := arg.(string); ok {
 			arg = strings.TrimSpace(v)
