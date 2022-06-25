@@ -107,4 +107,14 @@ func TestFilterField(t *testing.T) {
 			return
 		}
 	}
+	{
+		fields = nil
+		FilterFieldCall("test", simple, "t.a0,a1,ax#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+			fields = append(fields, fieldName)
+		})
+		if strings.Join(fields, ",") != "t.a0,t.a1,t.ax" {
+			t.Errorf("%v", fields)
+			return
+		}
+	}
 }

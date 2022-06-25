@@ -65,9 +65,15 @@ func (s *Scanner) FilterFieldCall(on string, v interface{}, filter string, call 
 	var fieldAll = map[string]string{}
 	var isExc = false
 	var incNil, incZero bool
+	var alias string
 	if len(filter) > 0 {
 		filter = strings.TrimSpace(filter)
-		parts := strings.SplitN(filter, "#", 2)
+		parts := strings.SplitN(filter, ".", 2)
+		if len(parts) > 1 {
+			alias = parts[0] + "."
+			filter = parts[1]
+		}
+		parts = strings.SplitN(filter, "#", 2)
 		isExc = strings.HasPrefix(parts[0], "^")
 		if len(parts[0]) > 0 {
 			for _, fieldItem := range strings.Split(strings.TrimPrefix(parts[0], "^"), ",") {
@@ -105,6 +111,6 @@ func (s *Scanner) FilterFieldCall(on string, v interface{}, filter string, call 
 			continue
 		}
 		fieldName = s.NameConv(on, fieldName, fieldType)
-		call(fieldName, fieldAll[fieldName], fieldType, fieldValue.Addr().Interface())
+		call(alias+fieldName, fieldAll[fieldName], fieldType, fieldValue.Addr().Interface())
 	}
 }
