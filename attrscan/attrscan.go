@@ -36,11 +36,20 @@ func (s *Scanner) CheckValue(val reflect.Value, incNil, incZero bool) bool {
 		return incNil
 	}
 	v := val.Interface()
-	if c, ok := v.(NilChecker); ok {
-		return !c.IsNil() || incNil
+	if c, ok := v.(NilChecker); ok && c.IsNil() {
+		return incNil
 	}
-	if c, ok := v.(ZeroChecker); ok {
-		return !c.IsZero() || incZero
+	if c, ok := v.(ZeroChecker); ok && c.IsZero() {
+		return incZero
+	}
+	if val.CanAddr() {
+		v := val.Addr().Interface()
+		// if c, ok := v.(NilChecker); ok && c.IsNil() {
+		// 	return incNil
+		// }
+		if c, ok := v.(ZeroChecker); ok && c.IsZero() {
+			return incZero
+		}
 	}
 	kind := val.Kind()
 	if kind == reflect.Ptr && val.IsNil() && !incNil {

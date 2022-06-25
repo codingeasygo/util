@@ -12,28 +12,30 @@ type IsNilArray []string
 
 type IsZeroArray []string
 
-func (s IsNilArray) IsNil() bool {
+func (s *IsNilArray) IsNil() bool {
 	return s == nil
 }
 
-func (s IsZeroArray) IsZero() bool {
-	return len(s) < 1
+func (s *IsZeroArray) IsZero() bool {
+	return s == nil || len(*s) < 1
 }
 
 type Simple struct {
-	_  string      `json:"-"`
-	A0 int64       `json:"a0"`
-	A1 *int64      `json:"a1"`
-	AX int64       `json:"ax"`
-	B0 string      `json:"b0"`
-	B1 *string     `json:"b1"`
-	BX string      `json:"bx"`
-	C0 float64     `json:"c0"`
-	C1 *float64    `json:"c1"`
-	CX float64     `json:"cx" filter:"#all"`
-	D0 IsNilArray  `json:"d0"`
-	D1 IsZeroArray `json:"d1"`
-	XX string      `json:"-"`
+	_  string       `json:"-"`
+	A0 int64        `json:"a0"`
+	A1 *int64       `json:"a1"`
+	AX int64        `json:"ax"`
+	B0 string       `json:"b0"`
+	B1 *string      `json:"b1"`
+	BX string       `json:"bx"`
+	C0 float64      `json:"c0"`
+	C1 *float64     `json:"c1"`
+	CX float64      `json:"cx" filter:"#all"`
+	D0 IsNilArray   `json:"d0"`
+	D1 IsZeroArray  `json:"d1"`
+	D2 *IsNilArray  `json:"d2"`
+	D3 *IsZeroArray `json:"d3"`
+	XX string       `json:"-"`
 }
 
 func TestFilterField(t *testing.T) {
@@ -72,7 +74,7 @@ func TestFilterField(t *testing.T) {
 		FilterFieldCall("test", simple, "#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
 			fields = append(fields, fieldName)
 		})
-		if strings.Join(fields, ",") != "a0,a1,ax,b0,b1,bx,c0,c1,cx,d0,d1" {
+		if strings.Join(fields, ",") != "a0,a1,ax,b0,b1,bx,c0,c1,cx,d0,d1,d2,d3" {
 			t.Errorf("%v", fields)
 			return
 		}
@@ -92,7 +94,7 @@ func TestFilterField(t *testing.T) {
 		FilterFieldCall("test", simple, "^a0,a1,ax#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
 			fields = append(fields, fieldName)
 		})
-		if strings.Join(fields, ",") != "b0,b1,bx,c0,c1,cx,d0,d1" {
+		if strings.Join(fields, ",") != "b0,b1,bx,c0,c1,cx,d0,d1,d2,d3" {
 			t.Errorf("%v", fields)
 			return
 		}

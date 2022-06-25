@@ -1251,7 +1251,7 @@ package xsql
 // 		t.Error(err)
 // 		return
 // 	}
-// 	okObject := struct {
+// 	ok1Object := struct {
 // 		Map      M      `json:"map" valid:"map,r|s,l:0;"`
 // 		MapArray MArray `json:"map_array" valid:"map_array,r|s,l:0;"`
 // 		Time     Time   `json:"time" valid:"time,r|i,r:0;"`
@@ -1260,7 +1260,18 @@ package xsql
 // 		MapArray: MArray{M{}},
 // 		Time:     TimeNow(),
 // 	}
-// 	err = attrvalid.Valid(&okObject, "#all", "")
+// 	err = attrvalid.Valid(&ok1Object, "#all", "")
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	ok2Object := struct {
+// 		TID  int64 `json:"tid"  valid:"tid,r|i,r:0;"`
+// 		Time Time  `json:"time" valid:"time,r|i,r:0;"`
+// 	}{
+// 		Time: TimeZero(),
+// 	}
+// 	err = attrvalid.Valid(&ok2Object, "", "")
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
