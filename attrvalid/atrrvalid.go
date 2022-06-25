@@ -782,11 +782,13 @@ func ValidArgs(target interface{}, filter string, args ...interface{}) (format s
 func (v *Valider) addValidArgs(target interface{}, filter string, format string, args []interface{}) (format_ string, args_ []interface{}) {
 	format_, args_ = format, args
 	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+		valid := field.Tag.Get("valid")
 		if field.Type.Kind() == reflect.Struct {
-			format_, args_ = v.addValidArgs(value, filter, format_, args_)
+			if valid == "inline" {
+				format_, args_ = v.addValidArgs(value, filter, format_, args_)
+			}
 			return
 		}
-		valid := field.Tag.Get("valid")
 		if len(valid) < 1 {
 			return
 		}

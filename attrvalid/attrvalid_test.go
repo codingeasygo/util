@@ -1175,7 +1175,7 @@ type SimpleArgs struct {
 	XX struct {
 		B0 int64  `json:"b0" valid:"b0,r|i,r:0"`
 		B1 *int64 `json:"b1" valid:"b1,r|i,r:0;"`
-	} `json:"xx" valid:"ax,r|i,r:0;"`
+	} `json:"xx" valid:"inline"`
 }
 
 func TestValidArgs(t *testing.T) {
