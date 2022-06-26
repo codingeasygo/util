@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+type XTIME time.Time
+
 func TestNumber(t *testing.T) {
 	type MyInt int
 	var m map[string]interface{}
@@ -29,6 +31,9 @@ func TestNumber(t *testing.T) {
 	m["uint32"] = uint32(1)
 	m["uint64"] = uint64(1)
 	m["time"] = time.Now()
+	m["time1"] = time.Time{}
+	m["time2"] = XTIME(time.Now())
+	m["time3"] = XTIME(time.Time{})
 	for key, val := range m {
 		intA, err := IntVal(val)
 		if err != nil {

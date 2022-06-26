@@ -19,11 +19,19 @@ func valueConvert(v interface{}, targetType reflect.Type, defaultRet interface{}
 	if !targetValue.IsValid() {
 		return defaultRet, ErrNil
 	}
-	if v, ok := v.(time.Time); ok {
-		targetValue = reflect.ValueOf(v.Local().UnixNano() / 1e6)
+	if timeValue, ok := v.(time.Time); ok {
+		if targetValue.IsZero() {
+			targetValue = reflect.ValueOf(int64(0))
+		} else {
+			targetValue = reflect.ValueOf(timeValue.Local().UnixNano() / 1e6)
+		}
 	}
 	if targetValue.CanConvert(reflect.TypeOf(time.Time{})) {
-		targetValue = reflect.ValueOf(targetValue.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Local().UnixNano() / 1e6)
+		if targetValue.IsZero() {
+			targetValue = reflect.ValueOf(int64(0))
+		} else {
+			targetValue = reflect.ValueOf(targetValue.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Local().UnixNano() / 1e6)
+		}
 	}
 	if targetValue.Kind() == reflect.String {
 		result, err = parse(targetValue.String())
