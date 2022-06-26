@@ -318,6 +318,21 @@ func TestValidAttrTemple(t *testing.T) {
 		t.Error("not error")
 		return
 	}
+	_, err = ValidAttrTemple(0, "o|i", "r:0", true, nil)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+	_, err = ValidAttrTemple(0, "o|f", "r:0", true, nil)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+	_, err = ValidAttrTemple("", "o|s", "r:0", true, nil)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 }
 
 type EnumIntTest int
