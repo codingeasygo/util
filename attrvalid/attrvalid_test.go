@@ -1207,6 +1207,24 @@ func TestValid(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	ok2Object.A0 = 0
+	err = Valid(&ok2Object, "#all", "a0")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	ok2Object.A0 = 0
+	err = Valid(&ok2Object, "#all", "")
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	ok2Object.A0 = -1
+	err = Valid(&ok2Object, "#all", "a0")
+	if err == nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestValidArgs(t *testing.T) {
