@@ -841,15 +841,15 @@ func (v *Valider) Valid(target interface{}, filter, optional string) (err error)
 		}
 	}
 	v.FilterFieldCall("valid", target, filter, func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
-		format := field.Tag.Get("valid")
-		if len(format) < 1 {
+		valid := field.Tag.Get("valid")
+		if len(valid) < 1 {
 			return
 		}
-		format = strings.TrimSpace(format)
-		format = strings.TrimSuffix(format, ";")
-		parts := strings.SplitN(format, ",", 4)
+		valid = strings.TrimSpace(valid)
+		valid = strings.TrimSuffix(valid, ";")
+		parts := strings.SplitN(valid, ",", 4)
 		if len(parts) < 3 {
-			errList = append(errList, fmt.Sprintf("valid error:%s", format))
+			errList = append(errList, fmt.Sprintf("valid error:%s", valid))
 			return
 		}
 		var xerr error
@@ -859,16 +859,16 @@ func (v *Valider) Valid(target interface{}, filter, optional string) (err error)
 			n := targetValue.Len()
 			for i := 0; i < n; i++ {
 				targetItem := targetValue.Index(i)
-				_, xerr = validAttrTemple(targetItem.Interface(), format, parts, isRequired(fieldName), enum)
+				_, xerr = validAttrTemple(targetItem.Interface(), valid, parts, isRequired(fieldName), enum)
 				if xerr != nil {
 					break
 				}
 			}
 			if xerr == nil && n < 1 {
-				_, xerr = validAttrTemple(nil, format, parts, isRequired(fieldName), enum)
+				_, xerr = validAttrTemple(nil, valid, parts, isRequired(fieldName), enum)
 			}
 		} else {
-			_, xerr = validAttrTemple(targetValue.Interface(), format, parts, isRequired(fieldName), enum)
+			_, xerr = validAttrTemple(targetValue.Interface(), valid, parts, isRequired(fieldName), enum)
 		}
 		if xerr != nil {
 			errList = append(errList, xerr.Error())

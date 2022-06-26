@@ -104,18 +104,24 @@ func (s *Scanner) FilterFieldCall(on string, v interface{}, filter string, call 
 		fieldValue := reflectValue.Field(i)
 		fieldType := reflectType.Field(i)
 		fieldName := strings.SplitN(fieldType.Tag.Get(s.Tag), ",", 2)[0]
+		fieldFilter := strings.TrimSpace(strings.TrimPrefix(fieldType.Tag.Get("filter"), "#"))
+		fieldIncNil, fieldIncZero, fieldInline := incNil, incZero, false
+		if len(fieldFilter) > 0 {
+			fieldIncNil = strings.Contains(","+fieldFilter+",", ",nil,") || strings.Contains(","+fieldFilter+",", ",all,")
+			fieldIncZero = strings.Contains(","+fieldFilter+",", ",zero,") || strings.Contains(","+fieldFilter+",", ",all,")
+			fieldInline = strings.Contains(","+fieldFilter+",", ",inline,")
+		}
+		if fieldInline {
+			s.FilterFieldCall(on, fieldValue.Addr().Interface(), filter, call)
+			continue
+		}
 		if len(fieldName) < 1 || fieldName == "-" {
 			continue
 		}
 		if _, ok := fieldAll[fieldName]; (isExc && ok) || (!isExc && len(fieldAll) > 0 && !ok) {
 			continue
 		}
-		filter := strings.TrimPrefix(fieldType.Tag.Get("filter"), "#")
-		fieldIncNil, fieldIncZero := incNil, incZero
-		if len(filter) > 0 {
-			fieldIncNil = strings.Contains(","+filter+",", ",nil,") || strings.Contains(","+filter+",", ",all,")
-			fieldIncZero = strings.Contains(","+filter+",", ",zero,") || strings.Contains(","+filter+",", ",all,")
-		}
+
 		if !s.CheckValue(fieldValue, fieldIncNil, fieldIncZero) {
 			continue
 		}

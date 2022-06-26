@@ -119,4 +119,20 @@ func TestFilterField(t *testing.T) {
 			return
 		}
 	}
+	{
+		object := struct {
+			A0     int64 `json:"a0" valid:"a0,r|i,r:0"`
+			Simple `filter:"inline"`
+		}{
+			A0: 100,
+		}
+		fields = nil
+		FilterFieldCall("test", &object, "a0,a1,ax#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+			fields = append(fields, fieldName)
+		})
+		if strings.Join(fields, ",") != "a0,a0,a1,ax" {
+			t.Errorf("%v", fields)
+			return
+		}
+	}
 }

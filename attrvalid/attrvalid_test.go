@@ -1103,6 +1103,23 @@ func TestCheck(t *testing.T) {
 	}
 }
 
+type Simple struct {
+	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
+	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
+	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
+	XX string  `json:"xx"`
+}
+
+type SimpleArgs struct {
+	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
+	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
+	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
+	XX struct {
+		B0 int64  `json:"b0" valid:"b0,r|i,r:0"`
+		B1 *int64 `json:"b1" valid:"b1,r|i,r:0;"`
+	} `json:"xx" valid:"inline"`
+}
+
 func TestValid(t *testing.T) {
 	var err error
 	errObject := struct {
@@ -1159,23 +1176,22 @@ func TestValid(t *testing.T) {
 		t.Error(err)
 		return
 	}
-}
-
-type Simple struct {
-	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
-	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
-	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
-	XX string  `json:"xx"`
-}
-
-type SimpleArgs struct {
-	A0 int64   `json:"a0" valid:"a0,r|i,r:0"`
-	A1 *int64  `json:"a1" valid:"a1,r|i,r:0;"`
-	AX []int64 `json:"ax" valid:"ax,r|i,r:0;"`
-	XX struct {
-		B0 int64  `json:"b0" valid:"b0,r|i,r:0"`
-		B1 *int64 `json:"b1" valid:"b1,r|i,r:0;"`
-	} `json:"xx" valid:"inline"`
+	ok2Object := struct {
+		A0     int64 `json:"a0" valid:"a0,r|i,r:0"`
+		Simple `filter:"inline"`
+	}{
+		A0: 100,
+		Simple: Simple{
+			A0: 100,
+			A1: converter.Int64Ptr(100),
+			AX: []int64{100},
+		},
+	}
+	err = Valid(&ok2Object, "#all", "")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestValidArgs(t *testing.T) {
