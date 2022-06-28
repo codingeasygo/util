@@ -1,6 +1,7 @@
 package attrvalid
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"math"
@@ -465,9 +466,22 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			if setter, ok := target.(ValueSetter); ok {
 				err = setter.Set(rval)
+			} else if sc, ok := target.(sql.Scanner); ok {
+				err = sc.Scan(rval)
 			} else if target != nil {
 				err = ValidSetValue(target, rval)
 			}
+			if err != nil {
+				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
+			}
+			continue
+		}
+		if sc, ok := target.(sql.Scanner); ok {
+			_, err = validAttrTemple(sval, temple, parts, required, enum)
+			if err != nil {
+				return err
+			}
+			err = sc.Scan(sval)
 			if err != nil {
 				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
 			}
@@ -523,8 +537,10 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 
 //ValidSetValue will convert src value to dst type and set it
 func ValidSetValue(dst, src interface{}) error {
-	setter, ok := dst.(ValueSetter)
-	if ok {
+	if sc, ok := dst.(sql.Scanner); ok {
+		return sc.Scan(src)
+	}
+	if setter, ok := dst.(ValueSetter); ok {
 		return setter.Set(src)
 	}
 	dstValue := reflect.Indirect(reflect.ValueOf(dst))

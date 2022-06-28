@@ -1333,3 +1333,82 @@ func TestSetter(t *testing.T) {
 	}
 	fmt.Println(err)
 }
+
+type ScannerTestObject struct {
+	A0 int64
+}
+
+func (s *ScannerTestObject) Scan(v interface{}) (err error) {
+	s.A0 = v.(int64)
+	return
+}
+
+type ScannerTestArray []int64
+
+func (s *ScannerTestArray) Scan(v interface{}) (err error) {
+	value, err := converter.Int64Val(v)
+	if err == nil {
+		*s = append(*s, value)
+	}
+	return
+}
+
+func TestScanner(t *testing.T) {
+	var err error
+	//setter
+	var setter0 ScannerTestObject
+	var setter1 ScannerTestArray
+	err = ValidSetValue(&setter0, int64(0))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = ValidAttrFormat(`x,R|I,R:0;x,R|I,R:0;x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "1", nil
+	}), true, &setter0, &setter1, ValueSetterF(func(i interface{}) error {
+		if v, err := converter.Int64Val(i); err != nil || v != 1 {
+			return fmt.Errorf("error")
+		}
+		return nil
+	}))
+	if err != nil || setter0.A0 != 1 {
+		t.Error(err)
+		return
+	}
+	//not supported
+	simple := &Simple{}
+	err = ValidAttrFormat(`x,R|I,R:0`, ValueGetterF(func(key string) (interface{}, error) {
+		return "1", nil
+	}), true, simple)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	//set error
+	err = ValidAttrFormat(`x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter0)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+	//set error
+	err = ValidAttrFormat(`x,R|I,R:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter1)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+	//set error
+	err = ValidAttrFormat(`x,R|S,L:0;`, ValueGetterF(func(key string) (interface{}, error) {
+		return "x", nil
+	}), true, &setter1)
+	if err == nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(err)
+}
