@@ -256,18 +256,21 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 			} else {
 				beg = 0
 			}
+			endStr := ""
 			if len(rgs) > 1 && len(rgs[1]) > 0 {
 				end, err = strconv.ParseFloat(rgs[1], 64)
 				if err != nil {
 					return nil, fmt.Errorf("invalid range end number option(%s)", rgs[1])
 				}
+				endStr = rgs[1]
 			} else {
 				end = math.MaxFloat64
+				endStr = "MaxFloat64"
 			}
 			if beg < ds && end > ds {
 				return ds, nil
 			}
-			return nil, fmt.Errorf("value must match %f<val<%f, but %v", beg, end, ds)
+			return nil, fmt.Errorf("value must match %f<val<%v, but %v", beg, endStr, ds)
 		case "o", "O":
 			options := strings.Split(lrs[1], "~")
 			var oary []float64
@@ -309,18 +312,21 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 			} else {
 				beg = 0
 			}
+			endStr := ""
 			if len(rgs) > 1 && len(rgs[1]) > 0 {
 				end, err = strconv.ParseInt(rgs[1], 10, 64)
 				if err != nil {
 					return nil, fmt.Errorf("invalid range end number option(%s)", rgs[1])
 				}
+				endStr = rgs[1]
 			} else {
 				end = math.MaxInt64
+				endStr = "MaxInt64"
 			}
 			if beg < ds && end > ds {
 				return ds, nil
 			}
-			return nil, fmt.Errorf("value must match %v<val<%v, but %v", beg, end, ds)
+			return nil, fmt.Errorf("value must match %v<val<%v, but %v", beg, endStr, ds)
 		case "o", "O":
 			options := strings.Split(lrs[1], "~")
 			var oary []int64
