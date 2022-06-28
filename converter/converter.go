@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -49,6 +50,15 @@ func valueConvert(v interface{}, targetType reflect.Type, defaultRet interface{}
 			return defaultRet, ErrNil
 		}
 		result, err = valueConvert(targetValue.Interface(), targetType, defaultRet, parse)
+		return
+	}
+	if valuer, ok := v.(driver.Valuer); ok {
+		driverValue, xerr := valuer.Value()
+		if xerr != nil {
+			err = xerr
+			return
+		}
+		result, err = valueConvert(driverValue, targetType, defaultRet, parse)
 		return
 	}
 	return defaultRet, fmt.Errorf("incompactable kind(%v)", targetValue.Kind())

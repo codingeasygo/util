@@ -13,6 +13,7 @@ package xsql
 // 	"github.com/codingeasygo/util/xmap"
 // 	"github.com/codingeasygo/util/xtime"
 // 	"github.com/jackc/pgx/v4/pgxpool"
+// 	"github.com/shopspring/decimal"
 // )
 
 // var Pool func() *pgxpool.Pool
@@ -1235,6 +1236,48 @@ package xsql
 // 		return
 // 	}
 // 	if err = stime.Set("xxx"); err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// }
+
+// func TestValidDecimal(t *testing.T) {
+// 	data := attrvalid.M{
+// 		"int":    100,
+// 		"float":  100.0,
+// 		"string": "100.0",
+// 	}
+// 	var val0, val1, val2 decimal.Decimal
+// 	err := data.ValidFormat(`
+// 		int,R|I,R:0;
+// 		float,R|F,R:0;
+// 		string,R|F,R:0;
+// 		`,
+// 		&val0, &val1, &val2,
+// 	)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	fmt.Println("-->", val0, val1, val2)
+
+// 	var args = struct {
+// 		A decimal.Decimal `json:"a" valid:"a,r|f,r:0"`
+// 	}{}
+// 	err = attrvalid.Valid(&args, "#all", "")
+// 	if err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	args.A = decimal.NewFromFloat(-1)
+// 	err = attrvalid.Valid(&args, "#all", "")
+// 	if err == nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	args.A = decimal.NewFromFloat(10)
+// 	err = attrvalid.Valid(&args, "#all", "")
+// 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
