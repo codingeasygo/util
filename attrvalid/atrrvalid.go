@@ -124,6 +124,21 @@ func checkTemplateRequired(data interface{}, required bool, lts []string) (bool,
 	return false, nil
 }
 
+func CompatibleType(typ reflect.Type) (ok bool) {
+	if typ == reflect.TypeOf(nil) {
+		return
+	}
+	switch typ.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64, reflect.String:
+		ok = true
+	case reflect.Ptr, reflect.Slice:
+		ok = CompatibleType(typ.Elem())
+	}
+	return
+}
+
 //ValidAttrTemple will valid the data to specified value by limit
 //
 //
@@ -464,11 +479,17 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			if rval == nil {
 				continue
 			}
-			if setter, ok := target.(ValueSetter); ok {
-				err = setter.Set(rval)
-			} else if sc, ok := target.(sql.Scanner); ok {
-				err = sc.Scan(rval)
-			} else if target != nil {
+			var setted bool
+			if target != nil && !CompatibleType(targetValue.Type()) {
+				if setter, ok := target.(ValueSetter); ok {
+					setted = true
+					err = setter.Set(rval)
+				} else if sc, ok := target.(sql.Scanner); ok {
+					setted = true
+					err = sc.Scan(rval)
+				}
+			}
+			if target != nil && !setted {
 				err = ValidSetValue(target, rval)
 			}
 			if err != nil {
@@ -476,27 +497,29 @@ func ValidAttrFormat(format string, valueGetter ValueGetter, required bool, args
 			}
 			continue
 		}
-		if sc, ok := target.(sql.Scanner); ok {
-			_, err = validAttrTemple(sval, temple, parts, required, enum)
-			if err != nil {
-				return err
+		if target != nil && !CompatibleType(targetValue.Type()) {
+			if setter, ok := target.(ValueSetter); ok {
+				_, err = validAttrTemple(sval, temple, parts, required, enum)
+				if err != nil {
+					return err
+				}
+				err = setter.Set(sval)
+				if err != nil {
+					return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
+				}
+				continue
 			}
-			err = sc.Scan(sval)
-			if err != nil {
-				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
+			if sc, ok := target.(sql.Scanner); ok {
+				_, err = validAttrTemple(sval, temple, parts, required, enum)
+				if err != nil {
+					return err
+				}
+				err = sc.Scan(sval)
+				if err != nil {
+					return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
+				}
+				continue
 			}
-			continue
-		}
-		if setter, ok := target.(ValueSetter); ok {
-			_, err = validAttrTemple(sval, temple, parts, required, enum)
-			if err != nil {
-				return err
-			}
-			err = setter.Set(sval)
-			if err != nil {
-				return fmt.Errorf("set value to %v by key %v,%v fail with %v", reflect.TypeOf(target), parts[0], reflect.TypeOf(sval), err)
-			}
-			continue
 		}
 		svals, _ := converter.ArrayValAll(sval, true) //ignore error
 		// if err != nil && err != converter.ErrNil {

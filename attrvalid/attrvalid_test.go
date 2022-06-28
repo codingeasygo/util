@@ -7,11 +7,56 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/codingeasygo/util/converter"
 )
+
+type TestInt int
+type TestIntArray []int
+type TestIntPtrArray []*int
+
+func TestCompatibleType(t *testing.T) {
+	var iVal int
+	var iArray []int
+	var iPtrArray []*int
+	var i interface{}
+	if !CompatibleType(reflect.TypeOf(iVal)) {
+		t.Error("err")
+		return
+	}
+	if !CompatibleType(reflect.TypeOf(iArray)) {
+		t.Error("err")
+		return
+	}
+	if !CompatibleType(reflect.TypeOf(iPtrArray)) {
+		t.Error("err")
+		return
+	}
+
+	if !CompatibleType(reflect.TypeOf(TestInt(iVal))) {
+		t.Error("err")
+		return
+	}
+	if !CompatibleType(reflect.TypeOf(TestIntArray(iArray))) {
+		t.Error("err")
+		return
+	}
+	if !CompatibleType(reflect.TypeOf(TestIntPtrArray(iPtrArray))) {
+		t.Error("err")
+		return
+	}
+	if CompatibleType(reflect.TypeOf(i)) {
+		t.Error("err")
+		return
+	}
+	if CompatibleType(reflect.TypeOf(nil)) {
+		t.Error("err")
+		return
+	}
+}
 
 func TestM(t *testing.T) {
 	var a int
@@ -1264,12 +1309,12 @@ func (s *SetterTestObject) Set(v interface{}) (err error) {
 	return
 }
 
-type SetterTestArray []int64
+type SetterTestArray []SetterTestObject
 
 func (s *SetterTestArray) Set(v interface{}) (err error) {
 	value, err := converter.Int64Val(v)
 	if err == nil {
-		*s = append(*s, value)
+		*s = append(*s, SetterTestObject{A0: value})
 	}
 	return
 }
@@ -1292,7 +1337,7 @@ func TestSetter(t *testing.T) {
 		}
 		return nil
 	}))
-	if err != nil || setter0.A0 != 1 {
+	if err != nil || setter0.A0 != 1 || len(setter1) != 1 || setter1[0].A0 != 1 {
 		t.Error(err)
 		return
 	}
@@ -1343,12 +1388,12 @@ func (s *ScannerTestObject) Scan(v interface{}) (err error) {
 	return
 }
 
-type ScannerTestArray []int64
+type ScannerTestArray []ScannerTestObject
 
 func (s *ScannerTestArray) Scan(v interface{}) (err error) {
 	value, err := converter.Int64Val(v)
 	if err == nil {
-		*s = append(*s, value)
+		*s = append(*s, ScannerTestObject{A0: value})
 	}
 	return
 }
@@ -1371,7 +1416,7 @@ func TestScanner(t *testing.T) {
 		}
 		return nil
 	}))
-	if err != nil || setter0.A0 != 1 {
+	if err != nil || setter0.A0 != 1 || len(setter1) != 1 || setter1[0].A0 != 1 {
 		t.Error(err)
 		return
 	}
