@@ -842,7 +842,7 @@ func (v *Valider) addValidArgs(target interface{}, filter string, format string,
 			format_, args_ = v.addValidArgs(value, filter, format_, args_)
 			return
 		}
-		if len(valid) < 1 {
+		if len(valid) < 1 || valid == "-" {
 			return
 		}
 		valid = strings.TrimSpace(valid)
