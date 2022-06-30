@@ -591,6 +591,10 @@ func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) 
 	if srcType.Kind() == dst.Kind() {
 		return src, nil
 	}
+	srcValue := reflect.ValueOf(src)
+	if srcValue.CanConvert(dst) {
+		return srcValue.Convert(dst).Interface(), nil
+	}
 	var isptr = false
 	var kind = dst.Kind()
 	if kind == reflect.Ptr {
