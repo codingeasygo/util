@@ -592,7 +592,7 @@ func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) 
 		return src, nil
 	}
 	srcValue := reflect.ValueOf(src)
-	if srcValue.CanConvert(dst) {
+	if dst.Kind() != reflect.String && srcValue.CanConvert(dst) { //skip string for int=>string is invalid
 		return srcValue.Convert(dst).Interface(), nil
 	}
 	var isptr = false

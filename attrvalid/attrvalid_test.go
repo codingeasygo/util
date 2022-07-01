@@ -440,6 +440,8 @@ func (e *EnumStringArrayTest) EnumValid(v interface{}) (err error) {
 	return
 }
 
+type DefineInt64Test int64
+
 func TestValidAttrFormat(t *testing.T) {
 	mv := map[string]interface{}{}
 	mv["a"] = "abc"
@@ -476,6 +478,7 @@ func TestValidAttrFormat(t *testing.T) {
 	var svary []string
 	var iv10ary2 []float64
 	var iv10ary3 []float64
+	var eint EnumIntTest
 	err := ValidAttrFormat(`//abc
 		a,r|s,l:~5;//abc
 		i,r|i,r:1~20;
@@ -501,11 +504,14 @@ func TestValidAttrFormat(t *testing.T) {
 		ary,r|i,r:0;
 		ary,r|f,r:0;
 		ary3,r|f,r:0;
+		i,r|i,r:0;
 		`, M(mv), true, &a, &i, &k, &ks, &f,
 		&iv1, &iv1ary, &iv2, &iv3, &iv4, &iv5,
 		&iv6, &iv7, &iv8, &iv9, &iv10, &iv10ary,
 		&iv11, &iv12, &snot, &svary,
-		&iv1ary2, &iv10ary2, &iv10ary3)
+		&iv1ary2, &iv10ary2, &iv10ary3,
+		&eint,
+	)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -521,6 +527,31 @@ func TestValidAttrFormat(t *testing.T) {
 		return
 	}
 	fmt.Println(a, i, k, f)
+	//string to int on ValidValue
+	err = ValidAttrFormat(`
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		i,r|s,l:0;
+		`, M(mv), true,
+		&iv1, &iv1ary, &iv2, &iv3, &iv4, &iv5,
+		&iv6, &iv7, &iv8, &iv9, &iv10, &iv10ary,
+		&iv11, &iv12,
+	)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
 	//
 	//test array
 	svary, iv1ary2, iv10ary2 = nil, nil, nil
