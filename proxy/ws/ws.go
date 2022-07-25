@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/codingeasygo/util/xio"
 	"github.com/codingeasygo/util/xnet"
@@ -16,14 +17,60 @@ type Server struct {
 	*websocket.Server
 	BufferSize int
 	Dialer     xio.PiperDialer
+	waiter     sync.WaitGroup
+	listners   map[net.Listener]string
 }
 
 func NewServer() (server *Server) {
 	server = &Server{
 		BufferSize: 32 * 1024,
 		Dialer:     xio.PiperDialerF(xio.DialNetPiper),
+		waiter:     sync.WaitGroup{},
+		listners:   map[net.Listener]string{},
 	}
 	server.Server = &websocket.Server{Handler: server.handleWS}
+	return
+}
+
+//Run will listen tcp on address and accept to ProcConn
+func (s *Server) loopAccept(l net.Listener) (err error) {
+	defer s.waiter.Done()
+	http.Serve(l, s)
+	return
+}
+
+//Run will listen tcp on address and sync accept to ProcConn
+func (s *Server) Run(addr string) (err error) {
+	listener, err := net.Listen("tcp", addr)
+	if err == nil {
+		s.listners[listener] = addr
+		InfoLog("Server listen http proxy on %v", addr)
+		s.waiter.Add(1)
+		err = s.loopAccept(listener)
+	}
+	return
+}
+
+//Start will listen tcp on address and async accept to ProcConn
+func (s *Server) Start(addr string) (listener net.Listener, err error) {
+	listener, err = net.Listen("tcp", addr)
+	if err == nil {
+		s.listners[listener] = addr
+		InfoLog("Server listen http proxy on %v", addr)
+		s.waiter.Add(1)
+		go s.loopAccept(listener)
+	}
+	return
+}
+
+//Stop will stop listener and wait loop stop
+func (s *Server) Stop() (err error) {
+	for listener, addr := range s.listners {
+		err = listener.Close()
+		delete(s.listners, listener)
+		InfoLog("Server http proxy listener on %v is stopped by %v", addr, err)
+	}
+	s.waiter.Wait()
 	return
 }
 

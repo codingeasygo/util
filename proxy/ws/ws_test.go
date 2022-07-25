@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -43,8 +41,12 @@ func TestProxy(t *testing.T) {
 		}
 	}
 	server := NewServer()
-	ts := httptest.NewServer(server)
-	proxyServer := strings.Replace(ts.URL, "http://", "ws://", 1)
+	go func() {
+		server.Run(":0")
+	}()
+	listener, _ := server.Start(":0")
+	defer server.Stop()
+	proxyServer := fmt.Sprintf("ws://%v", listener.Addr())
 	testEcho(proxyServer, testListener.Addr().String())
 	testEcho(proxyServer+"?abc=1", testListener.Addr().String())
 	_, err := Dial(proxyServer, "")
