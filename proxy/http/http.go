@@ -164,6 +164,8 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 
 //Dial will dial uri by proxy server
 func Dial(proxy, uri string) (conn net.Conn, err error) {
+	proxy = strings.TrimPrefix(proxy, "http://")
+	proxy = strings.TrimSuffix(proxy, "/")
 	conn, err = net.Dial("tcp", proxy)
 	if err != nil {
 		return
