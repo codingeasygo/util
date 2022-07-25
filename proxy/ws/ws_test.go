@@ -54,14 +54,8 @@ func TestProxy(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	conn, err := Dial(proxyServer, "127.0.0.1:2")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer conn.Close()
-	_, err = conn.Read(make([]byte, 100))
-	if err != io.EOF {
+	_, err = Dial(proxyServer, "127.0.0.1:2")
+	if err == nil {
 		t.Error(err)
 		return
 	}

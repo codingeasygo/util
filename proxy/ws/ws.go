@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"github.com/codingeasygo/util/xnet"
 	"golang.org/x/net/websocket"
 )
+
+type ContextKey string
 
 type Server struct {
 	*websocket.Server
@@ -28,7 +31,7 @@ func NewServer() (server *Server) {
 		waiter:     sync.WaitGroup{},
 		listners:   map[net.Listener]string{},
 	}
-	server.Server = &websocket.Server{Handler: server.handleWS}
+	server.Server = &websocket.Server{Handler: server.handler}
 	return
 }
 
@@ -82,20 +85,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "_uri is required")
 		return
 	}
-	s.Server.ServeHTTP(w, req)
-}
-
-func (s *Server) handleWS(conn *websocket.Conn) {
-	defer conn.Close()
-	req := conn.Request()
-	uri := conn.Request().Form.Get("_uri")
 	raw, err := s.Dialer.DialPiper(uri, s.BufferSize)
 	if err != nil {
 		InfoLog("Server dial to %v fail with %v", uri, err)
+		w.WriteHeader(http.StatusBadGateway)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
+	newReq := context.WithValue(req.Context(), ContextKey("upstream"), []interface{}{raw, uri})
+	s.Server.ServeHTTP(w, req.WithContext(newReq))
+}
+
+func (s *Server) handler(conn *websocket.Conn) {
+	defer conn.Close()
+	req := conn.Request()
+	upstream := req.Context().Value(ContextKey("upstream")).([]interface{})
+	raw, uri := upstream[0].(xio.Piper), upstream[1].(string)
 	DebugLog("Server start forward %v to %v", req.RemoteAddr, uri)
-	err = raw.PipeConn(conn, uri)
+	err := raw.PipeConn(conn, uri)
 	DebugLog("Server forward %v to %v is done with %v", req.RemoteAddr, uri, err)
 }
 
