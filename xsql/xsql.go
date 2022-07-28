@@ -14,6 +14,10 @@ import (
 	"github.com/codingeasygo/util/xtime"
 )
 
+type DbArrayConverter interface {
+	DbArray() string
+}
+
 //Time is database value to parse data from database and parset time.Time to timestamp on json mashal
 type Time time.Time
 
