@@ -89,6 +89,14 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return
 }
 
+//Value will parse to json value
+func (t *Time) Value() (driver.Value, error) {
+	if t == nil {
+		return time.Timer{}, nil
+	}
+	return time.Time(*t), nil
+}
+
 func (t *Time) IsNil() bool { return t == nil }
 
 func (t *Time) IsZero() bool { return t == nil || t.Timestamp() <= 0 }
