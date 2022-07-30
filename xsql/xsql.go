@@ -14,8 +14,9 @@ import (
 	"github.com/codingeasygo/util/xtime"
 )
 
-type DbArrayConverter interface {
+type ArrayConverter interface {
 	DbArray() string
+	InArray() string
 }
 
 //Time is database value to parse data from database and parset time.Time to timestamp on json mashal
@@ -194,6 +195,22 @@ func (m MArray) Value() (driver.Value, error) {
 	return string(bys), err
 }
 
+func (m MArray) DbArray() string {
+	if m == nil {
+		return "[]"
+	}
+	bys, _ := json.Marshal(m)
+	return string(bys)
+}
+
+func (m MArray) InArray() string {
+	if m == nil {
+		return "[]"
+	}
+	bys, _ := json.Marshal(m)
+	return string(bys)
+}
+
 func (m MArray) IsNil() bool { return m == nil }
 
 func (m MArray) IsZero() bool { return m == nil || len(m) == 0 }
@@ -302,6 +319,12 @@ func (i IntArray) DbArray() (res string) {
 	return
 }
 
+//InArray will join value to database array
+func (i IntArray) InArray() (res string) {
+	res = i.Join(",")
+	return
+}
+
 //StrArray will join value to string array by comma
 func (i IntArray) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
@@ -393,6 +416,12 @@ func (i IntPtrArray) Join(sep string) (res string) {
 //DbArray will join value to database array
 func (i IntPtrArray) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
+	return
+}
+
+//InArray will join value to database array
+func (i IntPtrArray) InArray() (res string) {
+	res = i.Join(",")
 	return
 }
 
@@ -494,6 +523,12 @@ func (i Int64Array) DbArray() (res string) {
 	return
 }
 
+//InArray will join value to database array
+func (i Int64Array) InArray() (res string) {
+	res = i.Join(",")
+	return
+}
+
 //StrArray will join value to string array by comma
 func (i Int64Array) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
@@ -585,6 +620,12 @@ func (i Int64PtrArray) Join(sep string) (res string) {
 //DbArray will join value to database array
 func (i Int64PtrArray) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
+	return
+}
+
+//InArray will join value to database array
+func (i Int64PtrArray) InArray() (res string) {
+	res = i.Join(",")
 	return
 }
 
@@ -686,6 +727,12 @@ func (f Float64Array) DbArray() (res string) {
 	return
 }
 
+//InArray will join value to database array
+func (f Float64Array) InArray() (res string) {
+	res = f.Join(",")
+	return
+}
+
 //StrArray will join value to string array by comma
 func (i Float64Array) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
@@ -777,6 +824,12 @@ func (f Float64PtrArray) Join(sep string) (res string) {
 //DbArray will join value to database array
 func (f Float64PtrArray) DbArray() (res string) {
 	res = "{" + f.Join(",") + "}"
+	return
+}
+
+//InArray will join value to database array
+func (f Float64PtrArray) InArray() (res string) {
+	res = f.Join(",")
 	return
 }
 
@@ -878,9 +931,17 @@ func (s StringArray) DbArray() (res string) {
 	return
 }
 
+//InArray will join value to database array
+func (s StringArray) InArray() (res string) {
+	res = converter.JSON(s)
+	res = strings.TrimPrefix(res, "[")
+	res = strings.TrimSuffix(res, "]")
+	return
+}
+
 //StrArray will join value to string array by comma
-func (i StringArray) StrArray() (res string) {
-	res = "," + i.Join(",") + ","
+func (s StringArray) StrArray() (res string) {
+	res = "," + s.Join(",") + ","
 	return
 }
 
@@ -992,6 +1053,14 @@ func (s StringPtrArray) Join(sep string) (res string) {
 //DbArray will join value to database array
 func (s StringPtrArray) DbArray() (res string) {
 	res = "{" + s.Join(",") + "}"
+	return
+}
+
+//InArray will join value to database array
+func (s StringPtrArray) InArray() (res string) {
+	res = converter.JSON(s)
+	res = strings.TrimPrefix(res, "[")
+	res = strings.TrimSuffix(res, "]")
 	return
 }
 
