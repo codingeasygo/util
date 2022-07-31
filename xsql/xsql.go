@@ -933,9 +933,7 @@ func (s StringArray) DbArray() (res string) {
 
 //InArray will join value to database array
 func (s StringArray) InArray() (res string) {
-	res = converter.JSON(s)
-	res = strings.TrimPrefix(res, "[")
-	res = strings.TrimSuffix(res, "]")
+	res = "'" + s.Join("','") + "'"
 	return
 }
 
@@ -1058,15 +1056,13 @@ func (s StringPtrArray) DbArray() (res string) {
 
 //InArray will join value to database array
 func (s StringPtrArray) InArray() (res string) {
-	res = converter.JSON(s)
-	res = strings.TrimPrefix(res, "[")
-	res = strings.TrimSuffix(res, "]")
+	res = "'" + s.Join("','") + "'"
 	return
 }
 
 //StrArray will join value to string array by comma
-func (i StringPtrArray) StrArray() (res string) {
-	res = "," + i.Join(",") + ","
+func (s StringPtrArray) StrArray() (res string) {
+	res = "," + s.Join(",") + ","
 	return
 }
 
