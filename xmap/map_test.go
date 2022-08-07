@@ -479,3 +479,22 @@ func TestEscapeValue(t *testing.T) {
 		return
 	}
 }
+
+func TestValueEqual(t *testing.T) {
+	vals := M{
+		"int":    123,
+		"string": "123",
+	}
+	if !vals.ValueEqual("int", 123) {
+		t.Error("err")
+		return
+	}
+	if !vals.ValueEqual("nil", nil) {
+		t.Error("err")
+		return
+	}
+	if vals.ValueEqual("string", 123) {
+		t.Error("err")
+		return
+	}
+}

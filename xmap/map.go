@@ -883,6 +883,22 @@ func (m M) ReplaceAll(in string, usingEnv, usingEmpty bool) (out string) {
 	return
 }
 
+func ValueEqual(a, b interface{}) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	resultValue := reflect.ValueOf(a)
+	if !resultValue.CanConvert(reflect.TypeOf(b)) {
+		return false
+	}
+	targetValue := resultValue.Convert(reflect.TypeOf(b)).Interface()
+	return reflect.DeepEqual(targetValue, b)
+}
+
+func (m M) ValueEqual(key string, value interface{}) bool {
+	return ValueEqual(m.Value(key), value)
+}
+
 //SafeM is safe map
 type SafeM struct {
 	Valuable
