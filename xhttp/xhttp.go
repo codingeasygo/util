@@ -317,9 +317,17 @@ func NewClient(raw *http.Client) (client *Client) {
 	return
 }
 
+func mustOk(res *http.Response, err error) error {
+	if err == nil && res.StatusCode != 200 {
+		err = fmt.Errorf("status code is %v", res.StatusCode)
+	}
+	return err
+}
+
 //GetBytes will do http request and read the bytes response
 func (c *Client) GetBytes(format string, args ...interface{}) (data []byte, err error) {
-	data, _, err = c.GetHeaderBytes(nil, format, args...)
+	data, res, err := c.GetHeaderBytes(nil, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -332,15 +340,13 @@ func (c *Client) GetHeaderBytes(header xmap.M, format string, args ...interface{
 	}
 	defer res.Body.Close()
 	data, err = ioutil.ReadAll(res.Body)
-	if res.StatusCode != 200 {
-		err = fmt.Errorf("status code is %v", res.StatusCode)
-	}
 	return
 }
 
 //GetText will do http request and read the text response
 func (c *Client) GetText(format string, args ...interface{}) (data string, err error) {
-	data, _, err = c.GetHeaderText(nil, format, args...)
+	data, res, err := c.GetHeaderText(nil, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -353,26 +359,23 @@ func (c *Client) GetHeaderText(header xmap.M, format string, args ...interface{}
 
 //GetMap will do http request, read reponse and parse to map
 func (c *Client) GetMap(format string, args ...interface{}) (data xmap.M, err error) {
-	data, _, err = c.GetHeaderMap(nil, format, args...)
+	data, res, err := c.GetHeaderMap(nil, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //GetHeaderMap will do http request, read reponse and parse to map
 func (c *Client) GetHeaderMap(header xmap.M, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
 	text, res, err := c.GetHeaderBytes(header, format, args...)
-	if len(text) > 0 {
-		if err == nil {
-			data, err = xmap.MapVal(text)
-		} else {
-			data, _ = xmap.MapVal(text)
-		}
+	if err == nil {
+		data, err = xmap.MapVal(text)
 	}
 	return
 }
 
 //GetJSON will do http request, read reponse and parse to json
 func (c *Client) GetJSON(value interface{}, format string, args ...interface{}) (err error) {
-	_, err = c.GetHeaderJSON(value, nil, format, args...)
+	err = mustOk(c.GetHeaderJSON(value, nil, format, args...))
 	return
 }
 
@@ -387,13 +390,15 @@ func (c *Client) GetHeaderJSON(value interface{}, header xmap.M, format string, 
 
 //PostBytes will do http request and read the bytes response
 func (c *Client) PostBytes(body io.Reader, format string, args ...interface{}) (data []byte, err error) {
-	data, _, err = c.PostHeaderBytes(nil, body, format, args...)
+	data, res, err := c.PostHeaderBytes(nil, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //PostTypeBytes will do http request and read the bytes response
 func (c *Client) PostTypeBytes(contentType string, body io.Reader, format string, args ...interface{}) (data []byte, err error) {
-	data, _, err = c.PostHeaderBytes(xmap.M{"Content-Type": contentType}, body, format, args...)
+	data, res, err := c.PostHeaderBytes(xmap.M{"Content-Type": contentType}, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -406,21 +411,20 @@ func (c *Client) PostHeaderBytes(header xmap.M, body io.Reader, format string, a
 	}
 	defer res.Body.Close()
 	data, err = ioutil.ReadAll(res.Body)
-	if res.StatusCode != 200 {
-		err = fmt.Errorf("status code is %v", res.StatusCode)
-	}
 	return
 }
 
 //PostText will do http request and read the text response
 func (c *Client) PostText(body io.Reader, format string, args ...interface{}) (data string, err error) {
-	data, _, err = c.PostHeaderText(nil, body, format, args...)
+	data, res, err := c.PostHeaderText(nil, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //PostTypeText will do http request and read the text response
 func (c *Client) PostTypeText(contentType string, body io.Reader, format string, args ...interface{}) (data string, err error) {
-	data, _, err = c.PostHeaderText(xmap.M{"Content-Type": contentType}, body, format, args...)
+	data, res, err := c.PostHeaderText(xmap.M{"Content-Type": contentType}, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -433,25 +437,23 @@ func (c *Client) PostHeaderText(header xmap.M, body io.Reader, format string, ar
 
 //PostMap will do http request, read reponse and parse to map
 func (c *Client) PostMap(body io.Reader, format string, args ...interface{}) (data xmap.M, err error) {
-	data, _, err = c.PostHeaderMap(nil, body, format, args...)
+	data, res, err := c.PostHeaderMap(nil, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //PostTypeMap will do http request, read reponse and parse to map
 func (c *Client) PostTypeMap(contentType string, body io.Reader, format string, args ...interface{}) (data xmap.M, err error) {
-	data, _, err = c.PostHeaderMap(xmap.M{"Content-Type": contentType}, body, format, args...)
+	data, res, err := c.PostHeaderMap(xmap.M{"Content-Type": contentType}, body, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //PostHeaderMap will do http request, read reponse and parse to map
 func (c *Client) PostHeaderMap(header xmap.M, body io.Reader, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
 	text, res, err := c.PostHeaderBytes(header, body, format, args...)
-	if len(text) > 0 {
-		if err == nil {
-			data, err = xmap.MapVal(text)
-		} else {
-			data, _ = xmap.MapVal(text)
-		}
+	if err == nil {
+		data, err = xmap.MapVal(text)
 	}
 	return
 }
@@ -462,13 +464,15 @@ func (c *Client) PostJSONMap(body interface{}, format string, args ...interface{
 	if err != nil {
 		return
 	}
-	data, _, err = c.PostHeaderMap(xmap.M{"Content-Type": ContentTypeJSON}, bytes.NewBuffer(bys), format, args...)
+	data, res, err := c.PostHeaderMap(xmap.M{"Content-Type": ContentTypeJSON}, bytes.NewBuffer(bys), format, args...)
+	err = mustOk(res, err)
 	return
 }
 
 //PostMap will do http request, read reJSONponse and parse by json
 func (c *Client) PostJSON(result interface{}, body io.Reader, format string, args ...interface{}) (err error) {
-	data, _, err := c.PostHeaderBytes(nil, body, format, args...)
+	data, res, err := c.PostHeaderBytes(nil, body, format, args...)
+	err = mustOk(res, err)
 	if err == nil {
 		err = json.Unmarshal(data, result)
 	}
@@ -477,7 +481,8 @@ func (c *Client) PostJSON(result interface{}, body io.Reader, format string, arg
 
 //PostTypeJSON will do http request, read reponse and parse by json
 func (c *Client) PostTypeJSON(result interface{}, contentType string, body io.Reader, format string, args ...interface{}) (err error) {
-	data, _, err := c.PostHeaderBytes(xmap.M{"Content-Type": contentType}, body, format, args...)
+	data, res, err := c.PostHeaderBytes(xmap.M{"Content-Type": contentType}, body, format, args...)
+	err = mustOk(res, err)
 	if err == nil {
 		err = json.Unmarshal(data, result)
 	}
@@ -499,7 +504,8 @@ func (c *Client) PostJSONJSON(result interface{}, body interface{}, format strin
 	if err != nil {
 		return
 	}
-	data, _, err := c.PostHeaderBytes(xmap.M{"Content-Type": ContentTypeJSON}, bytes.NewBuffer(bys), format, args...)
+	data, res, err := c.PostHeaderBytes(xmap.M{"Content-Type": ContentTypeJSON}, bytes.NewBuffer(bys), format, args...)
+	err = mustOk(res, err)
 	if err == nil {
 		err = json.Unmarshal(data, result)
 	}
@@ -515,9 +521,6 @@ func (c *Client) MethodBytes(method string, header xmap.M, body io.Reader, forma
 	}
 	defer res.Body.Close()
 	data, err = ioutil.ReadAll(res.Body)
-	if res.StatusCode != 200 {
-		err = fmt.Errorf("status code is %v", res.StatusCode)
-	}
 	return
 }
 
@@ -533,12 +536,8 @@ func (c *Client) MethodText(method string, header xmap.M, body io.Reader, format
 //MethodBytes will do http request, read reponse and parse to map
 func (c *Client) MethodMap(method string, header xmap.M, body io.Reader, format string, args ...interface{}) (data xmap.M, res *http.Response, err error) {
 	text, res, err := c.MethodBytes(method, header, body, format, args...)
-	if len(text) > 0 {
-		if err == nil {
-			data, err = xmap.MapVal(text)
-		} else {
-			data, _ = xmap.MapVal(text)
-		}
+	if err == nil {
+		data, err = xmap.MapVal(text)
 	}
 	return
 }
@@ -546,9 +545,11 @@ func (c *Client) MethodMap(method string, header xmap.M, body io.Reader, format 
 //PostXMLText will do http request, read reponse and parse to map
 func (c *Client) PostXMLText(v interface{}, format string, args ...interface{}) (data string, err error) {
 	bys, err := xml.Marshal(v)
-	if err == nil {
-		data, _, err = c.PostHeaderText(xmap.M{"Content-Type": ContentTypeXML}, bytes.NewBuffer(bys), format, args...)
+	if err != nil {
+		return
 	}
+	data, res, err := c.PostHeaderText(xmap.M{"Content-Type": ContentTypeXML}, bytes.NewBuffer(bys), format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -559,7 +560,8 @@ func (c *Client) PostFormText(form xmap.M, format string, args ...interface{}) (
 		query.Set(k, fmt.Sprintf("%v", v))
 	}
 	buf := bytes.NewBufferString(query.Encode())
-	data, _, err = c.PostHeaderText(xmap.M{"Content-Type": ContentTypeForm}, buf, format, args...)
+	data, res, err := c.PostHeaderText(xmap.M{"Content-Type": ContentTypeForm}, buf, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -570,7 +572,8 @@ func (c *Client) PostFormMap(form xmap.M, format string, args ...interface{}) (d
 		query.Set(k, fmt.Sprintf("%v", v))
 	}
 	buf := bytes.NewBufferString(query.Encode())
-	data, _, err = c.PostHeaderMap(xmap.M{"Content-Type": ContentTypeForm}, buf, format, args...)
+	data, res, err := c.PostHeaderMap(xmap.M{"Content-Type": ContentTypeForm}, buf, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -600,15 +603,13 @@ func (c *Client) PostMultipartBytes(header, fields xmap.M, format string, args .
 	}
 	defer res.Body.Close()
 	data, err = ioutil.ReadAll(res.Body)
-	if res.StatusCode != 200 {
-		err = fmt.Errorf("status code is %v", res.StatusCode)
-	}
 	return
 }
 
 //PostMultipartText will do http request, read reponse and parse to map
 func (c *Client) PostMultipartText(header, fields xmap.M, format string, args ...interface{}) (data string, err error) {
-	bytes, _, err := c.PostMultipartBytes(header, fields, format, args...)
+	bytes, res, err := c.PostMultipartBytes(header, fields, format, args...)
+	err = mustOk(res, err)
 	if len(bytes) > 0 {
 		data = string(bytes)
 	}
@@ -617,13 +618,10 @@ func (c *Client) PostMultipartText(header, fields xmap.M, format string, args ..
 
 //PostMultipartMap will do http request, read reponse and parse to map
 func (c *Client) PostMultipartMap(header, fields xmap.M, format string, args ...interface{}) (data xmap.M, err error) {
-	bytes, _, err := c.PostMultipartBytes(header, fields, format, args...)
-	if len(bytes) > 0 {
-		if err == nil {
-			data, err = xmap.MapVal(bytes)
-		} else {
-			data, _ = xmap.MapVal(bytes)
-		}
+	bytes, res, err := c.PostMultipartBytes(header, fields, format, args...)
+	err = mustOk(res, err)
+	if err == nil {
+		data, err = xmap.MapVal(bytes)
 	}
 	return
 }
@@ -686,7 +684,8 @@ func (f *FileBodyTask) Close() error {
 
 //UploadText upload file and get text response
 func (c *Client) UploadText(fields xmap.M, filekey, filename, format string, args ...interface{}) (text string, err error) {
-	text, _, err = c.UploadHeaderText(nil, fields, filekey, filename, format, args...)
+	text, res, err := c.UploadHeaderText(nil, fields, filekey, filename, format, args...)
+	err = mustOk(res, err)
 	return
 }
 
@@ -709,21 +708,15 @@ func (c *Client) UploadHeaderText(header xmap.M, fields xmap.M, filekey, filenam
 	defer res.Body.Close()
 	bys, err := ioutil.ReadAll(res.Body)
 	text = string(bys)
-	if res.StatusCode != 200 {
-		err = fmt.Errorf("status code is %v", res.StatusCode)
-	}
 	return
 }
 
 //UploadMap will upload file and get map response
 func (c *Client) UploadMap(fields xmap.M, filekey, filename, format string, args ...interface{}) (data xmap.M, err error) {
-	text, _, err := c.UploadHeaderText(nil, fields, filekey, filename, format, args...)
-	if len(text) > 0 {
-		if err == nil {
-			data, err = xmap.MapVal(text)
-		} else {
-			data, _ = xmap.MapVal(text)
-		}
+	text, res, err := c.UploadHeaderText(nil, fields, filekey, filename, format, args...)
+	err = mustOk(res, err)
+	if err == nil {
+		data, err = xmap.MapVal(text)
 	}
 	return
 }

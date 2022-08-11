@@ -22,6 +22,8 @@ func init() {
 	ClearCookie()
 	EnableCookie()
 	ClearCookie()
+	NewRawClient(nil)
+	NewClient(&http.Client{})
 }
 
 func TestGet(t *testing.T) {
@@ -233,6 +235,11 @@ func TestPost(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	_, err = PostJSONMap(t.Fail, "%v?format=body", ts.URL)
+	if err == nil {
+		t.Error(err)
+		return
+	}
 	err = mval.ValidFormat(`abc,r|i,r:0;`, &ival)
 	if err != nil || ival != 1 {
 		t.Error(err)
@@ -255,6 +262,11 @@ func TestPost(t *testing.T) {
 	}
 	sval, err = PostXMLText(t, "%v?format=body", ts.URL)
 	if err != nil {
+		t.Errorf("%v,%v", sval, err)
+		return
+	}
+	_, err = PostXMLText(t.Fail, "%v?format=body", ts.URL)
+	if err == nil {
 		t.Errorf("%v,%v", sval, err)
 		return
 	}
@@ -323,7 +335,7 @@ func TestPost(t *testing.T) {
 		return
 	}
 	_, _, err = MethodText("POST", nil, nil, "%v/?format=error", ts.URL)
-	if err == nil {
+	if err != nil {
 		t.Error(err)
 		return
 	}
