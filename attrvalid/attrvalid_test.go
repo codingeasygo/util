@@ -1211,6 +1211,11 @@ type SimpleArgs struct {
 	} `json:"xx" valid:"inline"`
 }
 
+type Product struct {
+	Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+	TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,o|s,l:0;"` /* the product sub title */
+}
+
 func TestValid(t *testing.T) {
 	var err error
 	errObject := struct {
@@ -1235,12 +1240,16 @@ func TestValid(t *testing.T) {
 		A1 *int64   `json:"a1" valid:"a1,r|i,r:0;"`
 		AX []int64  `json:"ax" valid:"ax,r|i,r:0;"`
 		AY []*int64 `json:"ay" valid:"ay,r|i,r:0;"`
+		S0 string   `json:"s0" valid:"s0,r|s,l:0;"`
+		S1 *string  `json:"s1" valid:"s1,r|s,l:0;"`
 		XX string   `json:"xx"`
 	}{
 		A0: 100,
 		A1: converter.Int64Ptr(100),
 		AX: []int64{1, 2, 3},
 		AY: []*int64{converter.Int64Ptr(1), converter.Int64Ptr(2), converter.Int64Ptr(3)},
+		S0: "abc",
+		S1: converter.StringPtr("abc"),
 	}
 	err = Valid(&ok0Object, "#all", "")
 	if err != nil {
@@ -1252,12 +1261,14 @@ func TestValid(t *testing.T) {
 		A1 *int64   `json:"a1" valid:"a1,r|i,r:0;"`
 		AX []int64  `json:"ax" valid:"ax,r|i,r:0;"`
 		AY []*int64 `json:"ay" valid:"ay,r|i,r:0;"`
+		S0 string   `json:"s0" valid:"s0,r|s,l:0;"`
+		S1 *string  `json:"s1" valid:"s1,r|s,l:0;"`
 		XX string   `json:"xx"`
 	}{
 		A0: 100,
 		AX: []int64{1, 2, 3},
 	}
-	err = Valid(&ok1Object, "#all", "a1,ay")
+	err = Valid(&ok1Object, "#all", "a1,ay,s0,s1")
 	if err != nil {
 		t.Error(err)
 		return
@@ -1298,6 +1309,41 @@ func TestValid(t *testing.T) {
 	ok2Object.A0 = -1
 	err = Valid(&ok2Object, "#all", "a0")
 	if err == nil {
+		t.Error(err)
+		return
+	}
+	ok3Object := struct {
+		Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+		TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,r|s,l:0;"` /* the product sub title */
+	}{
+		Title: "abc",
+	}
+	err = Valid(&ok3Object, "#all", "title_sub")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	ok4Object := struct {
+		Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+		TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,r|s,l:0;"` /* the product sub title */
+	}{
+		Title:    "abc",
+		TitleSub: converter.StringPtr(""),
+	}
+	err = Valid(&ok4Object, "#all", "title_sub")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	ok5Object := struct {
+		Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+		TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,o|s,l:0;"` /* the product sub title */
+	}{
+		Title:    "abc",
+		TitleSub: converter.StringPtr(""),
+	}
+	err = Valid(&ok5Object, "#all", "")
+	if err != nil {
 		t.Error(err)
 		return
 	}

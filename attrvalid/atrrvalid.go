@@ -103,24 +103,24 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 }
 
 func checkTemplateRequired(data interface{}, required bool, lts []string) (bool, error) {
-	if v := reflect.ValueOf(data); v.Kind() == reflect.Invalid || (v.Kind() == reflect.Ptr && v.IsZero()) {
+	if v := reflect.ValueOf(data); v.Kind() == reflect.Invalid || (v.IsZero() || reflect.Indirect(v).IsZero()) {
 		if (lts[0] == "R" || lts[0] == "r") && required {
 			return true, errors.New("data is empty")
 		}
 		return true, nil
 	}
-	if v, ok := data.(string); data == nil || (ok && len(v) < 1) { //chekc the value required.
-		if (lts[0] == "R" || lts[0] == "r") && required {
-			return true, errors.New("data is empty")
-		}
-		return true, nil
-	}
-	if v, ok := data.([]interface{}); data == nil || (ok && len(v) < 1) { //chekc the value required.
-		if (lts[0] == "R" || lts[0] == "r") && required {
-			return true, errors.New("data is empty")
-		}
-		return true, nil
-	}
+	// if v, ok := data.(string); data == nil || (ok && len(v) < 1) { //chekc the value required.
+	// 	if (lts[0] == "R" || lts[0] == "r") && required {
+	// 		return true, errors.New("data is empty")
+	// 	}
+	// 	return true, nil
+	// }
+	// if v, ok := data.([]interface{}); data == nil || (ok && len(v) < 1) { //chekc the value required.
+	// 	if (lts[0] == "R" || lts[0] == "r") && required {
+	// 		return true, errors.New("data is empty")
+	// 	}
+	// 	return true, nil
+	// }
 	return false, nil
 }
 
@@ -184,7 +184,7 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 	if ret, err := checkTemplateRequired(data, required, lts); ret { //check required
 		return nil, err
 	}
-	required = required && (lts[0] == "R" || lts[0] == "r")
+	// required = required && (lts[0] == "R" || lts[0] == "r")
 	//define the valid string function.
 	validStr := func(ds string) (interface{}, error) {
 		//check range limit.
@@ -357,26 +357,17 @@ func ValidAttrTemple(data interface{}, valueType string, valueRange string, requ
 		switch lts[1] {
 		case "s", "S":
 			sval, _ := converter.StringVal(ds)
-			// if len(sval) < 1 && !required {
-			// 	return sval, nil
-			// }
 			return validStr(sval)
 		case "i", "I":
 			ids, err := converter.Int64Val(ds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid value(%s) for type(%s):%v", ds, lts[1], err)
 			}
-			if ids == 0 && !required {
-				return ids, nil
-			}
 			return validInt(ids)
 		case "f", "F":
 			fds, err := converter.Float64Val(ds)
 			if err != nil {
 				return nil, fmt.Errorf("invalid value(%s) for type(%s):%v", ds, lts[1], err)
-			}
-			if fds == 0 && !required {
-				return fds, nil
 			}
 			return validNum(fds)
 		}
