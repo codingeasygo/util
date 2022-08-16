@@ -16,6 +16,10 @@ import (
 	"github.com/codingeasygo/util/converter"
 )
 
+type ZeroChecker interface {
+	IsZero() bool
+}
+
 //EnumValider is interface to enum valid
 type EnumValider interface {
 	EnumValid(v interface{}) error
@@ -103,7 +107,8 @@ func RequestValidFormat(req *http.Request, format string, args ...interface{}) e
 }
 
 func checkTemplateRequired(data interface{}, required bool, lts []string) (bool, error) {
-	if v := reflect.ValueOf(data); v.Kind() == reflect.Invalid || (v.IsZero() || reflect.Indirect(v).IsZero()) {
+	zeroChecker, ok := data.(ZeroChecker)
+	if v := reflect.ValueOf(data); (ok && zeroChecker.IsZero()) || v.Kind() == reflect.Invalid || (v.IsZero() || reflect.Indirect(v).IsZero()) {
 		if (lts[0] == "R" || lts[0] == "r") && required {
 			return true, errors.New("data is empty")
 		}
