@@ -82,21 +82,23 @@ func (s *Scanner) FilterFieldCall(on string, v interface{}, filter string, call 
 			alias = parts[0] + "."
 			filter = parts[1]
 		}
-		parts = strings.SplitN(filter, "#", 2)
-		isExc = strings.HasPrefix(parts[0], "^")
-		if len(parts[0]) > 0 {
-			for _, fieldItem := range strings.Split(strings.TrimPrefix(parts[0], "^"), ",") {
-				fieldParts := strings.SplitN(strings.Trim(strings.TrimSpace(fieldItem), ")"), "(", 2)
-				if len(fieldParts) > 1 {
-					fieldAll[fieldParts[1]] = fieldParts[0]
-				} else {
-					fieldAll[fieldParts[0]] = ""
+		for _, f := range strings.Split(filter, "|") {
+			parts = strings.SplitN(f, "#", 2)
+			isExc = strings.HasPrefix(parts[0], "^")
+			if len(parts[0]) > 0 {
+				for _, fieldItem := range strings.Split(strings.TrimPrefix(parts[0], "^"), ",") {
+					fieldParts := strings.SplitN(strings.Trim(strings.TrimSpace(fieldItem), ")"), "(", 2)
+					if len(fieldParts) > 1 {
+						fieldAll[fieldParts[1]] = fieldParts[0]
+					} else {
+						fieldAll[fieldParts[0]] = ""
+					}
 				}
 			}
-		}
-		if len(parts) > 1 && len(parts[1]) > 0 {
-			incNil = strings.Contains(","+parts[1]+",", ",nil,") || strings.Contains(","+parts[1]+",", ",all,")
-			incZero = strings.Contains(","+parts[1]+",", ",zero,") || strings.Contains(","+parts[1]+",", ",all,")
+			if len(parts) > 1 && len(parts[1]) > 0 {
+				incNil = strings.Contains(","+parts[1]+",", ",nil,") || strings.Contains(","+parts[1]+",", ",all,")
+				incZero = strings.Contains(","+parts[1]+",", ",zero,") || strings.Contains(","+parts[1]+",", ",all,")
+			}
 		}
 	}
 	numField := reflectType.NumField()

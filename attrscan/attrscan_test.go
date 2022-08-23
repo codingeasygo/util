@@ -91,6 +91,16 @@ func TestFilterField(t *testing.T) {
 	}
 	{
 		fields = nil
+		FilterFieldCall("test", simple, "a0,a1|ax#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
+			fields = append(fields, fieldName)
+		})
+		if strings.Join(fields, ",") != "a0,a1,ax" {
+			t.Errorf("%v", fields)
+			return
+		}
+	}
+	{
+		fields = nil
 		FilterFieldCall("test", simple, "^a0,a1,ax#all", func(fieldName, fieldFunc string, field reflect.StructField, value interface{}) {
 			fields = append(fields, fieldName)
 		})
