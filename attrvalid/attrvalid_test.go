@@ -1347,6 +1347,32 @@ func TestValid(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	ok6Object := struct {
+		Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+		TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,o|s,l:0;"` /* the product sub title */
+		Value    int     `json:"value" valid:"value,r|i,r:0"`
+	}{
+		Title:    "abc",
+		TitleSub: converter.StringPtr(""),
+	}
+	err = Valid(&ok6Object, "title,value|title_sub#all", "")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err6Object := struct {
+		Title    string  `json:"title,omitempty" valid:"title,r|s,l:0;"`         /* the product title */
+		TitleSub *string `json:"title_sub,omitempty" valid:"title_sub,r|s,l:0;"` /* the product sub title */
+		Value    int     `json:"value" valid:"value,r|i,r:0"`
+	}{
+		Title:    "abc",
+		TitleSub: converter.StringPtr(""),
+	}
+	err = Valid(&err6Object, "title,value|title_sub#all", "")
+	if err == nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestValidArgs(t *testing.T) {
