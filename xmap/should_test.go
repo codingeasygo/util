@@ -1,6 +1,7 @@
 package xmap
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -293,5 +294,26 @@ func TestShould(t *testing.T) {
 			t.Error(err)
 			return
 		}
+	}
+}
+
+func TestShoulder(t *testing.T) {
+	(&Shoulder{}).Should(t).Valid(1, M{"code": 0}, nil)
+	(&Shoulder{}).Should(t, "code", 0).Valid(1, M{"code": 0}, nil)
+	(&Shoulder{}).ShouldError(t).Valid(1, M{"code": 0}, fmt.Errorf("err"))
+	(&Shoulder{}).OnlyLog(true).Should(t, "code", 0).Valid(1, M{"code": 1}, nil)
+	(&Shoulder{}).OnlyLog(true).Should(t).Valid(1, M{"code": 1}, fmt.Errorf("err"))
+	(&Shoulder{}).OnlyLog(true).ShouldError(t).Valid(1, M{"code": 1}, nil)
+	func() {
+		defer func() {
+			fmt.Println(recover())
+		}()
+		(&Shoulder{}).Should(nil, "code", 0).Valid(1, M{"code": 1}, nil)
+	}()
+	{
+		shoulder := &Shoulder{}
+		shoulder.testerFail = func() {}
+		shoulder.testerSkip = func() {}
+		shoulder.Should(nil, "code", 0).Valid(1, M{"code": 1}, nil)
 	}
 }

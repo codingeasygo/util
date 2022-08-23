@@ -2,8 +2,13 @@ package xmap
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"reflect"
 	"strings"
+	"testing"
+
+	"github.com/codingeasygo/util/converter"
 )
 
 const ShouldIsNil ShouldAction = "IsNil"
@@ -168,4 +173,85 @@ func (m M) Should(args ...interface{}) (err error) {
 		i += 3
 	}
 	return
+}
+
+type Shoulder struct {
+	Log        *log.Logger
+	testerFail func()
+	testerSkip func()
+	shouldErr  bool
+	shouldArgs []interface{}
+	onlyLog    bool
+}
+
+func (s *Shoulder) Should(t *testing.T, args ...interface{}) *Shoulder {
+	if t != nil {
+		s.testerFail, s.testerSkip, s.shouldArgs = t.Fail, t.SkipNow, args
+	}
+	s.shouldArgs = append(s.shouldArgs, args...)
+	return s
+}
+
+func (s *Shoulder) ShouldError(t *testing.T) *Shoulder {
+	if t != nil {
+		s.testerFail, s.testerSkip = t.Fail, t.SkipNow
+	}
+	s.shouldErr = true
+	return s
+}
+
+func (s *Shoulder) OnlyLog(only bool) *Shoulder {
+	s.onlyLog = only
+	return s
+}
+
+func (s *Shoulder) callError(depth int, err error) {
+	if s.testerFail == nil {
+		panic(err)
+	}
+	if s.Log == nil {
+		s.Log = log.New(os.Stderr, "    ", log.Llongfile)
+	}
+	s.Log.Output(depth, err.Error())
+	if !s.onlyLog {
+		s.testerFail()
+		s.testerSkip()
+	}
+}
+
+func (s *Shoulder) validError(depth int, res M, err error) bool {
+	if err != nil {
+		s.callError(depth+1, fmt.Errorf("%v, res is %v", err, converter.JSON(res)))
+		return false
+	}
+	return true
+}
+
+func (s *Shoulder) validShould(depth int, res M, err error) bool {
+	if len(s.shouldArgs) < 1 {
+		return true
+	}
+	xerr := res.Should(s.shouldArgs...)
+	if xerr != nil {
+		s.callError(depth+1, fmt.Errorf("%v, res is %v", xerr, converter.JSON(res)))
+		return false
+	}
+	return true
+}
+
+func (s *Shoulder) Valid(depth int, res M, err error) bool {
+	if s.shouldErr {
+		if err == nil {
+			s.callError(depth, fmt.Errorf("err is nil, res is %v", converter.JSON(res)))
+			return false
+		}
+	} else {
+		if !s.validError(depth+1, res, err) {
+			return false
+		}
+		if !s.validShould(depth+1, res, err) {
+			return false
+		}
+	}
+	return true
 }
