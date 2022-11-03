@@ -242,7 +242,7 @@ func (s *Shoulder) validShould(depth int, res M, err error) bool {
 func (s *Shoulder) Valid(depth int, res M, err error) bool {
 	if s.shouldErr {
 		if err == nil {
-			s.callError(depth, fmt.Errorf("err is nil, res is %v", converter.JSON(res)))
+			s.callError(depth+1, fmt.Errorf("err is nil, res is %v", converter.JSON(res)))
 			return false
 		}
 	} else {
