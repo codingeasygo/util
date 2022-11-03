@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/codingeasygo/util/converter"
 	"github.com/codingeasygo/util/xjson"
 	"github.com/codingeasygo/util/xmap"
 )
@@ -755,3 +756,28 @@ func TestCreateMultipartBody(t *testing.T) {
 // func TestHttps(t *testing.T) {
 // 	fmt.Println(HGet("https://qnear.com"))
 // }
+
+func TestShould(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ok":
+			fmt.Fprintf(w, "%v", converter.JSON(xmap.M{"code": 0}))
+		default:
+			http.NotFound(w, r)
+		}
+
+	}))
+	client := NewShouldClient()
+	client.Should(t, "code", 0).GetMap("%v/ok", ts.URL)
+	client.Should(t, "code", 0).GetHeaderMap(nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostMap(nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostTypeMap("application/json", nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostHeaderMap(nil, nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostJSONMap(xmap.M{}, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).MethodMap("POST", nil, nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostFormMap(nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).PostMultipartMap(nil, nil, "%v/ok", ts.URL)
+	client.Should(t, "code", 0).UploadMap(nil, "file", "xhttp.go", "%v/ok", ts.URL)
+	client.ShouldError(t).GetMap("%v/none", ts.URL)
+	client.Should(t).OnlyLog(true).GetMap("%v/none", ts.URL)
+}
