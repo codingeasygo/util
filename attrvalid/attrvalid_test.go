@@ -1560,3 +1560,39 @@ func TestScanner(t *testing.T) {
 	}
 	fmt.Println(err)
 }
+
+type StringDef string
+type IntDef int64
+type FloatDef float64
+type StringDefArray []StringDef
+type IntDefArray []IntDef
+type FloatDefArray []FloatDef
+
+func TestValidDef(t *testing.T) {
+	getter := ValueGetterF(func(key string) (interface{}, error) { return "1", nil })
+	//
+	var strVal StringDef
+	var intVal IntDef
+	var floatVal FloatDef
+	err := ValidAttrFormat(`
+		v,r|s,l:0;
+		v,r|i,r:0;
+		v,r|f,r:0;
+	`, getter, true, &strVal, &intVal, &floatVal)
+	if err != nil || strVal != "1" || intVal != 1 || floatVal != 1 {
+		t.Error(err)
+		return
+	}
+	var strArr StringDefArray
+	var intArr IntDefArray
+	var floatArr FloatDefArray
+	err = ValidAttrFormat(`
+		v,r|s,l:0;
+		v,r|i,r:0;
+		v,r|f,r:0;
+	`, getter, true, &strArr, &intArr, &floatArr)
+	if err != nil || len(strArr) < 1 || len(intArr) < 1 || len(floatArr) < 1 || strArr[0] != "1" || intArr[0] != 1 || floatArr[0] != 1 {
+		t.Error(err)
+		return
+	}
+}

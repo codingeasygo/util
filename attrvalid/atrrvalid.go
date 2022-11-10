@@ -584,10 +584,10 @@ func ValidSetValue(dst, src interface{}) error {
 //ValidValue will convert src value to dst type and return it
 func ValidValue(dst reflect.Type, src interface{}) (val interface{}, err error) {
 	srcType := reflect.TypeOf(src)
-	if srcType.Kind() == dst.Kind() {
-		return src, nil
-	}
 	srcValue := reflect.ValueOf(src)
+	if srcType.Kind() == dst.Kind() {
+		return srcValue.Convert(dst).Interface(), nil
+	}
 	if dst.Kind() != reflect.String && srcValue.CanConvert(dst) { //skip string for int=>string is invalid
 		return srcValue.Convert(dst).Interface(), nil
 	}
