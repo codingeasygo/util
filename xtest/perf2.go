@@ -102,8 +102,8 @@ func (d DisVal) Swap(i, j int) {
 }
 
 func (d DisVal) Less(i, j int) bool {
-	vali, _ := strconv.ParseFloat(strings.Split(d[i], ":")[0], 10)
-	valj, _ := strconv.ParseFloat(strings.Split(d[j], ":")[0], 10)
+	vali, _ := strconv.ParseFloat(strings.Split(d[i], ":")[0], 64)
+	valj, _ := strconv.ParseFloat(strings.Split(d[j], ":")[0], 64)
 	return vali < valj
 }
 
@@ -132,7 +132,7 @@ func (p *Perf2) NotifyReal() {
 		host := os.Getenv("HOSTNAME")
 		host = strings.Split(host, ".")[0]
 		bys, _ := json.Marshal(map[string]map[string]interface{}{
-			host: map[string]interface{}{
+			host: {
 				"Used":       p.Used,
 				"Done":       p.Done,
 				"Errc":       p.Errc,
