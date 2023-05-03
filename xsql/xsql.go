@@ -19,7 +19,7 @@ type ArrayConverter interface {
 	InArray() string
 }
 
-//Time is database value to parse data from database and parset time.Time to timestamp on json mashal
+// Time is database value to parse data from database and parset time.Time to timestamp on json mashal
 type Time time.Time
 
 // TimeUnix will return time by timestamp
@@ -52,12 +52,12 @@ func TimeStartOfMonth() Time {
 	return Time(xtime.TimeStartOfMonth())
 }
 
-//Timestamp return timestamp
+// Timestamp return timestamp
 func (t Time) Timestamp() int64 {
 	return time.Time(t).Local().UnixNano() / 1e6
 }
 
-//MarshalJSON marshal time to string
+// MarshalJSON marshal time to string
 func (t *Time) MarshalJSON() ([]byte, error) {
 	raw := t.Timestamp()
 	if raw < 0 {
@@ -67,7 +67,7 @@ func (t *Time) MarshalJSON() ([]byte, error) {
 	return []byte(stamp), nil
 }
 
-//UnmarshalJSON unmarshal string to time
+// UnmarshalJSON unmarshal string to time
 func (t *Time) UnmarshalJSON(bys []byte) (err error) {
 	val := strings.TrimSpace(string(bys))
 	if val == "null" {
@@ -80,7 +80,7 @@ func (t *Time) UnmarshalJSON(bys []byte) (err error) {
 	return
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (t *Time) Scan(src interface{}) (err error) {
 	if src != nil {
 		if timeSrc, ok := src.(time.Time); ok {
@@ -90,7 +90,7 @@ func (t *Time) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value will parse to json value
+// Value will parse to json value
 func (t *Time) Value() (driver.Value, error) {
 	if t == nil {
 		return time.Timer{}, nil
@@ -128,15 +128,15 @@ func (t Time) String() string {
 	return time.Time(t).String()
 }
 
-//M is database value to parse json data to map value
+// M is database value to parse json data to map value
 type M map[string]interface{}
 
-//RawMap will return raw map value
+// RawMap will return raw map value
 func (m M) RawMap() map[string]interface{} {
 	return m
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (m *M) Scan(src interface{}) (err error) {
 	if src != nil {
 		if jsonSrc, ok := src.(string); ok {
@@ -148,7 +148,7 @@ func (m *M) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value will parse to json value
+// Value will parse to json value
 func (m M) Value() (driver.Value, error) {
 	if m == nil {
 		return "{}", nil
@@ -161,7 +161,7 @@ func (m M) AsMap() xmap.M { return xmap.M(m) }
 
 func (m M) IsNil() bool { return m == nil }
 
-func (m M) IsZero() bool { return m == nil || len(m) == 0 }
+func (m M) IsZero() bool { return len(m) == 0 }
 
 func (m *M) Set(v interface{}) (err error) {
 	value, err := xmap.MapVal(v)
@@ -171,10 +171,10 @@ func (m *M) Set(v interface{}) (err error) {
 	return
 }
 
-//MArray is database value to parse json data to map value
+// MArray is database value to parse json data to map value
 type MArray []M
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (m *MArray) Scan(src interface{}) (err error) {
 	if src != nil {
 		if jsonSrc, ok := src.(string); ok {
@@ -186,7 +186,7 @@ func (m *MArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value will parse to json value
+// Value will parse to json value
 func (m MArray) Value() (driver.Value, error) {
 	if m == nil {
 		return "[]", nil
@@ -213,7 +213,7 @@ func (m MArray) InArray() string {
 
 func (m MArray) IsNil() bool { return m == nil }
 
-func (m MArray) IsZero() bool { return m == nil || len(m) == 0 }
+func (m MArray) IsZero() bool { return len(m) == 0 }
 
 func (m *MArray) Set(v interface{}) (err error) {
 	valueList, err := xmap.ArrayMapVal(v)
@@ -256,7 +256,7 @@ func sqlScan(src, dst interface{}, strConvert func(str string) (xerr error)) (er
 	return
 }
 
-//IntArray is database value to parse data to []int64 value
+// IntArray is database value to parse data to []int64 value
 type IntArray []int
 
 func AsIntArray(v interface{}) IntArray {
@@ -267,7 +267,7 @@ func AsIntArray(v interface{}) IntArray {
 	return IntArray(vals)
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (i *IntArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
 		*i, xerr = converter.ArrayIntVal(str)
@@ -276,7 +276,7 @@ func (i *IntArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (i IntArray) Value() (driver.Value, error) {
 	if i == nil {
 		return "[]", nil
@@ -295,7 +295,7 @@ func (i IntArray) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (i IntArray) HavingOne(vals ...int) bool {
 	for _, v0 := range i {
 		for _, v1 := range vals {
@@ -307,31 +307,31 @@ func (i IntArray) HavingOne(vals ...int) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (i IntArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (i IntArray) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (i IntArray) InArray() (res string) {
 	res = i.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i IntArray) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (i IntArray) RemoveDuplicate() IntArray {
 	var arr IntArray
 	m := map[int]bool{}
@@ -345,7 +345,7 @@ func (i IntArray) RemoveDuplicate() IntArray {
 	return arr
 }
 
-//AsPtrArray will convet normla to ptr
+// AsPtrArray will convet normla to ptr
 func (i IntArray) AsPtrArray() (vals IntPtrArray) {
 	for _, v := range i {
 		vals = append(vals, converter.IntPtr(v))
@@ -355,16 +355,16 @@ func (i IntArray) AsPtrArray() (vals IntPtrArray) {
 
 func (i IntArray) IsNil() bool { return i == nil }
 
-func (i IntArray) IsZero() bool { return i == nil || len(i) == 0 }
+func (i IntArray) IsZero() bool { return len(i) == 0 }
 
-//IntPtrArray is database value to parse data to []int64 value
+// IntPtrArray is database value to parse data to []int64 value
 type IntPtrArray []*int
 
 func AsIntPtrArray(v interface{}) (array IntPtrArray) {
 	return AsIntArray(v).AsPtrArray()
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (i *IntPtrArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
 		vals, xerr := converter.ArrayIntVal(str)
@@ -376,7 +376,7 @@ func (i *IntPtrArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (i IntPtrArray) Value() (driver.Value, error) {
 	if i == nil {
 		return "[]", nil
@@ -395,7 +395,7 @@ func (i IntPtrArray) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (i IntPtrArray) HavingOne(vals ...int) bool {
 	for _, v0 := range i {
 		for _, v1 := range vals {
@@ -407,31 +407,31 @@ func (i IntPtrArray) HavingOne(vals ...int) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (i IntPtrArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (i IntPtrArray) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (i IntPtrArray) InArray() (res string) {
 	res = i.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i IntPtrArray) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (i IntPtrArray) RemoveDuplicate() IntPtrArray {
 	var arr IntPtrArray
 	m := map[int]bool{}
@@ -445,7 +445,7 @@ func (i IntPtrArray) RemoveDuplicate() IntPtrArray {
 	return arr
 }
 
-//AsArray will convet ptr to normal, skip nil
+// AsArray will convet ptr to normal, skip nil
 func (i IntPtrArray) AsArray() (vals IntArray) {
 	for _, v := range i {
 		if v == nil {
@@ -458,9 +458,9 @@ func (i IntPtrArray) AsArray() (vals IntArray) {
 
 func (i IntPtrArray) IsNil() bool { return i == nil }
 
-func (i IntPtrArray) IsZero() bool { return i == nil || len(i) == 0 }
+func (i IntPtrArray) IsZero() bool { return len(i) == 0 }
 
-//Int64Array is database value to parse data to []int64 value
+// Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
 func AsInt64Array(v interface{}) Int64Array {
@@ -471,7 +471,7 @@ func AsInt64Array(v interface{}) Int64Array {
 	return Int64Array(vals)
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (i *Int64Array) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
 		*i, xerr = converter.ArrayInt64Val(str)
@@ -480,7 +480,7 @@ func (i *Int64Array) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (i Int64Array) Value() (driver.Value, error) {
 	if i == nil {
 		return "[]", nil
@@ -499,7 +499,7 @@ func (i Int64Array) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (i Int64Array) HavingOne(vals ...int64) bool {
 	for _, v0 := range i {
 		for _, v1 := range vals {
@@ -511,31 +511,31 @@ func (i Int64Array) HavingOne(vals ...int64) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (i Int64Array) Join(sep string) (res string) {
 	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (i Int64Array) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (i Int64Array) InArray() (res string) {
 	res = i.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i Int64Array) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (i Int64Array) RemoveDuplicate() Int64Array {
 	var arr Int64Array
 	m := map[int64]bool{}
@@ -549,7 +549,7 @@ func (i Int64Array) RemoveDuplicate() Int64Array {
 	return arr
 }
 
-//AsPtrArray will convet normla to ptr
+// AsPtrArray will convet normla to ptr
 func (i Int64Array) AsPtrArray() (vals Int64PtrArray) {
 	for _, v := range i {
 		vals = append(vals, converter.Int64Ptr(v))
@@ -559,16 +559,16 @@ func (i Int64Array) AsPtrArray() (vals Int64PtrArray) {
 
 func (i Int64Array) IsNil() bool { return i == nil }
 
-func (i Int64Array) IsZero() bool { return i == nil || len(i) == 0 }
+func (i Int64Array) IsZero() bool { return len(i) == 0 }
 
-//Int64PtrArray is database value to parse data to []int64 value
+// Int64PtrArray is database value to parse data to []int64 value
 type Int64PtrArray []*int64
 
 func AsInt64PtrArray(v interface{}) Int64PtrArray {
 	return AsInt64Array(v).AsPtrArray()
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, i, func(str string) (xerr error) {
 		vals, xerr := converter.ArrayInt64Val(str)
@@ -580,7 +580,7 @@ func (i *Int64PtrArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (i Int64PtrArray) Value() (driver.Value, error) {
 	if i == nil {
 		return "[]", nil
@@ -599,7 +599,7 @@ func (i Int64PtrArray) Swap(a, b int) {
 	i[a], i[b] = i[b], i[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 	for _, v0 := range i {
 		for _, v1 := range vals {
@@ -611,31 +611,31 @@ func (i Int64PtrArray) HavingOne(vals ...int64) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (i Int64PtrArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(i, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (i Int64PtrArray) DbArray() (res string) {
 	res = "{" + i.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (i Int64PtrArray) InArray() (res string) {
 	res = i.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i Int64PtrArray) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (i Int64PtrArray) RemoveDuplicate() Int64PtrArray {
 	var arr Int64PtrArray
 	m := map[int64]bool{}
@@ -649,7 +649,7 @@ func (i Int64PtrArray) RemoveDuplicate() Int64PtrArray {
 	return arr
 }
 
-//AsArray will convet ptr to normal, skip nil
+// AsArray will convet ptr to normal, skip nil
 func (i Int64PtrArray) AsArray() (vals Int64Array) {
 	for _, v := range i {
 		if v == nil {
@@ -662,9 +662,9 @@ func (i Int64PtrArray) AsArray() (vals Int64Array) {
 
 func (i Int64PtrArray) IsNil() bool { return i == nil }
 
-func (i Int64PtrArray) IsZero() bool { return i == nil || len(i) == 0 }
+func (i Int64PtrArray) IsZero() bool { return len(i) == 0 }
 
-//Float64Array is database value to parse data to []int64 value
+// Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
 func AsFloat64Array(v interface{}) Float64Array {
@@ -675,7 +675,7 @@ func AsFloat64Array(v interface{}) Float64Array {
 	return Float64Array(vals)
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (f *Float64Array) Scan(src interface{}) (err error) {
 	err = sqlScan(src, f, func(str string) (xerr error) {
 		*f, xerr = converter.ArrayFloat64Val(str)
@@ -684,7 +684,7 @@ func (f *Float64Array) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (f Float64Array) Value() (driver.Value, error) {
 	if f == nil {
 		return "[]", nil
@@ -703,7 +703,7 @@ func (f Float64Array) Swap(a, b int) {
 	f[a], f[b] = f[b], f[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (f Float64Array) HavingOne(vals ...float64) bool {
 	for _, v0 := range f {
 		for _, v1 := range vals {
@@ -715,31 +715,31 @@ func (f Float64Array) HavingOne(vals ...float64) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (f Float64Array) Join(sep string) (res string) {
 	res = converter.JoinSafe(f, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (f Float64Array) DbArray() (res string) {
 	res = "{" + f.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (f Float64Array) InArray() (res string) {
 	res = f.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i Float64Array) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (f Float64Array) RemoveDuplicate() Float64Array {
 	var arr Float64Array
 	m := map[float64]bool{}
@@ -753,7 +753,7 @@ func (f Float64Array) RemoveDuplicate() Float64Array {
 	return arr
 }
 
-//AsPtrArray will convet normla to ptr
+// AsPtrArray will convet normla to ptr
 func (f Float64Array) AsPtrArray() (vals Float64PtrArray) {
 	for _, v := range f {
 		vals = append(vals, converter.Float64Ptr(v))
@@ -763,16 +763,16 @@ func (f Float64Array) AsPtrArray() (vals Float64PtrArray) {
 
 func (f Float64Array) IsNil() bool { return f == nil }
 
-func (f Float64Array) IsZero() bool { return f == nil || len(f) == 0 }
+func (f Float64Array) IsZero() bool { return len(f) == 0 }
 
-//Float64PtrArray is database value to parse data to []int64 value
+// Float64PtrArray is database value to parse data to []int64 value
 type Float64PtrArray []*float64
 
 func AsFloat64PtrArray(v interface{}) Float64PtrArray {
 	return AsFloat64Array(v).AsPtrArray()
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, f, func(str string) (xerr error) {
 		vals, xerr := converter.ArrayFloat64Val(str)
@@ -784,7 +784,7 @@ func (f *Float64PtrArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value is driver.Valuer
+// Value is driver.Valuer
 func (f Float64PtrArray) Value() (driver.Value, error) {
 	if f == nil {
 		return "[]", nil
@@ -803,7 +803,7 @@ func (f Float64PtrArray) Swap(a, b int) {
 	f[a], f[b] = f[b], f[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (f Float64PtrArray) HavingOne(vals ...float64) bool {
 	for _, v0 := range f {
 		for _, v1 := range vals {
@@ -815,31 +815,31 @@ func (f Float64PtrArray) HavingOne(vals ...float64) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (f Float64PtrArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(f, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (f Float64PtrArray) DbArray() (res string) {
 	res = "{" + f.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (f Float64PtrArray) InArray() (res string) {
 	res = f.Join(",")
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (i Float64PtrArray) StrArray() (res string) {
 	res = "," + i.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (f Float64PtrArray) RemoveDuplicate() Float64PtrArray {
 	var arr Float64PtrArray
 	m := map[float64]bool{}
@@ -853,7 +853,7 @@ func (f Float64PtrArray) RemoveDuplicate() Float64PtrArray {
 	return arr
 }
 
-//AsArray will convet ptr to normal, skip nil
+// AsArray will convet ptr to normal, skip nil
 func (f Float64PtrArray) AsArray() (vals Float64Array) {
 	for _, v := range f {
 		if v == nil {
@@ -866,9 +866,9 @@ func (f Float64PtrArray) AsArray() (vals Float64Array) {
 
 func (f Float64PtrArray) IsNil() bool { return f == nil }
 
-func (f Float64PtrArray) IsZero() bool { return f == nil || len(f) == 0 }
+func (f Float64PtrArray) IsZero() bool { return len(f) == 0 }
 
-//StringArray is database value to parse data to []string value
+// StringArray is database value to parse data to []string value
 type StringArray []string
 
 func AsStringArray(v interface{}) StringArray {
@@ -879,7 +879,7 @@ func AsStringArray(v interface{}) StringArray {
 	return StringArray(vals)
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (s *StringArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, s, func(str string) (xerr error) {
 		*s, xerr = converter.ArrayStringVal(str)
@@ -888,7 +888,7 @@ func (s *StringArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value will parse to json value
+// Value will parse to json value
 func (s StringArray) Value() (driver.Value, error) {
 	if s == nil {
 		return "[]", nil
@@ -907,7 +907,7 @@ func (s StringArray) Swap(a, b int) {
 	s[a], s[b] = s[b], s[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (s StringArray) HavingOne(vals ...string) bool {
 	for _, v0 := range s {
 		for _, v1 := range vals {
@@ -919,31 +919,31 @@ func (s StringArray) HavingOne(vals ...string) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (s StringArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(s, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (s StringArray) DbArray() (res string) {
 	res = "{" + s.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (s StringArray) InArray() (res string) {
 	res = "'" + s.Join("','") + "'"
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (s StringArray) StrArray() (res string) {
 	res = "," + s.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (s StringArray) RemoveDuplicate(trim, empty bool) StringArray {
 	var arr StringArray
 	m := map[string]bool{}
@@ -964,7 +964,7 @@ func (s StringArray) RemoveDuplicate(trim, empty bool) StringArray {
 	return arr
 }
 
-//RemoveEmpty will remove empty and copy item to new array
+// RemoveEmpty will remove empty and copy item to new array
 func (s StringArray) RemoveEmpty(trim bool) StringArray {
 	var arr StringArray
 	for _, v := range s {
@@ -980,7 +980,7 @@ func (s StringArray) RemoveEmpty(trim bool) StringArray {
 	return arr
 }
 
-//AsPtrArray will convet normla to ptr
+// AsPtrArray will convet normla to ptr
 func (s StringArray) AsPtrArray() (vals StringPtrArray) {
 	for _, v := range s {
 		vals = append(vals, converter.StringPtr(v))
@@ -990,16 +990,16 @@ func (s StringArray) AsPtrArray() (vals StringPtrArray) {
 
 func (s StringArray) IsNil() bool { return s == nil }
 
-func (s StringArray) IsZero() bool { return s == nil || len(s) == 0 }
+func (s StringArray) IsZero() bool { return len(s) == 0 }
 
-//StringPtrArray is database value to parse data to []string value
+// StringPtrArray is database value to parse data to []string value
 type StringPtrArray []*string
 
 func AsStringPtrArray(v interface{}) StringPtrArray {
 	return AsStringArray(v).AsPtrArray()
 }
 
-//Scan is sql.Sanner
+// Scan is sql.Sanner
 func (s *StringPtrArray) Scan(src interface{}) (err error) {
 	err = sqlScan(src, s, func(str string) (xerr error) {
 		vals, xerr := converter.ArrayStringVal(str)
@@ -1011,7 +1011,7 @@ func (s *StringPtrArray) Scan(src interface{}) (err error) {
 	return
 }
 
-//Value will parse to json value
+// Value will parse to json value
 func (s StringPtrArray) Value() (driver.Value, error) {
 	if s == nil {
 		return "[]", nil
@@ -1030,7 +1030,7 @@ func (s StringPtrArray) Swap(a, b int) {
 	s[a], s[b] = s[b], s[a]
 }
 
-//HavingOne will check if array having one value in vals
+// HavingOne will check if array having one value in vals
 func (s StringPtrArray) HavingOne(vals ...string) bool {
 	for _, v0 := range s {
 		for _, v1 := range vals {
@@ -1042,31 +1042,31 @@ func (s StringPtrArray) HavingOne(vals ...string) bool {
 	return false
 }
 
-//Join will parset to database array
+// Join will parset to database array
 func (s StringPtrArray) Join(sep string) (res string) {
 	res = converter.JoinSafe(s, sep, converter.JoinPolicyDefault)
 	return
 }
 
-//DbArray will join value to database array
+// DbArray will join value to database array
 func (s StringPtrArray) DbArray() (res string) {
 	res = "{" + s.Join(",") + "}"
 	return
 }
 
-//InArray will join value to database array
+// InArray will join value to database array
 func (s StringPtrArray) InArray() (res string) {
 	res = "'" + s.Join("','") + "'"
 	return
 }
 
-//StrArray will join value to string array by comma
+// StrArray will join value to string array by comma
 func (s StringPtrArray) StrArray() (res string) {
 	res = "," + s.Join(",") + ","
 	return
 }
 
-//RemoveDuplicate will remove duplicate and copy item to new array
+// RemoveDuplicate will remove duplicate and copy item to new array
 func (s StringPtrArray) RemoveDuplicate(trim, empty bool) StringPtrArray {
 	var arr StringPtrArray
 	m := map[string]bool{}
@@ -1091,7 +1091,7 @@ func (s StringPtrArray) RemoveDuplicate(trim, empty bool) StringPtrArray {
 	return arr
 }
 
-//RemoveEmpty will remove empty and copy item to new array
+// RemoveEmpty will remove empty and copy item to new array
 func (s StringPtrArray) RemoveEmpty(trim bool) StringPtrArray {
 	var arr StringPtrArray
 	for _, v := range s {
@@ -1111,7 +1111,7 @@ func (s StringPtrArray) RemoveEmpty(trim bool) StringPtrArray {
 	return arr
 }
 
-//AsArray will convet ptr to normal, skip nil
+// AsArray will convet ptr to normal, skip nil
 func (s StringPtrArray) AsArray() (vals StringArray) {
 	for _, v := range s {
 		if v == nil {
@@ -1124,4 +1124,4 @@ func (s StringPtrArray) AsArray() (vals StringArray) {
 
 func (s StringPtrArray) IsNil() bool { return s == nil }
 
-func (s StringPtrArray) IsZero() bool { return s == nil || len(s) == 0 }
+func (s StringPtrArray) IsZero() bool { return len(s) == 0 }
