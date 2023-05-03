@@ -471,6 +471,13 @@ func (i *IntNilZero) IsNil() bool { return i == nil }
 
 func (i *IntNilZero) IsZero() bool { return i == nil }
 
+func (i *IntNilZero) Value() (v int) {
+	if i != nil {
+		v = int(*i)
+	}
+	return
+}
+
 // Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
@@ -686,6 +693,13 @@ func (i *Int64NilZero) IsNil() bool { return i == nil }
 
 func (i *Int64NilZero) IsZero() bool { return i == nil }
 
+func (i *Int64NilZero) Value() (v int64) {
+	if i != nil {
+		v = int64(*i)
+	}
+	return
+}
+
 // Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
@@ -900,6 +914,13 @@ func NewFloat64NilZero(v float64) *Float64NilZero {
 func (f *Float64NilZero) IsNil() bool { return f == nil }
 
 func (f *Float64NilZero) IsZero() bool { return f == nil }
+
+func (f *Float64NilZero) Value() (v float64) {
+	if f != nil {
+		v = float64(*f)
+	}
+	return
+}
 
 // StringArray is database value to parse data to []string value
 type StringArray []string
@@ -1169,3 +1190,10 @@ func NewStringNilZero(v string) *StringNilZero {
 func (s *StringNilZero) IsNil() bool { return s == nil }
 
 func (s *StringNilZero) IsZero() bool { return s == nil }
+
+func (s *StringNilZero) Value() (v string) {
+	if s != nil {
+		v = string(*s)
+	}
+	return
+}
