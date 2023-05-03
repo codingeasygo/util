@@ -460,20 +460,49 @@ func (i IntPtrArray) IsNil() bool { return i == nil }
 
 func (i IntPtrArray) IsZero() bool { return len(i) == 0 }
 
-type IntNilZero int
+type IntNilZero struct {
+	V *int
+}
 
-func NewIntNilZero(v int) *IntNilZero {
-	var r = IntNilZero(v)
-	return &r
+func NewIntNilZero(v int) IntNilZero {
+	return IntNilZero{V: &v}
+}
+
+// Scan is sql.Sanner
+func (i *IntNilZero) Scan(src interface{}) (err error) {
+	v, err := converter.IntVal(src)
+	i.V = &v
+	return
+}
+
+// Value is driver.Valuer
+func (i IntNilZero) Value() (driver.Value, error) {
+	if i.V == nil {
+		return 0, nil
+	}
+	return i.V, nil
+}
+
+func (i *IntNilZero) UnmarshalJSON(data []byte) (err error) {
+	v, err := converter.IntVal(string(data))
+	i.V = &v
+	return
+}
+
+func (i IntNilZero) MarshalJSON() ([]byte, error) {
+	if i.V == nil {
+		return []byte("0"), nil
+	}
+	return []byte(fmt.Sprintf("%d", *i.V)), nil
 }
 
 func (i *IntNilZero) IsNil() bool { return i == nil }
 
 func (i *IntNilZero) IsZero() bool { return i == nil }
 
-func (i *IntNilZero) Value() (v int) {
-	if i != nil {
-		v = int(*i)
+func (i *IntNilZero) Int64() (v int) {
+	if i.V != nil {
+		v = int(*i.V)
 	}
 	return
 }
@@ -682,20 +711,49 @@ func (i Int64PtrArray) IsNil() bool { return i == nil }
 
 func (i Int64PtrArray) IsZero() bool { return len(i) == 0 }
 
-type Int64NilZero int64
+type Int64NilZero struct {
+	V *int64
+}
 
-func NewInt64NilZero(v int64) *Int64NilZero {
-	var r = Int64NilZero(v)
-	return &r
+func NewInt64NilZero(v int64) Int64NilZero {
+	return Int64NilZero{V: &v}
+}
+
+// Scan is sql.Sanner
+func (i *Int64NilZero) Scan(src interface{}) (err error) {
+	v, err := converter.Int64Val(src)
+	i.V = &v
+	return
+}
+
+// Value is driver.Valuer
+func (i Int64NilZero) Value() (driver.Value, error) {
+	if i.V == nil {
+		return 0, nil
+	}
+	return i.V, nil
+}
+
+func (i *Int64NilZero) UnmarshalJSON(data []byte) (err error) {
+	v, err := converter.Int64Val(string(data))
+	i.V = &v
+	return
+}
+
+func (i Int64NilZero) MarshalJSON() ([]byte, error) {
+	if i.V == nil {
+		return []byte("0"), nil
+	}
+	return []byte(fmt.Sprintf("%d", *i.V)), nil
 }
 
 func (i *Int64NilZero) IsNil() bool { return i == nil }
 
 func (i *Int64NilZero) IsZero() bool { return i == nil }
 
-func (i *Int64NilZero) Value() (v int64) {
-	if i != nil {
-		v = int64(*i)
+func (i *Int64NilZero) Int64() (v int64) {
+	if i.V != nil {
+		v = int64(*i.V)
 	}
 	return
 }
@@ -904,20 +962,49 @@ func (f Float64PtrArray) IsNil() bool { return f == nil }
 
 func (f Float64PtrArray) IsZero() bool { return len(f) == 0 }
 
-type Float64NilZero float64
+type Float64NilZero struct {
+	V *float64
+}
 
-func NewFloat64NilZero(v float64) *Float64NilZero {
-	var r = Float64NilZero(v)
-	return &r
+func NewFloat64NilZero(v float64) Float64NilZero {
+	return Float64NilZero{V: &v}
+}
+
+// Scan is sql.Sanner
+func (f *Float64NilZero) Scan(src interface{}) (err error) {
+	v, err := converter.Float64Val(src)
+	f.V = &v
+	return
+}
+
+// Value is driver.Valuer
+func (f Float64NilZero) Value() (driver.Value, error) {
+	if f.V == nil {
+		return 0, nil
+	}
+	return f.V, nil
+}
+
+func (f *Float64NilZero) UnmarshalJSON(data []byte) (err error) {
+	v, err := converter.Float64Val(string(data))
+	f.V = &v
+	return
+}
+
+func (f Float64NilZero) MarshalJSON() ([]byte, error) {
+	if f.V == nil {
+		return []byte("0"), nil
+	}
+	return []byte(fmt.Sprintf("%f", *f.V)), nil
 }
 
 func (f *Float64NilZero) IsNil() bool { return f == nil }
 
 func (f *Float64NilZero) IsZero() bool { return f == nil }
 
-func (f *Float64NilZero) Value() (v float64) {
-	if f != nil {
-		v = float64(*f)
+func (f *Float64NilZero) Float64() (v float64) {
+	if f.V != nil {
+		v = float64(*f.V)
 	}
 	return
 }
@@ -1180,20 +1267,49 @@ func (s StringPtrArray) IsNil() bool { return s == nil }
 
 func (s StringPtrArray) IsZero() bool { return len(s) == 0 }
 
-type StringNilZero string
+type StringNilZero struct {
+	V *string
+}
 
-func NewStringNilZero(v string) *StringNilZero {
-	var r = StringNilZero(v)
-	return &r
+func NewStringNilZero(v string) StringNilZero {
+	return StringNilZero{V: &v}
+}
+
+// Scan is sql.Sanner
+func (s *StringNilZero) Scan(src interface{}) (err error) {
+	v, err := converter.StringVal(src)
+	s.V = &v
+	return
+}
+
+// Value is driver.Valuer
+func (s StringNilZero) Value() (driver.Value, error) {
+	if s.V == nil {
+		return 0, nil
+	}
+	return s.V, nil
+}
+
+func (f *StringNilZero) UnmarshalJSON(data []byte) (err error) {
+	v := strings.Trim(string(data), `"`)
+	f.V = &v
+	return
+}
+
+func (s StringNilZero) MarshalJSON() ([]byte, error) {
+	if s.V == nil {
+		return []byte(`""`), nil
+	}
+	return []byte(fmt.Sprintf(`"%v"`, *s.V)), nil
 }
 
 func (s *StringNilZero) IsNil() bool { return s == nil }
 
 func (s *StringNilZero) IsZero() bool { return s == nil }
 
-func (s *StringNilZero) Value() (v string) {
+func (s *StringNilZero) String() (v string) {
 	if s != nil {
-		v = string(*s)
+		v = string(*s.V)
 	}
 	return
 }
