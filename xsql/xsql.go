@@ -462,6 +462,11 @@ func (i IntPtrArray) IsZero() bool { return len(i) == 0 }
 
 type IntNilZero int
 
+func NewIntNilZero(v int) *IntNilZero {
+	var r = IntNilZero(v)
+	return &r
+}
+
 func (i *IntNilZero) IsNil() bool { return i == nil }
 
 func (i *IntNilZero) IsZero() bool { return i == nil }
@@ -670,7 +675,12 @@ func (i Int64PtrArray) IsNil() bool { return i == nil }
 
 func (i Int64PtrArray) IsZero() bool { return len(i) == 0 }
 
-type Int64NilZero int
+type Int64NilZero int64
+
+func NewInt64NilZero(v int64) *Int64NilZero {
+	var r = Int64NilZero(v)
+	return &r
+}
 
 func (i *Int64NilZero) IsNil() bool { return i == nil }
 
@@ -880,7 +890,12 @@ func (f Float64PtrArray) IsNil() bool { return f == nil }
 
 func (f Float64PtrArray) IsZero() bool { return len(f) == 0 }
 
-type Float64NilZero int
+type Float64NilZero float64
+
+func NewFloat64NilZero(v float64) *Float64NilZero {
+	var r = Float64NilZero(v)
+	return &r
+}
 
 func (f *Float64NilZero) IsNil() bool { return f == nil }
 
@@ -1145,6 +1160,11 @@ func (s StringPtrArray) IsNil() bool { return s == nil }
 func (s StringPtrArray) IsZero() bool { return len(s) == 0 }
 
 type StringNilZero string
+
+func NewStringNilZero(v string) *StringNilZero {
+	var r = StringNilZero(v)
+	return &r
+}
 
 func (s *StringNilZero) IsNil() bool { return s == nil }
 
