@@ -460,6 +460,12 @@ func (i IntPtrArray) IsNil() bool { return i == nil }
 
 func (i IntPtrArray) IsZero() bool { return len(i) == 0 }
 
+type IntNilZero int
+
+func (i *IntNilZero) IsNil() bool { return i == nil }
+
+func (i *IntNilZero) IsZero() bool { return i == nil }
+
 // Int64Array is database value to parse data to []int64 value
 type Int64Array []int64
 
@@ -664,6 +670,12 @@ func (i Int64PtrArray) IsNil() bool { return i == nil }
 
 func (i Int64PtrArray) IsZero() bool { return len(i) == 0 }
 
+type Int64NilZero int
+
+func (i *Int64NilZero) IsNil() bool { return i == nil }
+
+func (i *Int64NilZero) IsZero() bool { return i == nil }
+
 // Float64Array is database value to parse data to []int64 value
 type Float64Array []float64
 
@@ -867,6 +879,12 @@ func (f Float64PtrArray) AsArray() (vals Float64Array) {
 func (f Float64PtrArray) IsNil() bool { return f == nil }
 
 func (f Float64PtrArray) IsZero() bool { return len(f) == 0 }
+
+type Float64NilZero int
+
+func (f *Float64NilZero) IsNil() bool { return f == nil }
+
+func (f *Float64NilZero) IsZero() bool { return f == nil }
 
 // StringArray is database value to parse data to []string value
 type StringArray []string
@@ -1125,3 +1143,9 @@ func (s StringPtrArray) AsArray() (vals StringArray) {
 func (s StringPtrArray) IsNil() bool { return s == nil }
 
 func (s StringPtrArray) IsZero() bool { return len(s) == 0 }
+
+type StringNilZero string
+
+func (s *StringNilZero) IsNil() bool { return s == nil }
+
+func (s *StringNilZero) IsZero() bool { return s == nil }
