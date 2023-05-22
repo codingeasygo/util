@@ -8,30 +8,30 @@ import (
 	"sync"
 )
 
-//Processor is interface for process connection
+// Processor is interface for process connection
 type Processor interface {
 	ProcConn(conn io.ReadWriteCloser) (err error)
 }
 
-//ProcessorF is func to implement Processor
+// ProcessorF is func to implement Processor
 type ProcessorF func(conn io.ReadWriteCloser) (err error)
 
-//ProcConn is process connection by func
+// ProcConn is process connection by func
 func (p ProcessorF) ProcConn(conn io.ReadWriteCloser) (err error) {
 	err = p(conn)
 	return
 }
 
-//ErrAsyncRunning is error for async running on PipeConn
+// ErrAsyncRunning is error for async running on PipeConn
 var ErrAsyncRunning = fmt.Errorf("asynced")
 
-//Piper is interface for process pipe connection
+// Piper is interface for process pipe connection
 type Piper interface {
 	PipeConn(conn io.ReadWriteCloser, target string) (err error)
 	Close() (err error)
 }
 
-//PiperF is func to implement Piper
+// PiperF is func to implement Piper
 type PiperF func(conn io.ReadWriteCloser, target string) (err error)
 
 func (p PiperF) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
@@ -43,27 +43,27 @@ func (p PiperF) Close() (err error) {
 	return
 }
 
-//PiperDialer is interface for implement piper dialer
+// PiperDialer is interface for implement piper dialer
 type PiperDialer interface {
 	DialPiper(uri string, bufferSize int) (raw Piper, err error)
 }
 
-//PiperDialerF is func to implement PiperDialer
+// PiperDialerF is func to implement PiperDialer
 type PiperDialerF func(uri string, bufferSize int) (raw Piper, err error)
 
-//DialPiper will dial one piper by uri
+// DialPiper will dial one piper by uri
 func (p PiperDialerF) DialPiper(uri string, bufferSize int) (raw Piper, err error) {
 	raw, err = p(uri, bufferSize)
 	return
 }
 
-//NetPiper is Piper implement by net.Dial
+// NetPiper is Piper implement by net.Dial
 type NetPiper struct {
 	net.Conn
 	CopyPiper
 }
 
-//DialNetPiper will return new NetPiper by net.Dial
+// DialNetPiper will return new NetPiper by net.Dial
 func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
 	var network, address string
 	parts := strings.SplitN(uri, "://", 2)
@@ -87,20 +87,20 @@ func DialNetPiper(uri string, bufferSize int) (piper Piper, err error) {
 	return
 }
 
-//CopyPiper is Piper implement by copy
+// CopyPiper is Piper implement by copy
 type CopyPiper struct {
 	io.ReadWriteCloser
 	BufferSize int
 	XX         string
 }
 
-//NewCopyPiper will return new CopyPiper
+// NewCopyPiper will return new CopyPiper
 func NewCopyPiper(raw io.ReadWriteCloser, bufferSize int) (piper *CopyPiper) {
 	piper = &CopyPiper{ReadWriteCloser: raw, BufferSize: bufferSize}
 	return
 }
 
-//PipeConn will pipe connection to raw
+// PipeConn will pipe connection to raw
 func (c *CopyPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	wc := make(chan int, 1)
 	go func() {
@@ -137,7 +137,7 @@ func (c *CopyPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error)
 	return
 }
 
-//ByteDistributeProcessor is distribute processor by prefix read first byte
+// ByteDistributeProcessor is distribute processor by prefix read first byte
 type ByteDistributeProcessor struct {
 	Next      map[byte]Processor
 	conns     map[string]io.ReadWriteCloser
@@ -145,7 +145,7 @@ type ByteDistributeProcessor struct {
 	locker    sync.RWMutex
 }
 
-//NewByteDistributeProcessor will return new processor
+// NewByteDistributeProcessor will return new processor
 func NewByteDistributeProcessor() (processor *ByteDistributeProcessor) {
 	processor = &ByteDistributeProcessor{
 		Next:      map[byte]Processor{},
@@ -156,17 +156,17 @@ func NewByteDistributeProcessor() (processor *ByteDistributeProcessor) {
 	return
 }
 
-//AddProcessor will add processor by mode
+// AddProcessor will add processor by mode
 func (b *ByteDistributeProcessor) AddProcessor(m byte, procesor Processor) {
 	b.Next[m] = procesor
 }
 
-//RemoveProcessor will remove processor by mode
+// RemoveProcessor will remove processor by mode
 func (b *ByteDistributeProcessor) RemoveProcessor(m byte) {
 	delete(b.Next, m)
 }
 
-//ProcAccept will loop accept net.Conn and async call ProcConn
+// ProcAccept will loop accept net.Conn and async call ProcConn
 func (b *ByteDistributeProcessor) ProcAccept(listener net.Listener) (err error) {
 	b.locker.Lock()
 	b.listeners[fmt.Sprintf("%p", listener)] = listener
@@ -193,7 +193,7 @@ func (b *ByteDistributeProcessor) ProcAccept(listener net.Listener) (err error) 
 	return
 }
 
-//ProcConn will process connection by prefix reader and distribute to next processor
+// ProcConn will process connection by prefix reader and distribute to next processor
 func (b *ByteDistributeProcessor) ProcConn(conn io.ReadWriteCloser) (err error) {
 	b.locker.Lock()
 	b.conns[fmt.Sprintf("%p", conn)] = conn
@@ -220,7 +220,7 @@ func (b *ByteDistributeProcessor) ProcConn(conn io.ReadWriteCloser) (err error) 
 	return
 }
 
-//Close will close all listener and connection
+// Close will close all listener and connection
 func (b *ByteDistributeProcessor) Close() (err error) {
 	b.locker.Lock()
 	for _, conn := range b.conns {

@@ -6,13 +6,13 @@ import (
 	"sync"
 )
 
-//ByteDistributeWriter is Writer by byte
+// ByteDistributeWriter is Writer by byte
 type ByteDistributeWriter struct {
 	ws  map[byte]io.Writer
 	lck sync.RWMutex
 }
 
-//NewByteDistributeWriter will return new ByteDistributeWriter
+// NewByteDistributeWriter will return new ByteDistributeWriter
 func NewByteDistributeWriter() (writer *ByteDistributeWriter) {
 	writer = &ByteDistributeWriter{
 		ws:  map[byte]io.Writer{},
@@ -21,7 +21,7 @@ func NewByteDistributeWriter() (writer *ByteDistributeWriter) {
 	return
 }
 
-//Add WriteCloser to list
+// Add WriteCloser to list
 func (h *ByteDistributeWriter) Add(m byte, w io.Writer) {
 	h.lck.Lock()
 	defer h.lck.Unlock()
@@ -40,7 +40,7 @@ func (h *ByteDistributeWriter) Write(b []byte) (n int, err error) {
 	return
 }
 
-//Close will close all connection
+// Close will close all connection
 func (h *ByteDistributeWriter) Close() (err error) {
 	h.lck.Lock()
 	for k, w := range h.ws {

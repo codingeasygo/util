@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-//EchoConn is net.Conn impl by os.Pipe
+// EchoConn is net.Conn impl by os.Pipe
 type EchoConn struct {
 	piped *PipedChan
 }
 
-//NewEchoConn will return new echo connection
+// NewEchoConn will return new echo connection
 func NewEchoConn() (conn *EchoConn) {
 	conn = &EchoConn{
 		piped: NewPipedChan(),
@@ -60,7 +60,7 @@ func (e *EchoConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-//Network is net.Addr impl
+// Network is net.Addr impl
 func (e *EchoConn) Network() string {
 	return "echo"
 }
@@ -69,45 +69,45 @@ func (e *EchoConn) String() string {
 	return "echo"
 }
 
-//EchoPiper is echo implement to Piper
+// EchoPiper is echo implement to Piper
 type EchoPiper struct {
 	BufferSize int
 }
 
-//NewEchoPiper will return new EchoPiper
+// NewEchoPiper will return new EchoPiper
 func NewEchoPiper(bufferSize int) (piper *EchoPiper) {
 	piper = &EchoPiper{BufferSize: bufferSize}
 	return
 }
 
-//PipeConn will process connection by as echo
+// PipeConn will process connection by as echo
 func (e *EchoPiper) PipeConn(conn io.ReadWriteCloser, target string) (err error) {
 	_, err = io.CopyBuffer(conn, conn, make([]byte, e.BufferSize))
 	return
 }
 
-//Close is empty implement for Piper
+// Close is empty implement for Piper
 func (e *EchoPiper) Close() (err error) {
 	return
 }
 
-//EchoDialer is dialer test
+// EchoDialer is dialer test
 type EchoDialer struct {
 }
 
-//NewEchoDialer will return new EchoDialer
+// NewEchoDialer will return new EchoDialer
 func NewEchoDialer() (dialer *EchoDialer) {
 	dialer = &EchoDialer{}
 	return
 }
 
-//Dial dail one raw connection
+// Dial dail one raw connection
 func (e *EchoDialer) Dial(network, address string) (c net.Conn, err error) {
 	c = NewEchoConn()
 	return
 }
 
-//DialPiper will dial piper by target
+// DialPiper will dial piper by target
 func (e *EchoDialer) DialPiper(target string, bufferSize int) (raw Piper, err error) {
 	raw = NewEchoPiper(bufferSize)
 	return

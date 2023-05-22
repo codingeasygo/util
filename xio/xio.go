@@ -52,13 +52,13 @@ func CopyPacketTo(dst net.PacketConn, to net.Addr, src io.Reader) (l int64, err 
 	return
 }
 
-//CopyMulti will copy data from Reader and write to multi Writer at the same time
+// CopyMulti will copy data from Reader and write to multi Writer at the same time
 func CopyMulti(dst []io.Writer, src io.Reader) (written int64, err error) {
 	written, err = CopyBufferMulti(dst, src, nil)
 	return
 }
 
-//CopyBufferMulti will copy data from Reader and write to multi Writer at the same time
+// CopyBufferMulti will copy data from Reader and write to multi Writer at the same time
 func CopyBufferMulti(dst []io.Writer, src io.Reader, buf []byte) (written int64, err error) {
 	if buf == nil {
 		size := 32 * 1024
@@ -99,13 +99,13 @@ func CopyBufferMulti(dst []io.Writer, src io.Reader, buf []byte) (written int64,
 	return written, err
 }
 
-//CopyMax will copy data to writer and total limit by max
+// CopyMax will copy data to writer and total limit by max
 func CopyMax(dst io.Writer, src io.Reader, max int64) (written int64, err error) {
 	written, err = CopyBufferMax(dst, src, max, nil)
 	return
 }
 
-//CopyBufferMax will copy data to writer and total limit by max
+// CopyBufferMax will copy data to writer and total limit by max
 func CopyBufferMax(dst io.Writer, src io.Reader, max int64, buf []byte) (written int64, err error) {
 	if buf == nil {
 		size := 32 * 1024
@@ -145,7 +145,7 @@ func CopyBufferMax(dst io.Writer, src io.Reader, max int64, buf []byte) (written
 	return written, err
 }
 
-//FullBuffer will read data from reader until to buffer
+// FullBuffer will read data from reader until to buffer
 func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) error {
 	all := uint32(0)
 	buf := buffer[:length]
@@ -168,20 +168,20 @@ func FullBuffer(r io.Reader, buffer []byte, length uint32, latest *time.Time) er
 	return nil
 }
 
-//CopyBuffer will copy data and call dst Closer after done
+// CopyBuffer will copy data and call dst Closer after done
 func CopyBuffer(dst io.WriteCloser, src io.Reader, buf []byte) (n int64, err error) {
 	n, err = io.CopyBuffer(dst, src, buf)
 	dst.Close()
 	return
 }
 
-//StringConn is an ReadWriteCloser for return  remote address info
+// StringConn is an ReadWriteCloser for return  remote address info
 type StringConn struct {
 	Name string
 	io.ReadWriteCloser
 }
 
-//NewStringConn will return new StringConn
+// NewStringConn will return new StringConn
 func NewStringConn(raw io.ReadWriteCloser) *StringConn {
 	return &StringConn{
 		ReadWriteCloser: raw,
@@ -202,13 +202,13 @@ func remoteAddr(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
-//TCPKeepAliveListener is normal tcp listner for set tcp connection keep alive
+// TCPKeepAliveListener is normal tcp listner for set tcp connection keep alive
 type TCPKeepAliveListener struct {
 	*net.TCPListener
 	Period time.Duration
 }
 
-//NewTCPKeepAliveListener will create listener
+// NewTCPKeepAliveListener will create listener
 func NewTCPKeepAliveListener(l *net.TCPListener) (listener *TCPKeepAliveListener) {
 	listener = &TCPKeepAliveListener{
 		TCPListener: l,
@@ -217,7 +217,7 @@ func NewTCPKeepAliveListener(l *net.TCPListener) (listener *TCPKeepAliveListener
 	return
 }
 
-//Accept will accept one connection
+// Accept will accept one connection
 func (ln TCPKeepAliveListener) Accept() (net.Conn, error) {
 	tc, err := ln.AcceptTCP()
 	if err == nil {
@@ -227,26 +227,26 @@ func (ln TCPKeepAliveListener) Accept() (net.Conn, error) {
 	return tc, err
 }
 
-//ListenerF is net.Listener func implement
+// ListenerF is net.Listener func implement
 type ListenerF func() (conn net.Conn, err error)
 
-//Accept is net.Listener implement
+// Accept is net.Listener implement
 func (l ListenerF) Accept() (conn net.Conn, err error) {
 	conn, err = l()
 	return
 }
 
-//Close is net.Listener implement
+// Close is net.Listener implement
 func (l ListenerF) Close() (err error) {
 	return
 }
 
-//Addr is net.Listener implement
+// Addr is net.Listener implement
 func (l ListenerF) Addr() net.Addr {
 	return nil
 }
 
-//Network is net.Addr implement
+// Network is net.Addr implement
 func (l ListenerF) Network() string {
 	return "func"
 }
@@ -255,7 +255,7 @@ func (l ListenerF) String() string {
 	return reflect.TypeOf(l).PkgPath()
 }
 
-//LocalAddr will return net.Conn.LocalAddr or fmt.Sprintf("%v", target)
+// LocalAddr will return net.Conn.LocalAddr or fmt.Sprintf("%v", target)
 func LocalAddr(target interface{}) string {
 	if conn, ok := target.(*websocket.Conn); ok {
 		return conn.LocalAddr().String()
@@ -266,7 +266,7 @@ func LocalAddr(target interface{}) string {
 	return fmt.Sprintf("%v", target)
 }
 
-//RemoteAddr will return net.Conn.RemoteAddr or fmt.Sprintf("%v", target)
+// RemoteAddr will return net.Conn.RemoteAddr or fmt.Sprintf("%v", target)
 func RemoteAddr(target interface{}) string {
 	if conn, ok := target.(*websocket.Conn); ok {
 		return conn.Request().RemoteAddr

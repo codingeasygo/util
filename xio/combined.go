@@ -5,14 +5,14 @@ import (
 	"io"
 )
 
-//CombinedReadWriteCloser is middle struct to combine Reader/Writer/Closer
+// CombinedReadWriteCloser is middle struct to combine Reader/Writer/Closer
 type CombinedReadWriteCloser struct {
 	io.Reader
 	io.Writer
 	io.Closer
 }
 
-//NewCombinedReadWriteCloser will return new combined
+// NewCombinedReadWriteCloser will return new combined
 func NewCombinedReadWriteCloser(reader io.Reader, writer io.Writer, closer io.Closer) (combined *CombinedReadWriteCloser) {
 	combined = &CombinedReadWriteCloser{
 		Reader: reader,
@@ -40,7 +40,7 @@ func (c *CombinedReadWriteCloser) Write(p []byte) (n int, err error) {
 	return
 }
 
-//Close will close Closer
+// Close will close Closer
 func (c *CombinedReadWriteCloser) Close() (err error) {
 	if c.Closer != nil {
 		err = c.Closer.Close()

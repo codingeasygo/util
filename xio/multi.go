@@ -2,12 +2,12 @@ package xio
 
 import "io"
 
-//MultiWriteCloser is WriterCloser to bind one write to mulit sub writer
+// MultiWriteCloser is WriterCloser to bind one write to mulit sub writer
 type MultiWriteCloser struct {
 	Writers []io.Writer
 }
 
-//NewMultiWriter will return new MultiWriteCloser
+// NewMultiWriter will return new MultiWriteCloser
 func NewMultiWriter(writers ...io.Writer) (writer *MultiWriteCloser) {
 	writer = &MultiWriteCloser{Writers: writers}
 	return
@@ -27,7 +27,7 @@ func (m *MultiWriteCloser) Write(p []byte) (n int, err error) {
 	return
 }
 
-//Close will try  close all writer if it is io.Closer
+// Close will try  close all writer if it is io.Closer
 func (m *MultiWriteCloser) Close() (err error) {
 	for _, w := range m.Writers {
 		if closer, ok := w.(io.Closer); ok {

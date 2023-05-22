@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-//PrefixReader provide feature to prefix read data from Reader
+// PrefixReader provide feature to prefix read data from Reader
 type PrefixReader struct {
 	io.Reader
 	Prefix []byte
 }
 
-//NewPrefixReader will return new PrefixReader
+// NewPrefixReader will return new PrefixReader
 func NewPrefixReader(base io.Reader) (prefix *PrefixReader) {
 	prefix = &PrefixReader{Reader: base}
 	return
@@ -32,7 +32,7 @@ func (p *PrefixReader) Read(b []byte) (n int, err error) {
 	return
 }
 
-//PreRead will read prefix size data before read loop start
+// PreRead will read prefix size data before read loop start
 func (p *PrefixReader) PreRead(size int) (data []byte, err error) {
 	data = make([]byte, size)
 	err = FullBuffer(p.Reader, data, uint32(size), nil)
@@ -46,13 +46,13 @@ func (p *PrefixReader) String() string {
 	return RemoteAddr(p.Reader)
 }
 
-//PrefixReadWriteCloser is prefix read implement
+// PrefixReadWriteCloser is prefix read implement
 type PrefixReadWriteCloser struct {
 	io.ReadWriteCloser
 	PrefixReader
 }
 
-//NewPrefixReadWriteCloser will return new PrefixReadWriteCloser
+// NewPrefixReadWriteCloser will return new PrefixReadWriteCloser
 func NewPrefixReadWriteCloser(base io.ReadWriteCloser) (prefix *PrefixReadWriteCloser) {
 	prefix = &PrefixReadWriteCloser{}
 	prefix.ReadWriteCloser = base
@@ -69,7 +69,7 @@ func (p *PrefixReadWriteCloser) String() string {
 	return RemoteAddr(p.ReadWriteCloser)
 }
 
-//Network is net.Addr implement
+// Network is net.Addr implement
 func (p *PrefixReadWriteCloser) Network() string {
 	return "prefix"
 }
@@ -114,13 +114,13 @@ func (p *PrefixReadWriteCloser) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-//PrefixConn is net.Conn implement for prefix read data
+// PrefixConn is net.Conn implement for prefix read data
 type PrefixConn struct {
 	net.Conn
 	PrefixReader
 }
 
-//NewPrefixConn will return newPrefixConn
+// NewPrefixConn will return newPrefixConn
 func NewPrefixConn(conn net.Conn) (prefix *PrefixConn) {
 	prefix = &PrefixConn{}
 	prefix.Conn = conn

@@ -16,7 +16,7 @@ const (
 	OffsetBytes = 4
 )
 
-//ErrFrameTooLarge is the error when the frame head lenght > buffer length
+// ErrFrameTooLarge is the error when the frame head lenght > buffer length
 var ErrFrameTooLarge = fmt.Errorf("%v", "frame is too large")
 
 type readDeadlinable interface {
@@ -27,7 +27,7 @@ type writeDeadlinable interface {
 	SetWriteDeadline(t time.Time) error
 }
 
-//Reader is interface for read the raw io as frame mode
+// Reader is interface for read the raw io as frame mode
 type Reader interface {
 	io.Reader
 	ReadFrame() (frame []byte, err error)
@@ -47,7 +47,7 @@ type Reader interface {
 	WriteTo(writer io.Writer) (w int64, err error)
 }
 
-//Writer is interface for write the raw io as frame mode
+// Writer is interface for write the raw io as frame mode
 type Writer interface {
 	io.Writer
 	//WriteCmd will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
@@ -69,7 +69,7 @@ type Writer interface {
 	ReadFrom(reader io.Reader) (w int64, err error)
 }
 
-//ReadWriter is interface for read/write the raw io as frame mode
+// ReadWriter is interface for read/write the raw io as frame mode
 type ReadWriter interface {
 	Reader
 	Writer
@@ -88,32 +88,32 @@ type ReadWriter interface {
 	SetDataOffset(value int)
 }
 
-//ReadWriteCloser is interface for read/write the raw io as frame mode
+// ReadWriteCloser is interface for read/write the raw io as frame mode
 type ReadWriteCloser interface {
 	ReadWriter
 	io.Closer
 }
 
-//NewReader will create new Reader by raw reader and buffer size
+// NewReader will create new Reader by raw reader and buffer size
 func NewReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 	reader = NewBaseReader(raw, bufferSize)
 	return
 }
 
-//NewWriter will return new BaseWriter
+// NewWriter will return new BaseWriter
 func NewWriter(raw io.Writer) (writer *BaseWriter) {
 	writer = NewBaseWriter(raw)
 	return
 }
 
-//BaseReadWriteCloser is frame reader/writer combiner
+// BaseReadWriteCloser is frame reader/writer combiner
 type BaseReadWriteCloser struct {
 	io.Closer
 	*BaseReader
 	*BaseWriter
 }
 
-//Close will call the closer
+// Close will call the closer
 func (b *BaseReadWriteCloser) Close() (err error) {
 	if b.Closer != nil {
 		err = b.Closer.Close()
@@ -125,7 +125,7 @@ func (b *BaseReadWriteCloser) String() string {
 	return fmt.Sprintf("Reader:%v,Writer:%v", b.BaseReader, b.BaseWriter)
 }
 
-//SetTimeout will record the timout
+// SetTimeout will record the timout
 func (b *BaseReadWriteCloser) SetTimeout(timeout time.Duration) {
 	b.BaseReader.SetReadTimeout(timeout)
 	b.BaseWriter.SetWriteTimeout(timeout)
@@ -166,25 +166,25 @@ func (b *BaseReadWriteCloser) SetByteOrder(order binary.ByteOrder) {
 	b.BaseWriter.SetWriteByteOrder(order)
 }
 
-//SetLengthFieldMagic will set the LengthFieldMagic for reader/writer
+// SetLengthFieldMagic will set the LengthFieldMagic for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldMagic(value int) {
 	b.BaseReader.SetReadLengthFieldMagic(value)
 	b.BaseWriter.SetWriteLengthFieldMagic(value)
 }
 
-//SetLengthFieldOffset will set the LengthFieldOffset for reader/writer
+// SetLengthFieldOffset will set the LengthFieldOffset for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldOffset(value int) {
 	b.BaseReader.SetReadLengthFieldOffset(value)
 	b.BaseWriter.SetWriteLengthFieldOffset(value)
 }
 
-//SetLengthFieldLength will set the LengthFieldLength for reader/writer
+// SetLengthFieldLength will set the LengthFieldLength for reader/writer
 func (b *BaseReadWriteCloser) SetLengthFieldLength(value int) {
 	b.BaseReader.SetReadLengthFieldLength(value)
 	b.BaseWriter.SetWriteLengthFieldLength(value)
 }
 
-//SetLengthAdjustment will set the LengthAdjustment for reader/writer
+// SetLengthAdjustment will set the LengthAdjustment for reader/writer
 func (b *BaseReadWriteCloser) SetLengthAdjustment(value int) {
 	b.BaseReader.SetReadLengthAdjustment(value)
 	b.BaseWriter.SetWriteLengthAdjustment(value)
@@ -195,7 +195,7 @@ func (b *BaseReadWriteCloser) SetDataOffset(value int) {
 	b.BaseWriter.SetWriteDataOffset(value)
 }
 
-//NewReadWriter will return new ReadWriteCloser
+// NewReadWriter will return new ReadWriteCloser
 func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame *BaseReadWriteCloser) {
 	if bufferSize < 1 {
 		panic("buffer size is < 1")
@@ -209,7 +209,7 @@ func NewReadWriter(raw io.ReadWriter, bufferSize int) (frame *BaseReadWriteClose
 	return
 }
 
-//NewReadWriteCloser will return new ReadWriteCloser
+// NewReadWriteCloser will return new ReadWriteCloser
 func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame *BaseReadWriteCloser) {
 	if bufferSize < 1 {
 		panic("buffer size is < 1")
@@ -222,7 +222,7 @@ func NewReadWriteCloser(raw io.ReadWriteCloser, bufferSize int) (frame *BaseRead
 	return
 }
 
-//BaseReader imple read raw connection by frame mode
+// BaseReader imple read raw connection by frame mode
 type BaseReader struct {
 	ByteOrder         binary.ByteOrder
 	LengthFieldMagic  int
@@ -238,7 +238,7 @@ type BaseReader struct {
 	locker            sync.RWMutex
 }
 
-//NewBaseReader will create new Reader by raw reader and buffer size
+// NewBaseReader will create new Reader by raw reader and buffer size
 func NewBaseReader(raw io.Reader, bufferSize int) (reader *BaseReader) {
 	if bufferSize < 1 {
 		panic("buffer size is < 1")
@@ -309,7 +309,7 @@ func (b *BaseReader) SetReadDataOffset(value int) {
 	b.DataOffset = value
 }
 
-//readMore will read more data to buffer
+// readMore will read more data to buffer
 func (b *BaseReader) readMore() (err error) {
 	if r, ok := b.Raw.(readDeadlinable); b.Timeout > 0 && ok {
 		r.SetReadDeadline(time.Now().Add(b.Timeout))
@@ -338,8 +338,8 @@ func (b *BaseReader) readFrameLength() (length uint32) {
 	return
 }
 
-//ReadFrame will read raw reader as frame mode. it will return length(4bytes)+data.
-//the return []byte is the buffer slice, must be copy to new []byte, it will be change after next read
+// ReadFrame will read raw reader as frame mode. it will return length(4bytes)+data.
+// the return []byte is the buffer slice, must be copy to new []byte, it will be change after next read
 func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 	b.locker.Lock()
 	defer b.locker.Unlock()
@@ -384,14 +384,14 @@ func (b *BaseReader) ReadFrame() (cmd []byte, err error) {
 	return
 }
 
-//Read implment the io.Reader
-//it will read the one frame and copy the data to p
+// Read implment the io.Reader
+// it will read the one frame and copy the data to p
 func (b *BaseReader) Read(p []byte) (n int, err error) {
 	n, err = Read(b, p)
 	return
 }
 
-//SetReadTimeout will record the timout
+// SetReadTimeout will record the timout
 func (b *BaseReader) SetReadTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }
@@ -431,7 +431,7 @@ func WriteTo(reader Reader, writer io.Writer) (w int64, err error) {
 	return
 }
 
-//BaseWriter implment the frame Writer
+// BaseWriter implment the frame Writer
 type BaseWriter struct {
 	ByteOrder         binary.ByteOrder
 	LengthFieldMagic  int
@@ -445,7 +445,7 @@ type BaseWriter struct {
 	locker            sync.RWMutex
 }
 
-//NewBaseWriter will return new BaseWriter
+// NewBaseWriter will return new BaseWriter
 func NewBaseWriter(raw io.Writer) (writer *BaseWriter) {
 	writer = &BaseWriter{
 		ByteOrder:         binary.BigEndian,
@@ -512,8 +512,8 @@ func (b *BaseWriter) SetWriteDataOffset(value int) {
 	b.DataOffset = value
 }
 
-//WriteFrame will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
-//genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
+// WriteFrame will write data by frame mode, it must have 4 bytes at the begin of buffer to store the frame length.
+// genral buffer is (4 bytes)+(user data), 4 bytes will be set the in WriteCmd
 func (b *BaseWriter) WriteFrame(buffer []byte) (w int, err error) {
 	b.locker.Lock()
 	defer b.locker.Unlock()
@@ -537,14 +537,14 @@ func (b *BaseWriter) WriteFrame(buffer []byte) (w int, err error) {
 	return
 }
 
-//Write implment the io.Writer, the p is user data buffer.
-//it will make a new []byte with len(p)+4, the copy data to buffer
+// Write implment the io.Writer, the p is user data buffer.
+// it will make a new []byte with len(p)+4, the copy data to buffer
 func (b *BaseWriter) Write(p []byte) (n int, err error) {
 	n, err = Write(b, p)
 	return
 }
 
-//SetWriteTimeout will record the timout
+// SetWriteTimeout will record the timout
 func (b *BaseWriter) SetWriteTimeout(timeout time.Duration) {
 	b.Timeout = timeout
 }

@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-//PipedChan provoider Write buffer to Read implement by chan
+// PipedChan provoider Write buffer to Read implement by chan
 type PipedChan struct {
 	closed uint32
 	having []byte
 	locker *sync.Cond
 }
 
-//NewPipedChan will return new PipedChan
+// NewPipedChan will return new PipedChan
 func NewPipedChan() (piped *PipedChan) {
 	piped = &PipedChan{
 		locker: sync.NewCond(&sync.Mutex{}),
@@ -63,7 +63,7 @@ func (p *PipedChan) Write(b []byte) (n int, err error) {
 	return
 }
 
-//Close will close piped channel
+// Close will close piped channel
 func (p *PipedChan) Close() (err error) {
 	p.locker.L.Lock()
 	defer p.locker.L.Unlock()
@@ -76,7 +76,7 @@ func (p *PipedChan) Close() (err error) {
 	return
 }
 
-//PipeReadWriteCloser is pipe connection
+// PipeReadWriteCloser is pipe connection
 type PipeReadWriteCloser struct {
 	Alias  string
 	reader *PipedChan
@@ -84,7 +84,7 @@ type PipeReadWriteCloser struct {
 	side   *PipeReadWriteCloser
 }
 
-//Pipe will return new pipe connection.
+// Pipe will return new pipe connection.
 func Pipe() (a, b *PipeReadWriteCloser, err error) {
 	piperA := NewPipedChan()
 	piperB := NewPipedChan()
@@ -114,7 +114,7 @@ func (p *PipeReadWriteCloser) Write(b []byte) (n int, err error) {
 	return
 }
 
-//Close will close reader/writer
+// Close will close reader/writer
 func (p *PipeReadWriteCloser) Close() (err error) {
 	p.reader.Close()
 	p.writer.Close()
@@ -127,12 +127,12 @@ func (p *PipeReadWriteCloser) String() string {
 	return p.Alias
 }
 
-//PipedConn is an implementation of the net.Conn interface for piped two connection.
+// PipedConn is an implementation of the net.Conn interface for piped two connection.
 type PipedConn struct {
 	*PipeReadWriteCloser
 }
 
-//CreatePipedConn will return two piped connection.
+// CreatePipedConn will return two piped connection.
 func CreatePipedConn() (a, b *PipedConn, err error) {
 	basea, baseb, err := Pipe()
 	if err == nil {
@@ -142,32 +142,32 @@ func CreatePipedConn() (a, b *PipedConn, err error) {
 	return
 }
 
-//LocalAddr return self
+// LocalAddr return self
 func (p *PipedConn) LocalAddr() net.Addr {
 	return p
 }
 
-//RemoteAddr return self
+// RemoteAddr return self
 func (p *PipedConn) RemoteAddr() net.Addr {
 	return p
 }
 
-//SetDeadline is empty
+// SetDeadline is empty
 func (p *PipedConn) SetDeadline(t time.Time) error {
 	return nil
 }
 
-//SetReadDeadline is empty
+// SetReadDeadline is empty
 func (p *PipedConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-//SetWriteDeadline is empty
+// SetWriteDeadline is empty
 func (p *PipedConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-//Network return "piped"
+// Network return "piped"
 func (p *PipedConn) Network() string {
 	return "piped"
 }
@@ -215,7 +215,7 @@ func (p *PipedListener) Addr() net.Addr {
 	return p
 }
 
-//Network return "piped"
+// Network return "piped"
 func (p *PipedListener) Network() string {
 	return "piped"
 }

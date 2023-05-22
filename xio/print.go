@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-//PrintConn is net.Conn to print the transfter data
+// PrintConn is net.Conn to print the transfter data
 type PrintConn struct {
 	Base io.ReadWriteCloser
 	Name string
 	Mode int
 }
 
-//NewPrintConn will create new PrintConn
+// NewPrintConn will create new PrintConn
 func NewPrintConn(name string, base io.ReadWriteCloser) (conn *PrintConn) {
 	conn = &PrintConn{Base: base, Name: name}
 	return
@@ -90,7 +90,7 @@ func (p *PrintConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-//Network impl net.Addr
+// Network impl net.Addr
 func (p *PrintConn) Network() string {
 	return "print"
 }
@@ -99,7 +99,7 @@ func (p *PrintConn) String() string {
 	return fmt.Sprintf("%v", p.Name)
 }
 
-//Close will close base
+// Close will close base
 func (p *PrintConn) Close() (err error) {
 	err = p.Base.Close()
 	fmt.Printf("%v Close %v\n", p.Name, err)
