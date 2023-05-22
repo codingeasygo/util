@@ -18,13 +18,13 @@ func TestMultiWriter(t *testing.T) {
 		return
 	}
 	raw.n = 1
-	n, err = fmt.Fprintf(writer, "abc")
+	_, err = fmt.Fprintf(writer, "abc")
 	if err == nil {
 		t.Error(err)
 		return
 	}
 	raw.n = 2
-	n, err = fmt.Fprintf(writer, "abc")
+	_, err = fmt.Fprintf(writer, "abc")
 	if err == nil {
 		t.Error(err)
 		return

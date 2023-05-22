@@ -14,11 +14,11 @@ func TestByteDistributeWriteCloser(t *testing.T) {
 	dist.Add('b', NewCombinedReadWriteCloser(nil, buffer2, nil))
 	fmt.Fprintf(dist, "a123")
 	fmt.Fprintf(dist, "b000")
-	if string(buffer1.Bytes()) != "a123" {
+	if buffer1.String() != "a123" {
 		t.Error("error")
 		return
 	}
-	if string(buffer2.Bytes()) != "b000" {
+	if buffer2.String() != "b000" {
 		t.Error("error")
 		return
 	}

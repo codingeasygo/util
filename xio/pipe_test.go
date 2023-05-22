@@ -26,13 +26,13 @@ func TestPipe(t *testing.T) {
 	var n int
 	buf := make([]byte, 1024)
 	n, err = a.Read(buf)
-	if err != nil || n != 3 || "abc" != string(buf[0:3]) {
+	if err != nil || n != 3 || string(buf[0:3]) != "abc" {
 		t.Error(err)
 		return
 	}
 	fmt.Printf("--->read0\n")
 	n, err = a.Read(buf)
-	if err != nil || n != 3 || "123" != string(buf[0:3]) {
+	if err != nil || n != 3 || string(buf[0:3]) != "123" {
 		t.Error(err)
 		return
 	}

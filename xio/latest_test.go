@@ -10,13 +10,13 @@ func TestLatestBuffer(t *testing.T) {
 	//multi write
 	fmt.Fprintf(buffer, "xa")
 	fmt.Fprintf(buffer, "bc")
-	if "abc" != string(buffer.Bytes()) {
+	if buffer.String() != "abc" {
 		t.Error("error")
 		return
 	}
 	//large write
 	fmt.Fprintf(buffer, "xabc")
-	if "abc" != string(buffer.Bytes()) {
+	if buffer.String() != "abc" {
 		t.Error("error")
 		return
 	}

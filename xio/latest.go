@@ -1,12 +1,12 @@
 package xio
 
-//LatestBuffer is membory buffer to remain latest buffer size bytes
+// LatestBuffer is membory buffer to remain latest buffer size bytes
 type LatestBuffer struct {
 	buffer []byte
 	length int
 }
 
-//NewLatestBuffer will create remain bufffer
+// NewLatestBuffer will create remain bufffer
 func NewLatestBuffer(bufferSize int) (buffer *LatestBuffer) {
 	buffer = &LatestBuffer{
 		buffer: make([]byte, bufferSize),
@@ -15,7 +15,7 @@ func NewLatestBuffer(bufferSize int) (buffer *LatestBuffer) {
 	return
 }
 
-//Bytes will get the having data
+// Bytes will get the having data
 func (r *LatestBuffer) Bytes() []byte {
 	return r.buffer[0:r.length]
 }
@@ -34,4 +34,8 @@ func (r *LatestBuffer) Write(p []byte) (n int, err error) {
 	n = copy(r.buffer[offset:], p)
 	r.length = offset + n
 	return
+}
+
+func (r *LatestBuffer) String() string {
+	return string(r.buffer[0:r.length])
 }

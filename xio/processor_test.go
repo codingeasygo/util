@@ -121,7 +121,7 @@ func TestByteDistribute(t *testing.T) {
 	conna, connb, _ = CreatePipedConn()
 	accept <- connb
 	fmt.Fprintf(conna, "B123")
-	readed, err = conna.Read(buf)
+	_, err = conna.Read(buf)
 	if err == nil {
 		t.Error(err)
 		return

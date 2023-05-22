@@ -63,7 +63,7 @@ func TestCopyPacketConnToWriter(t *testing.T) {
 		return
 	}
 	time.Sleep(100 * time.Millisecond)
-	if string(buffer.Bytes()) != "123" {
+	if buffer.String() != "123" {
 		t.Error("error")
 		return
 	}
