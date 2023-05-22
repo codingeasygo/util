@@ -1,17 +1,17 @@
-package debug
+package xdebug
 
 import (
 	"io"
 	"net"
 )
 
-//EchoServer
+// EchoServer
 type EchoServer struct {
 	net.Listener
 	Address string
 }
 
-//NewEchoServer will return new EchoServer
+// NewEchoServer will return new EchoServer
 func NewEchoServer(network, address string) (server *EchoServer, err error) {
 	server = &EchoServer{}
 	server.Listener, err = net.Listen(network, address)

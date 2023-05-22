@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/codingeasygo/util/debug"
+	"github.com/codingeasygo/util/xdebug"
 )
 
 var Shared = NewRunner()
@@ -63,7 +63,7 @@ func (r *Runner) run() {
 			defer func() {
 				err := recover()
 				if err != nil {
-					fmt.Printf("Runner call panic with %v, callstack is \n%v", err, debug.CallStatck())
+					fmt.Printf("Runner call panic with %v, callstack is \n%v", err, xdebug.CallStatck())
 				}
 			}()
 			t_.Caller(t_.State)
