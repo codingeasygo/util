@@ -15,19 +15,14 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-//Dialer is interface for dial raw connect by string
-type Dialer interface {
-	Dial(remote string) (raw io.ReadWriteCloser, err error)
-}
-
-//WebsocketDialer is an implementation of Dialer by websocket
+// WebsocketDialer is an implementation of Dialer by websocket
 type WebsocketDialer struct {
 	Dialer     RawDialer
 	HeaderGen  func(remote string) (header http.Header)
 	SkipVerify bool
 }
 
-//NewWebsocketDialer will create new WebsocketDialer
+// NewWebsocketDialer will create new WebsocketDialer
 func NewWebsocketDialer() (dialer *WebsocketDialer) {
 	dialer = &WebsocketDialer{
 		Dialer: &net.Dialer{},
@@ -35,7 +30,7 @@ func NewWebsocketDialer() (dialer *WebsocketDialer) {
 	return
 }
 
-//Dial dial to remote by websocket
+// Dial dial to remote by websocket
 func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error) {
 	targetURL, err := url.Parse(remote)
 	if err != nil {
