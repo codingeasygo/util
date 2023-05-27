@@ -63,7 +63,7 @@ func (r *Runner) run() {
 			defer func() {
 				err := recover()
 				if err != nil {
-					fmt.Printf("Runner call panic with %v, callstack is \n%v", err, xdebug.CallStatck())
+					fmt.Printf("Runner call panic with %v, callstack is \n%v", err, xdebug.CallStack())
 				}
 			}()
 			t_.Caller(t_.State)
