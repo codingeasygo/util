@@ -9,7 +9,7 @@ import (
 	"github.com/codingeasygo/util/xio"
 )
 
-//Server provider http/socks combined server
+// Server provider http/socks combined server
 type Server struct {
 	*xio.ByteDistributeProcessor
 	Dialer xio.PiperDialer
@@ -18,7 +18,7 @@ type Server struct {
 	waiter sync.WaitGroup
 }
 
-//NewServer will return new Server
+// NewServer will return new Server
 func NewServer(dialer xio.PiperDialer) (server *Server) {
 	server = &Server{
 		ByteDistributeProcessor: xio.NewByteDistributeProcessor(),
@@ -34,13 +34,13 @@ func NewServer(dialer xio.PiperDialer) (server *Server) {
 	return
 }
 
-//DialPiper is xio.Piper implement
+// DialPiper is xio.Piper implement
 func (s *Server) DialPiper(uri string, bufferSize int) (raw xio.Piper, err error) {
 	raw, err = s.Dialer.DialPiper(uri, bufferSize)
 	return
 }
 
-//Start wiil listen tcp on addr and run process accept to ByteDistributeProcessor
+// Start wiil listen tcp on addr and run process accept to ByteDistributeProcessor
 func (s *Server) Start(addr string) (listener net.Listener, err error) {
 	listener, err = net.Listen("tcp", addr)
 	if err != nil {
@@ -54,13 +54,7 @@ func (s *Server) Start(addr string) (listener net.Listener, err error) {
 	return
 }
 
-//Wait will wait all runner
+// Wait will wait all runner
 func (s *Server) Wait() {
 	s.waiter.Wait()
-}
-
-//SetLogLevel is set log level to l
-func SetLogLevel(l int) {
-	socks.SetLogLevel(l)
-	http.SetLogLevel(l)
 }

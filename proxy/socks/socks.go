@@ -11,12 +11,12 @@ import (
 	"github.com/codingeasygo/util/xio"
 )
 
-//Codable is interface for get current code
+// Codable is interface for get current code
 type Codable interface {
 	Code() byte
 }
 
-//Server is an implementation of socks5 proxy
+// Server is an implementation of socks5 proxy
 type Server struct {
 	BufferSize int
 	listners   map[net.Listener]string
@@ -24,7 +24,7 @@ type Server struct {
 	Dialer     xio.PiperDialer
 }
 
-//NewServer will return new Server
+// NewServer will return new Server
 func NewServer() (socks *Server) {
 	socks = &Server{
 		BufferSize: 32 * 1024,
@@ -46,7 +46,7 @@ func (s *Server) loopAccept(l net.Listener) {
 	s.waiter.Done()
 }
 
-//Run will listen tcp on address and sync accept to ProcConn
+// Run will listen tcp on address and sync accept to ProcConn
 func (s *Server) Run(addr string) (err error) {
 	listener, err := net.Listen("tcp", addr)
 	if err == nil {
@@ -58,7 +58,7 @@ func (s *Server) Run(addr string) (err error) {
 	return
 }
 
-//Start proxy listener
+// Start proxy listener
 func (s *Server) Start(addr string) (listener net.Listener, err error) {
 	listener, err = net.Listen("tcp", addr)
 	if err == nil {
@@ -70,7 +70,7 @@ func (s *Server) Start(addr string) (listener net.Listener, err error) {
 	return
 }
 
-//Stop will stop listener and wait loop stop
+// Stop will stop listener and wait loop stop
 func (s *Server) Stop() (err error) {
 	for listener, addr := range s.listners {
 		err = listener.Close()
@@ -81,7 +81,7 @@ func (s *Server) Stop() (err error) {
 	return
 }
 
-//ProcConn will process connecton as socket protocol
+// ProcConn will process connecton as socket protocol
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	// DebugLog("Server proxy socks connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
@@ -90,7 +90,7 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 			conn.Close()
 		}
 	}()
-	buf := make([]byte, 1024*64)
+	buf := make([]byte, 1024*4)
 	//
 	//Procedure method
 	err = xio.FullBuffer(conn, buf, 2, nil)
@@ -169,13 +169,13 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	return
 }
 
-//Dial will dial connection by proxy server
+// Dial will dial connection by proxy server
 func Dial(proxy, uri string) (conn net.Conn, err error) {
 	conn, err = DialType(proxy, 0x03, uri)
 	return
 }
 
-//DialType wil dial connection by proxy server and uri type
+// DialType wil dial connection by proxy server and uri type
 func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error) {
 	proxy = strings.TrimPrefix(proxy, "socks5://")
 	conn, err = net.Dial("tcp", proxy)
