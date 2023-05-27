@@ -17,15 +17,16 @@ import (
 
 // WebsocketDialer is an implementation of Dialer by websocket
 type WebsocketDialer struct {
-	Dialer     RawDialer
-	HeaderGen  func(remote string) (header http.Header)
-	SkipVerify bool
+	Dialer    RawDialer
+	HeaderGen func(remote string) (header http.Header)
+	TlsConfig *tls.Config
 }
 
 // NewWebsocketDialer will create new WebsocketDialer
 func NewWebsocketDialer() (dialer *WebsocketDialer) {
 	dialer = &WebsocketDialer{
-		Dialer: &net.Dialer{},
+		Dialer:    &net.Dialer{},
+		TlsConfig: &tls.Config{},
 	}
 	return
 }
@@ -41,7 +42,7 @@ func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error
 		username = targetURL.User.Username()
 		password, _ = targetURL.User.Password()
 	}
-	skipVerify := targetURL.Query().Get("skip_verify") == "1" || w.SkipVerify
+	skipVerify := targetURL.Query().Get("skip_verify") == "1" || w.TlsConfig.InsecureSkipVerify
 	timeout, _ := strconv.ParseUint(targetURL.Query().Get("timeout"), 10, 32)
 	if timeout < 1 {
 		timeout = 5
@@ -65,7 +66,10 @@ func (w *WebsocketDialer) Dial(remote string) (raw io.ReadWriteCloser, err error
 			colonPos = len(config.Location.Host)
 		}
 		hostname := config.Location.Host[:colonPos]
-		config.TlsConfig = &tls.Config{ServerName: hostname}
+		config.TlsConfig = w.TlsConfig
+		if len(config.TlsConfig.ServerName) < 1 {
+			config.TlsConfig.ServerName = hostname
+		}
 		config.TlsConfig.InsecureSkipVerify = skipVerify
 		raw, err = w.dial(config, time.Duration(timeout)*time.Second)
 	}
