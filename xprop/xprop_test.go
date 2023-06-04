@@ -330,8 +330,8 @@ func TestRange(t *testing.T) {
 
 func TestPrintMask(t *testing.T) {
 	config := NewConfig()
-	config.SetValue("loc/DB_DB_URL", "cny:sco@localhost")
-	config.SetValue("xxx/DB_DB_URL", "cny:sco@localhost")
+	config.SetValue("loc/DB_DB_URL", "test:123@localhost")
+	config.SetValue("xxx/DB_DB_URL", "test:123@localhost")
 	config.Masks = map[string]string{
 		".*_DB_.*": ".*:[^@]*",
 	}
