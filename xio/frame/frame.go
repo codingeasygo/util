@@ -721,3 +721,155 @@ func (r *RawWrapWriter) ReadFrom(reader io.Reader) (w int64, err error) {
 func (r *RawWrapWriter) String() string {
 	return xio.RemoteAddr(r.Raw)
 }
+
+type WrapWriteCloser struct {
+	Header
+	io.Writer
+	io.Closer
+	buffer []byte
+	length uint32
+}
+
+func NewWrapWriteCloser(next io.WriteCloser, bufferSize int) (writer *WrapWriteCloser) {
+	writer = &WrapWriteCloser{
+		Header: NewDefaultHeader(),
+		Writer: next,
+		Closer: next,
+		buffer: make([]byte, bufferSize),
+	}
+	return
+}
+
+func NewWrapWriter(next io.Writer, bufferSize int) (writer *WrapWriteCloser) {
+	writer = &WrapWriteCloser{
+		Header: NewDefaultHeader(),
+		Writer: next,
+		buffer: make([]byte, bufferSize),
+	}
+	if closer, ok := next.(io.Closer); ok {
+		writer.Closer = closer
+	}
+	return
+}
+
+func (w *WrapWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, err error) {
+	bufSize := uint32(len(buffer))
+	if bufSize < header {
+		return
+	}
+	frameLength := w.ReadHead(buffer)
+	if frameLength > uint32(len(w.buffer)) {
+		err = ErrFrameTooLarge
+		return
+	}
+	if bufSize >= frameLength {
+		size = frameLength
+	}
+	return
+}
+
+func (w *WrapWriteCloser) Write(p []byte) (writed int, err error) {
+	recvSize := uint32(len(p))
+	recvBuf := p
+	header := uint32(w.GetLengthFieldLength())
+	offset := uint32(w.GetDataOffset())
+	frameSize := uint32(0)
+	n := 0
+	for {
+		if w.length < 1 {
+			frameSize, err = w.readFrame(header, recvBuf)
+			if err != nil {
+				break
+			}
+			if frameSize < 1 { //need more data
+				n = copy(w.buffer, recvBuf)
+				writed += n
+				w.length += uint32(n)
+				break
+			}
+			n, err = w.Writer.Write(recvBuf[offset:frameSize])
+			if err != nil {
+				break
+			}
+			writed += n
+			recvBuf = recvBuf[frameSize:]
+			recvSize -= frameSize
+			if recvSize < 1 {
+				break
+			}
+		} else {
+			if len(recvBuf) > 0 {
+				n = copy(w.buffer[w.length:], recvBuf)
+				writed += n
+				recvBuf = recvBuf[n:]
+				recvSize -= uint32(n)
+				w.length += uint32(n)
+			}
+			frameSize, err = w.readFrame(header, w.buffer[:w.length])
+			if err != nil {
+				break
+			}
+			if frameSize < 1 { //need more data
+				break
+			}
+			n, err = w.Writer.Write(w.buffer[offset:frameSize])
+			if err != nil {
+				break
+			}
+			writed += n
+			copy(w.buffer[0:], w.buffer[frameSize:w.length])
+			w.length -= frameSize
+		}
+	}
+	return
+}
+
+func (w *WrapWriteCloser) Close() (err error) {
+	if w.Closer != nil {
+		err = w.Closer.Close()
+	}
+	return
+}
+
+type WrapReadCloser struct {
+	Header
+	io.Reader
+	io.Closer
+}
+
+func NewWrapReadCloser(from io.ReadCloser) (reader *WrapReadCloser) {
+	reader = &WrapReadCloser{
+		Header: NewDefaultHeader(),
+		Reader: from,
+		Closer: from,
+	}
+	return
+}
+
+func NewWrapReader(from io.Reader) (reader *WrapReadCloser) {
+	reader = &WrapReadCloser{
+		Header: NewDefaultHeader(),
+		Reader: from,
+	}
+	if closer, ok := from.(io.Closer); ok {
+		reader.Closer = closer
+	}
+	return
+}
+
+func (w *WrapReadCloser) Read(p []byte) (n int, err error) {
+	offset := w.GetDataOffset()
+	n, err = w.Reader.Read(p[offset:])
+	if err == nil {
+		n += offset
+		w.WriteHead(p[:n])
+	}
+	return
+}
+
+func (w *WrapReadCloser) Close() (err error) {
+	if w.Closer != nil {
+		err = w.Closer.Close()
+	}
+	return
+}

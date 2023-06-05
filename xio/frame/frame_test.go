@@ -525,6 +525,144 @@ func TestRaw(t *testing.T) {
 	}
 }
 
+func TestWrap(t *testing.T) {
+	tester := xdebug.CaseTester{
+		0: 1,
+		9: 1,
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		writer := NewBaseWriter(wrapper)
+		n, err := writer.Write([]byte("abc"))
+		if err != nil || wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", err, n)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0})
+		wrapper.Write([]byte{0, 0, 7})
+		wrapper.Write([]byte{97, 98, 99})
+		if wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0})
+		wrapper.Write([]byte{0, 0})
+		wrapper.Write([]byte{7})
+		wrapper.Write([]byte{97, 98, 99})
+		if wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7})
+		wrapper.Write([]byte{97, 98, 99})
+		if wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7, 97})
+		wrapper.Write([]byte{98, 99})
+		if wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7, 97})
+		wrapper.Write([]byte{98})
+		wrapper.Write([]byte{99})
+		if wrapper.length > 0 || buffer.String() != "abc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99, 0, 0})
+		wrapper.Write([]byte{0, 7, 97, 98, 99})
+		if wrapper.length > 0 || buffer.String() != "abcabc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99, 0, 0, 0, 7, 97, 98, 99})
+		if wrapper.length > 0 || buffer.String() != "abcabc" {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := make([]byte, 1024)
+		data := bytes.NewBuffer([]byte("abc"))
+		wrapper := NewWrapReader(data)
+		reader := NewBaseReader(wrapper, 1024)
+		n, err := reader.Read(buffer)
+		if err != nil || string(buffer[0:n]) != "abc" {
+			t.Errorf("%v,%v", err, n)
+			return
+		}
+		wrapper.Close()
+		NewWrapReadCloser(NewRawReadWriteCloser(nil, nil, 1024))
+		wrapper = NewWrapReader(NewRawReadWriteCloser(nil, nil, 1024))
+		wrapper.Close()
+	}
+	//
+	//test error
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		_, err := wrapper.Write([]byte{255, 255, 255, 7, 97, 98, 99})
+		if err != ErrFrameTooLarge {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+	if tester.Run() {
+		buffer := bytes.NewBuffer(nil)
+		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper.Write([]byte{255, 255})
+		_, err := wrapper.Write([]byte{255, 7, 97, 98, 99})
+		if err != ErrFrameTooLarge {
+			t.Errorf("%v,%v", wrapper.length, buffer)
+			return
+		}
+	}
+}
+
+type errrWriter struct {
+}
+
+func (e *errrWriter) Write(p []byte) (n int, err error) {
+	err = fmt.Errorf("error")
+	return
+}
+
+func (e *errrWriter) Close() (err error) {
+	return
+}
+
 func TestError(t *testing.T) {
 	func() {
 		defer func() {
@@ -585,5 +723,13 @@ func TestError(t *testing.T) {
 			recover()
 		}()
 		NewRawReadWriteCloser(nil, nil, -1)
+	}()
+	func() {
+		NewWrapWriter(&errrWriter{}, 1024)
+		wrapper := NewWrapWriteCloser(&errrWriter{}, 1024)
+		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99})
+		wrapper.Write([]byte{0, 0, 0, 7})
+		wrapper.Write([]byte{97, 98, 99})
+		wrapper.Close()
 	}()
 }
