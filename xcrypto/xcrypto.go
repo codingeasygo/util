@@ -48,11 +48,11 @@ func generateRSA(isCA bool, template, parent *x509.Certificate, rootKey *rsa.Pri
 	return
 }
 
-func GenerateRootCA(name string, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
+func GenerateRootCA(org []string, name string, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
 	template := &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{"Coding Easy Go"},
+			Organization: org,
 			CommonName:   name,
 		},
 		NotBefore:             time.Now(),
@@ -72,23 +72,17 @@ func GenerateRootCA(name string, bits int) (cert *x509.Certificate, privKey *rsa
 // 	return
 // }
 
-func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool, commonName string, dnsNames []string, ipAddresses []net.IP, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
-	keyUsage := []x509.ExtKeyUsage{}
-	if client {
-		keyUsage = append(keyUsage, x509.ExtKeyUsageClientAuth)
-	} else {
-		keyUsage = append(keyUsage, x509.ExtKeyUsageServerAuth)
-	}
+func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, ext []x509.ExtKeyUsage, org []string, commonName string, dnsNames []string, ipAddresses []net.IP, bits int) (cert *x509.Certificate, privKey *rsa.PrivateKey, certPEM, privPEM []byte, err error) {
 	template := &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			Organization: []string{"Coding Easy Go"},
+			Organization: org,
 			CommonName:   commonName,
 		},
 		NotBefore:      time.Now(),
 		NotAfter:       time.Now().Add(time.Hour * 24 * 365 * 10),
 		KeyUsage:       x509.KeyUsageCRLSign,
-		ExtKeyUsage:    keyUsage,
+		ExtKeyUsage:    ext,
 		IsCA:           false,
 		MaxPathLenZero: true,
 		DNSNames:       dnsNames,
@@ -98,8 +92,8 @@ func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool
 	return
 }
 
-//GenerateWeb will generate web cert
-func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool, domain, ip string, bits int) (cert tls.Certificate, certPEM, privPEM []byte, err error) {
+// GenerateWeb will generate web cert
+func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool, org, domain, ip string, bits int) (cert tls.Certificate, certPEM, privPEM []byte, err error) {
 	domains := strings.Split(domain, ",")
 	ipAddress := []net.IP{}
 	if len(ip) > 0 {
@@ -108,28 +102,34 @@ func GenerateWeb(parent *x509.Certificate, rootKey *rsa.PrivateKey, client bool,
 			ipAddress = append(ipAddress, net.ParseIP(v))
 		}
 	}
-	_, _, certPEM, privPEM, err = GenerateCert(parent, rootKey, client, domain, domains, ipAddress, bits)
+	keyUsage := []x509.ExtKeyUsage{}
+	if client {
+		keyUsage = append(keyUsage, x509.ExtKeyUsageClientAuth)
+	} else {
+		keyUsage = append(keyUsage, x509.ExtKeyUsageServerAuth)
+	}
+	_, _, certPEM, privPEM, err = GenerateCert(parent, rootKey, keyUsage, []string{org}, domain, domains, ipAddress, bits)
 	if err == nil {
 		cert, err = tls.X509KeyPair(certPEM, privPEM)
 	}
 	return
 }
 
-func GenerateWebServerClient(ca, domain, ip string, bits int) (
+func GenerateWebServerClient(org string, ca, domain, ip string, bits int) (
 	rootCert *x509.Certificate, rootKey *rsa.PrivateKey, rootCertPEM, rootKeyPEM []byte,
 	server tls.Certificate, serverCertPEM, serverKeyPEM []byte,
 	client tls.Certificate, clientCertPEM, clientKeyPEM []byte,
 	err error,
 ) {
-	rootCert, rootKey, rootCertPEM, rootKeyPEM, err = GenerateRootCA(ca, bits)
+	rootCert, rootKey, rootCertPEM, rootKeyPEM, err = GenerateRootCA([]string{org}, ca, bits)
 	if err != nil {
 		return
 	}
-	server, serverCertPEM, serverKeyPEM, err = GenerateWeb(rootCert, rootKey, false, domain, ip, bits)
+	server, serverCertPEM, serverKeyPEM, err = GenerateWeb(rootCert, rootKey, false, org, domain, ip, bits)
 	if err != nil {
 		return
 	}
-	client, clientCertPEM, clientKeyPEM, err = GenerateWeb(rootCert, rootKey, true, domain, ip, bits)
+	client, clientCertPEM, clientKeyPEM, err = GenerateWeb(rootCert, rootKey, true, org, domain, ip, bits)
 	return
 }
 

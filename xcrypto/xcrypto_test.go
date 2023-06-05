@@ -103,17 +103,17 @@ func testWebCert(t *testing.T, caPEM []byte, serverCert, clientCert tls.Certific
 // }
 
 func TestGenerateRoot(t *testing.T) {
-	rootCert, rootPriv, rootCertPEM, _, err := GenerateRootCA("Root CA", 2048)
+	rootCert, rootPriv, rootCertPEM, _, err := GenerateRootCA([]string{"test"}, "Root CA", 2048)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	serverCert, _, _, err := GenerateWeb(rootCert, rootPriv, false, "a.test.com", "127.0.0.1", 2048)
+	serverCert, _, _, err := GenerateWeb(rootCert, rootPriv, false, "test", "a.test.com", "127.0.0.1", 2048)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	clientCert, _, _, err := GenerateWeb(rootCert, rootPriv, true, "a.test.com", "127.0.0.1", 2048)
+	clientCert, _, _, err := GenerateWeb(rootCert, rootPriv, true, "test", "a.test.com", "127.0.0.1", 2048)
 	if err != nil {
 		t.Error(err)
 		return
@@ -136,7 +136,7 @@ func TestGenerateRoot(t *testing.T) {
 // }
 
 func TestGenerateWebServerClient(t *testing.T) {
-	_, _, _, _, _, _, _, _, _, _, err := GenerateWebServerClient("ca", "test", "", 2048)
+	_, _, _, _, _, _, _, _, _, _, err := GenerateWebServerClient("test", "ca", "test", "", 2048)
 	if err != nil {
 		t.Error(err)
 		return

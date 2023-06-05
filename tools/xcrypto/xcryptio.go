@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	_, _, rootCertPEM, rootKeyPEM, _, severCertPEM, serverKeyPEM, _, clientCertPEM, clientKeyPEM, _ := xcrypto.GenerateWebServerClient(os.Args[1], os.Args[2], os.Args[3], 2048)
+	_, _, rootCertPEM, rootKeyPEM, _, severCertPEM, serverKeyPEM, _, clientCertPEM, clientKeyPEM, _ := xcrypto.GenerateWebServerClient(os.Args[1], os.Args[2], os.Args[3], os.Args[4], 2048)
 	ioutil.WriteFile("ca.pem", rootCertPEM, os.ModePerm)
 	ioutil.WriteFile("ca.key", rootKeyPEM, os.ModePerm)
 	ioutil.WriteFile("server.pem", severCertPEM, os.ModePerm)
