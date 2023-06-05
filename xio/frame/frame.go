@@ -138,7 +138,7 @@ func (b *BaseHeader) ReadHead(buffer []byte) (length uint32) {
 	case 1:
 		length = uint32(buffer[uint32(b.LengthFieldOffset)]) - uint32(b.LengthAdjustment)
 	case 2:
-		length = uint32(b.ByteOrder.Uint16(buffer[+uint32(b.LengthFieldOffset):])) - uint32(b.LengthAdjustment)
+		length = uint32(b.ByteOrder.Uint16(buffer[uint32(b.LengthFieldOffset):])) - uint32(b.LengthAdjustment)
 	case 4:
 		length = uint32(b.ByteOrder.Uint32(buffer[uint32(b.LengthFieldOffset):])) - uint32(b.LengthAdjustment)
 	default:
@@ -749,6 +749,34 @@ func NewPassReadWriteCloser(header Header, raw io.ReadWriteCloser, bufferSize in
 	return
 }
 
+func NewPassReadWriter(header Header, raw io.ReadWriter, bufferSize int) (pass *PassReadWriteCloser) {
+	if bufferSize < 1 {
+		panic("buffer size is < 1")
+	}
+	if header == nil {
+		header = NewDefaultHeader()
+	} else {
+		header = CloneHeader(header)
+	}
+	closer, _ := raw.(io.Closer)
+	pass = &PassReadWriteCloser{
+		Closer:          closer,
+		PassReadCloser:  NewPassReader(raw),
+		PassWriteCloser: NewPassWriter(raw, bufferSize),
+	}
+	pass.Header = header
+	pass.PassReadCloser.Header = header
+	pass.PassWriteCloser.Header = header
+	return
+}
+
+func (r *PassReadWriteCloser) Close() (err error) {
+	if r.Closer != nil {
+		err = r.Closer.Close()
+	}
+	return
+}
+
 type PassWriteCloser struct {
 	Header
 	io.Writer
@@ -785,6 +813,10 @@ func (w *PassWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, 
 		return
 	}
 	frameLength := w.ReadHead(buffer)
+	if frameLength < 1 {
+		err = fmt.Errorf("head is zero")
+		return
+	}
 	if frameLength > uint32(len(w.buffer)) {
 		err = ErrFrameTooLarge
 		return
@@ -873,7 +905,7 @@ func NewPassReadCloser(from io.ReadCloser) (reader *PassReadCloser) {
 	return
 }
 
-func NewWrapReader(from io.Reader) (reader *PassReadCloser) {
+func NewPassReader(from io.Reader) (reader *PassReadCloser) {
 	reader = &PassReadCloser{
 		Header: NewDefaultHeader(),
 		Reader: from,

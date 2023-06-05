@@ -616,7 +616,7 @@ func TestPass(t *testing.T) {
 	if tester.Run() {
 		buffer := make([]byte, 1024)
 		data := bytes.NewBuffer([]byte("abc"))
-		wrapper := NewWrapReader(data)
+		wrapper := NewPassReader(data)
 		reader := NewBaseReader(wrapper, 1024)
 		n, err := reader.Read(buffer)
 		if err != nil || string(buffer[0:n]) != "abc" {
@@ -625,7 +625,7 @@ func TestPass(t *testing.T) {
 		}
 		wrapper.Close()
 		NewPassReadCloser(NewRawReadWriteCloser(nil, nil, 1024))
-		wrapper = NewWrapReader(NewRawReadWriteCloser(nil, nil, 1024))
+		wrapper = NewPassReader(NewRawReadWriteCloser(nil, nil, 1024))
 		wrapper.Close()
 	}
 	//
