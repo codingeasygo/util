@@ -525,14 +525,14 @@ func TestRaw(t *testing.T) {
 	}
 }
 
-func TestWrap(t *testing.T) {
+func TestPass(t *testing.T) {
 	tester := xdebug.CaseTester{
 		0: 1,
 		9: 1,
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		writer := NewBaseWriter(wrapper)
 		n, err := writer.Write([]byte("abc"))
 		if err != nil || wrapper.length > 0 || buffer.String() != "abc" {
@@ -542,7 +542,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0})
 		wrapper.Write([]byte{0, 0, 7})
 		wrapper.Write([]byte{97, 98, 99})
@@ -553,7 +553,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0})
 		wrapper.Write([]byte{0, 0})
 		wrapper.Write([]byte{7})
@@ -565,7 +565,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7})
 		wrapper.Write([]byte{97, 98, 99})
 		if wrapper.length > 0 || buffer.String() != "abc" {
@@ -575,7 +575,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7, 97})
 		wrapper.Write([]byte{98, 99})
 		if wrapper.length > 0 || buffer.String() != "abc" {
@@ -585,7 +585,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7, 97})
 		wrapper.Write([]byte{98})
 		wrapper.Write([]byte{99})
@@ -596,7 +596,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99, 0, 0})
 		wrapper.Write([]byte{0, 7, 97, 98, 99})
 		if wrapper.length > 0 || buffer.String() != "abcabc" {
@@ -606,7 +606,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99, 0, 0, 0, 7, 97, 98, 99})
 		if wrapper.length > 0 || buffer.String() != "abcabc" {
 			t.Errorf("%v,%v", wrapper.length, buffer)
@@ -624,7 +624,7 @@ func TestWrap(t *testing.T) {
 			return
 		}
 		wrapper.Close()
-		NewWrapReadCloser(NewRawReadWriteCloser(nil, nil, 1024))
+		NewPassReadCloser(NewRawReadWriteCloser(nil, nil, 1024))
 		wrapper = NewWrapReader(NewRawReadWriteCloser(nil, nil, 1024))
 		wrapper.Close()
 	}
@@ -632,7 +632,7 @@ func TestWrap(t *testing.T) {
 	//test error
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		_, err := wrapper.Write([]byte{255, 255, 255, 7, 97, 98, 99})
 		if err != ErrFrameTooLarge {
 			t.Errorf("%v,%v", wrapper.length, buffer)
@@ -641,7 +641,7 @@ func TestWrap(t *testing.T) {
 	}
 	if tester.Run() {
 		buffer := bytes.NewBuffer(nil)
-		wrapper := NewWrapWriter(buffer, 1024)
+		wrapper := NewPassWriter(buffer, 1024)
 		wrapper.Write([]byte{255, 255})
 		_, err := wrapper.Write([]byte{255, 7, 97, 98, 99})
 		if err != ErrFrameTooLarge {
@@ -725,8 +725,8 @@ func TestError(t *testing.T) {
 		NewRawReadWriteCloser(nil, nil, -1)
 	}()
 	func() {
-		NewWrapWriter(&errrWriter{}, 1024)
-		wrapper := NewWrapWriteCloser(&errrWriter{}, 1024)
+		NewPassWriter(&errrWriter{}, 1024)
+		wrapper := NewPassWriteCloser(&errrWriter{}, 1024)
 		wrapper.Write([]byte{0, 0, 0, 7, 97, 98, 99})
 		wrapper.Write([]byte{0, 0, 0, 7})
 		wrapper.Write([]byte{97, 98, 99})

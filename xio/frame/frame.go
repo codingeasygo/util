@@ -722,7 +722,34 @@ func (r *RawWrapWriter) String() string {
 	return xio.RemoteAddr(r.Raw)
 }
 
-type WrapWriteCloser struct {
+type PassReadWriteCloser struct {
+	io.Closer
+	Header
+	*PassReadCloser
+	*PassWriteCloser
+}
+
+func NewPassReadWriteCloser(header Header, raw io.ReadWriteCloser, bufferSize int) (pass *PassReadWriteCloser) {
+	if bufferSize < 1 {
+		panic("buffer size is < 1")
+	}
+	if header == nil {
+		header = NewDefaultHeader()
+	} else {
+		header = CloneHeader(header)
+	}
+	pass = &PassReadWriteCloser{
+		Closer:          raw,
+		PassReadCloser:  NewPassReadCloser(raw),
+		PassWriteCloser: NewPassWriteCloser(raw, bufferSize),
+	}
+	pass.Header = header
+	pass.PassReadCloser.Header = header
+	pass.PassWriteCloser.Header = header
+	return
+}
+
+type PassWriteCloser struct {
 	Header
 	io.Writer
 	io.Closer
@@ -730,8 +757,8 @@ type WrapWriteCloser struct {
 	length uint32
 }
 
-func NewWrapWriteCloser(next io.WriteCloser, bufferSize int) (writer *WrapWriteCloser) {
-	writer = &WrapWriteCloser{
+func NewPassWriteCloser(next io.WriteCloser, bufferSize int) (writer *PassWriteCloser) {
+	writer = &PassWriteCloser{
 		Header: NewDefaultHeader(),
 		Writer: next,
 		Closer: next,
@@ -740,8 +767,8 @@ func NewWrapWriteCloser(next io.WriteCloser, bufferSize int) (writer *WrapWriteC
 	return
 }
 
-func NewWrapWriter(next io.Writer, bufferSize int) (writer *WrapWriteCloser) {
-	writer = &WrapWriteCloser{
+func NewPassWriter(next io.Writer, bufferSize int) (writer *PassWriteCloser) {
+	writer = &PassWriteCloser{
 		Header: NewDefaultHeader(),
 		Writer: next,
 		buffer: make([]byte, bufferSize),
@@ -752,7 +779,7 @@ func NewWrapWriter(next io.Writer, bufferSize int) (writer *WrapWriteCloser) {
 	return
 }
 
-func (w *WrapWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, err error) {
+func (w *PassWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, err error) {
 	bufSize := uint32(len(buffer))
 	if bufSize < header {
 		return
@@ -768,7 +795,7 @@ func (w *WrapWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, 
 	return
 }
 
-func (w *WrapWriteCloser) Write(p []byte) (writed int, err error) {
+func (w *PassWriteCloser) Write(p []byte) (writed int, err error) {
 	recvSize := uint32(len(p))
 	recvBuf := p
 	header := uint32(w.GetLengthFieldLength())
@@ -824,21 +851,21 @@ func (w *WrapWriteCloser) Write(p []byte) (writed int, err error) {
 	return
 }
 
-func (w *WrapWriteCloser) Close() (err error) {
+func (w *PassWriteCloser) Close() (err error) {
 	if w.Closer != nil {
 		err = w.Closer.Close()
 	}
 	return
 }
 
-type WrapReadCloser struct {
+type PassReadCloser struct {
 	Header
 	io.Reader
 	io.Closer
 }
 
-func NewWrapReadCloser(from io.ReadCloser) (reader *WrapReadCloser) {
-	reader = &WrapReadCloser{
+func NewPassReadCloser(from io.ReadCloser) (reader *PassReadCloser) {
+	reader = &PassReadCloser{
 		Header: NewDefaultHeader(),
 		Reader: from,
 		Closer: from,
@@ -846,8 +873,8 @@ func NewWrapReadCloser(from io.ReadCloser) (reader *WrapReadCloser) {
 	return
 }
 
-func NewWrapReader(from io.Reader) (reader *WrapReadCloser) {
-	reader = &WrapReadCloser{
+func NewWrapReader(from io.Reader) (reader *PassReadCloser) {
+	reader = &PassReadCloser{
 		Header: NewDefaultHeader(),
 		Reader: from,
 	}
@@ -857,19 +884,19 @@ func NewWrapReader(from io.Reader) (reader *WrapReadCloser) {
 	return
 }
 
-func (w *WrapReadCloser) Read(p []byte) (n int, err error) {
-	offset := w.GetDataOffset()
-	n, err = w.Reader.Read(p[offset:])
+func (r *PassReadCloser) Read(p []byte) (n int, err error) {
+	offset := r.GetDataOffset()
+	n, err = r.Reader.Read(p[offset:])
 	if err == nil {
 		n += offset
-		w.WriteHead(p[:n])
+		r.WriteHead(p[:n])
 	}
 	return
 }
 
-func (w *WrapReadCloser) Close() (err error) {
-	if w.Closer != nil {
-		err = w.Closer.Close()
+func (r *PassReadCloser) Close() (err error) {
+	if r.Closer != nil {
+		err = r.Closer.Close()
 	}
 	return
 }
