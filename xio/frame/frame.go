@@ -125,18 +125,12 @@ func (b *BaseHeader) WriteHead(buffer []byte) {
 	default:
 		panic("not supported LengthFieldLength")
 	}
-	if b.LengthFieldMagic > 0 {
-		panic("xx")
-	}
 	for i := 0; i < b.LengthFieldMagic; i++ {
 		buffer[b.LengthFieldOffset+i] = byte(rand.Intn(255))
 	}
 }
 
 func (b *BaseHeader) ReadHead(buffer []byte) (length uint32) {
-	if b.LengthFieldMagic > 0 {
-		panic("xx")
-	}
 	for i := 0; i < b.LengthFieldMagic; i++ {
 		buffer[uint32(b.LengthFieldOffset)+uint32(i)] = 0
 	}
