@@ -28,6 +28,10 @@ type writeDeadlinable interface {
 	SetWriteDeadline(t time.Time) error
 }
 
+func connInfo(v interface{}) string {
+	return xio.LocalAddr(v) + "<=>" + xio.RemoteAddr(v)
+}
+
 type Header interface {
 	GetByteOrder() (order binary.ByteOrder)
 	GetLengthFieldMagic() (value int)
@@ -239,7 +243,11 @@ func (b *BaseReadWriteCloser) Close() (err error) {
 }
 
 func (b *BaseReadWriteCloser) String() string {
-	return fmt.Sprintf("Reader:%v,Writer:%v", b.BaseReader, b.BaseWriter)
+	if interface{}(b.BaseReader.Raw) == interface{}(b.BaseWriter.Raw) {
+		return fmt.Sprintf("%v", b.BaseReader)
+	} else {
+		return fmt.Sprintf("Reader:%v,Writer:%v", b.BaseReader, b.BaseWriter)
+	}
 }
 
 // SetTimeout will record the timout
@@ -397,7 +405,7 @@ func (b *BaseReader) WriteTo(writer io.Writer) (w int64, err error) {
 }
 
 func (b *BaseReader) String() string {
-	return xio.RemoteAddr(b.Raw)
+	return connInfo(b.Raw)
 }
 
 func Read(reader Reader, p []byte) (n int, err error) {
@@ -475,7 +483,7 @@ func (b *BaseWriter) ReadFrom(reader io.Reader) (w int64, err error) {
 }
 
 func (b *BaseWriter) String() string {
-	return xio.RemoteAddr(b.Raw)
+	return connInfo(b.Raw)
 }
 
 func Write(writer Writer, p []byte) (n int, err error) {
@@ -549,7 +557,11 @@ func (r *RawWrapReadWriteCloser) Close() (err error) {
 }
 
 func (r *RawWrapReadWriteCloser) String() string {
-	return fmt.Sprintf("Reader:%v,Writer:%v", r.RawWrapReader, r.RawWrapWriter)
+	if interface{}(r.RawWrapReader.Raw) == interface{}(r.RawWrapWriter.Raw) {
+		return fmt.Sprintf("%v", r.RawWrapReader)
+	} else {
+		return fmt.Sprintf("Reader:%v,Writer:%v", r.RawWrapReader, r.RawWrapWriter)
+	}
 }
 
 // SetTimeout will record the timout
@@ -666,7 +678,7 @@ func (r *RawWrapReader) WriteTo(writer io.Writer) (w int64, err error) {
 }
 
 func (r *RawWrapReader) String() string {
-	return xio.RemoteAddr(r.Raw)
+	return connInfo(r.Raw)
 }
 
 // RawWrapWriter implment the frame Writer
@@ -719,7 +731,7 @@ func (r *RawWrapWriter) ReadFrom(reader io.Reader) (w int64, err error) {
 }
 
 func (r *RawWrapWriter) String() string {
-	return xio.RemoteAddr(r.Raw)
+	return connInfo(r.Raw)
 }
 
 type PassReadWriteCloser struct {
@@ -775,6 +787,14 @@ func (r *PassReadWriteCloser) Close() (err error) {
 		err = r.Closer.Close()
 	}
 	return
+}
+
+func (r *PassReadWriteCloser) String() string {
+	if interface{}(r.PassReadCloser.Reader) == interface{}(r.PassWriteCloser.Writer) {
+		return fmt.Sprintf("%v", r.PassReadCloser)
+	} else {
+		return fmt.Sprintf("Reader:%v,Writer:%v", r.PassReadCloser, r.PassWriteCloser)
+	}
 }
 
 type PassWriteCloser struct {
@@ -890,6 +910,10 @@ func (w *PassWriteCloser) Close() (err error) {
 	return
 }
 
+func (w *PassWriteCloser) String() string {
+	return connInfo(w.Writer)
+}
+
 type PassReadCloser struct {
 	Header
 	io.Reader
@@ -931,4 +955,8 @@ func (r *PassReadCloser) Close() (err error) {
 		err = r.Closer.Close()
 	}
 	return
+}
+
+func (r *PassReadCloser) String() string {
+	return connInfo(r.Reader)
 }

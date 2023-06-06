@@ -733,3 +733,16 @@ func TestError(t *testing.T) {
 		wrapper.Close()
 	}()
 }
+
+func TestEqual(t *testing.T) {
+	var a = bytes.NewBuffer(nil)
+	var b = bytes.NewBuffer(nil)
+	var r io.Reader
+	var w io.Writer
+
+	r, w = a, a
+	fmt.Printf("--->%v\n", interface{}(r) == interface{}(w))
+
+	r, w = a, b
+	fmt.Printf("--->%v\n", interface{}(r) == interface{}(w))
+}
