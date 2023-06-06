@@ -29,7 +29,13 @@ type writeDeadlinable interface {
 }
 
 func connInfo(v interface{}) string {
-	return xio.LocalAddr(v) + "<=>" + xio.RemoteAddr(v)
+	local := xio.LocalAddr(v)
+	remote := xio.RemoteAddr(v)
+	if local == remote {
+		return local
+	} else {
+		return local + "<=>" + remote
+	}
 }
 
 type Header interface {
