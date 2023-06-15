@@ -839,7 +839,7 @@ func (w *PassWriteCloser) readFrame(header uint32, buffer []byte) (size uint32, 
 		return
 	}
 	frameLength := w.ReadHead(buffer)
-	if frameLength < 1 {
+	if frameLength <= uint32(-w.GetLengthAdjustment()) {
 		err = fmt.Errorf("head is zero")
 		return
 	}
