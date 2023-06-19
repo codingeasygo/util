@@ -85,7 +85,6 @@ func GenerateCert(parent *x509.Certificate, rootKey *rsa.PrivateKey, ext []x509.
 		ExtKeyUsage:           ext,
 		BasicConstraintsValid: true,
 		IsCA:                  false,
-		MaxPathLenZero:        true,
 		DNSNames:              dnsNames,
 		IPAddresses:           ipAddresses,
 	}
