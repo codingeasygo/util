@@ -916,6 +916,22 @@ func NewSafe() (m *SafeM) {
 	return
 }
 
+func (s *SafeM) Lock() {
+	s.locker.Lock()
+}
+
+func (s *SafeM) Unlock() {
+	s.locker.Unlock()
+}
+
+func (s *SafeM) RLock() {
+	s.locker.Lock()
+}
+
+func (s *SafeM) RUnlock() {
+	s.locker.Unlock()
+}
+
 // Raw will return raw base
 func (s *SafeM) Raw() BaseValuable {
 	return s.raw
