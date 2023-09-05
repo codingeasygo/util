@@ -916,6 +916,15 @@ func NewSafe() (m *SafeM) {
 	return
 }
 
+func NewSafeByBase(base BaseValuable) (m *SafeM) {
+	m = &SafeM{
+		raw:    base,
+		locker: sync.RWMutex{},
+	}
+	m.Valuable = &impl{BaseValuable: m}
+	return
+}
+
 func (s *SafeM) Lock() {
 	s.locker.Lock()
 }
