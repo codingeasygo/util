@@ -934,11 +934,11 @@ func (s *SafeM) Unlock() {
 }
 
 func (s *SafeM) RLock() {
-	s.locker.Lock()
+	s.locker.RLock()
 }
 
 func (s *SafeM) RUnlock() {
-	s.locker.Unlock()
+	s.locker.RUnlock()
 }
 
 // Raw will return raw base
