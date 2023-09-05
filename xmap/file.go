@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-//ReadJSON will read json data from file and parset to M
+// ReadJSON will read json data from file and parset to M
 func ReadJSON(filename string) (data M, err error) {
 	jsonData, err := ioutil.ReadFile(filename)
 	if err == nil {
@@ -16,7 +16,7 @@ func ReadJSON(filename string) (data M, err error) {
 	return
 }
 
-//WriteJSON will marshal M to json and write to file
+// WriteJSON will marshal M to json and write to file
 func WriteJSON(data M, filename string) (err error) {
 	dir, _ := filepath.Split(filename)
 	os.MkdirAll(dir, os.ModePerm)

@@ -24,27 +24,27 @@ func (b baseMap) ValueVal(path ...string) (v interface{}, err error) {
 	return
 }
 
-//SetValue will set value to path
+// SetValue will set value to path
 func (b baseMap) SetValue(path string, val interface{}) (err error) {
 	return
 }
 
-//Delete will delete value on path
+// Delete will delete value on path
 func (b baseMap) Delete(path string) (err error) {
 	return
 }
 
-//Clear will clear all key on map
+// Clear will clear all key on map
 func (b baseMap) Clear() (err error) {
 	return
 }
 
-//Length will return value count
+// Length will return value count
 func (b baseMap) Length() (l int) {
 	return
 }
 
-//Exist will return true if key having
+// Exist will return true if key having
 func (b baseMap) Exist(path ...string) bool {
 	return false
 }

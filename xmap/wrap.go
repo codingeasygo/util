@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-//Wrap will wrap raw map to safe
+// Wrap will wrap raw map to safe
 func Wrap(v interface{}) (m M) {
 	if v == nil {
 		panic("v is nil")
@@ -23,7 +23,7 @@ func Wrap(v interface{}) (m M) {
 	return
 }
 
-//WrapArray will wrap base values to array
+// WrapArray will wrap base values to array
 func WrapArray(v interface{}) (ms []M) {
 	if v == nil {
 		return nil
@@ -42,7 +42,7 @@ func WrapArray(v interface{}) (ms []M) {
 	return
 }
 
-//Parse will parse val to map
+// Parse will parse val to map
 func Parse(v interface{}) (m Valuable, err error) {
 	if v == nil {
 		err = fmt.Errorf("v is nil")
@@ -63,7 +63,7 @@ func Parse(v interface{}) (m Valuable, err error) {
 	return
 }
 
-//ParseArray will parse value to map array
+// ParseArray will parse value to map array
 func ParseArray(v interface{}) (ms []Valuable, err error) {
 	if v == nil {
 		return
@@ -96,7 +96,7 @@ func ParseArray(v interface{}) (ms []Valuable, err error) {
 	return
 }
 
-//WrapSafe will wrap raw map to safe
+// WrapSafe will wrap raw map to safe
 func WrapSafe(raw interface{}) (m *SafeM) {
 	if raw == nil {
 		panic("raw is nil")
@@ -121,7 +121,7 @@ func WrapSafe(raw interface{}) (m *SafeM) {
 	return
 }
 
-//ParseSafe will parse val to map
+// ParseSafe will parse val to map
 func ParseSafe(v interface{}) (m Valuable, err error) {
 	if v == nil {
 		err = fmt.Errorf("v is nil")
@@ -141,7 +141,7 @@ func ParseSafe(v interface{}) (m Valuable, err error) {
 	return
 }
 
-//WrapSafeArray will wrap raw map to safe
+// WrapSafeArray will wrap raw map to safe
 func WrapSafeArray(v interface{}) (ms []Valuable) {
 	if v == nil {
 		return nil
@@ -160,7 +160,7 @@ func WrapSafeArray(v interface{}) (ms []Valuable) {
 	return
 }
 
-//ParseSafeArray will parse value to map array
+// ParseSafeArray will parse value to map array
 func ParseSafeArray(v interface{}) (ms []Valuable, err error) {
 	if v == nil {
 		return

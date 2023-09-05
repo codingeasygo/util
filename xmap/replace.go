@@ -8,9 +8,9 @@ import (
 	"github.com/codingeasygo/util/converter"
 )
 
-//ReplaceAll will replace input string by ${xx}, which xx is in values,
-//if usingEnv is true, xx will check use env when vals is not having xx,
-//if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
+// ReplaceAll will replace input string by ${xx}, which xx is in values,
+// if usingEnv is true, xx will check use env when vals is not having xx,
+// if usingEmpty is true, xx will check use empty string when vals is not having xx and env is not exist
 func ReplaceAll(vals func(key string) interface{}, in string, usingEnv, usingEmpty bool) (out string) {
 	reg := regexp.MustCompile(`\$\{[^\}]*\}`)
 	var rval string
