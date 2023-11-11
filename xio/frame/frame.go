@@ -496,7 +496,7 @@ func Write(writer Writer, p []byte) (n int, err error) {
 	offset := writer.GetDataOffset()
 	buf := make([]byte, len(p)+offset)
 	copy(buf[offset:], p)
-	n = len(buf)
+	n = len(p)
 	_, err = writer.WriteFrame(buf)
 	return
 }
