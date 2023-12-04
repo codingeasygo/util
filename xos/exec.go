@@ -1,12 +1,12 @@
 package xos
 
 import (
+	"fmt"
 	"os/exec"
 	"runtime"
-	"strings"
 )
 
-//RunCommand will exec command and get text from stdout
+// RunCommand will exec command and get text from stdout
 func RunCommand(command string) (text string, err error) {
 	var bys []byte
 	switch runtime.GOOS {
@@ -19,7 +19,7 @@ func RunCommand(command string) (text string, err error) {
 	return
 }
 
-//Run will exec command and get text from stdout
-func Run(args ...string) (text string, err error) {
-	return RunCommand(strings.Join(args, " "))
+// Run will exec command and get text from stdout
+func Run(foramt string, args ...interface{}) (text string, err error) {
+	return RunCommand(fmt.Sprintf(foramt, args...))
 }
