@@ -19,7 +19,7 @@ func TestProxy(t *testing.T) {
 		fmt.Fprintf(w, "abc")
 	}))
 	server := NewServer()
-	_, err := server.Start(":8011")
+	_, err := server.Start("tcp", ":8011")
 	if err != nil {
 		t.Error(err)
 		return
@@ -86,7 +86,6 @@ func proxyDial(t *testing.T, remote string, port uint16) {
 		return
 	}
 	if buf[0] != 0x05 || buf[1] != 0x00 {
-		err = fmt.Errorf("only ver 0x05 / method 0x00 is supported, but %x/%x", buf[0], buf[1])
 		return
 	}
 	buf[0], buf[1], buf[2], buf[3] = 0x05, 0x01, 0x00, 0x03
@@ -123,7 +122,6 @@ func proxyDial2(t *testing.T, remote string, port uint16) {
 		return
 	}
 	if buf[0] != 0x05 || buf[1] != 0x00 {
-		err = fmt.Errorf("only ver 0x05 / method 0x00 is supported, but %x/%x", buf[0], buf[1])
 		return
 	}
 	buf[0], buf[1], buf[2], buf[3] = 0x05, 0x01, 0x00, 0x13
@@ -160,45 +158,9 @@ func proxyDialIP(t *testing.T, bys []byte, port uint16) {
 		return
 	}
 	if buf[0] != 0x05 || buf[1] != 0x00 {
-		err = fmt.Errorf("only ver 0x05 / method 0x00 is supported, but %x/%x", buf[0], buf[1])
 		return
 	}
 	buf[0], buf[1], buf[2], buf[3] = 0x05, 0x01, 0x00, 0x01
-	copy(buf[4:], bys)
-	binary.BigEndian.PutUint16(buf[8:], port)
-	_, err = conn.Write(buf[:10])
-	if err != nil {
-		return
-	}
-	readed, err := proxyReader.Read(buf)
-	if err != nil {
-		return
-	}
-	fmt.Printf("->%v\n", buf[0:readed])
-}
-
-func proxyDialIPv6(t *testing.T, bys []byte, port uint16) {
-	conn, err := net.Dial("tcp", "localhost:2081")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer conn.Close()
-	buf := make([]byte, 1024*64)
-	proxyReader := bufio.NewReader(conn)
-	_, err = conn.Write([]byte{0x05, 0x01, 0x00})
-	if err != nil {
-		return
-	}
-	err = xio.FullBuffer(proxyReader, buf, 2, nil)
-	if err != nil {
-		return
-	}
-	if buf[0] != 0x05 || buf[1] != 0x00 {
-		err = fmt.Errorf("only ver 0x05 / method 0x00 is supported, but %x/%x", buf[0], buf[1])
-		return
-	}
-	buf[0], buf[1], buf[2], buf[3] = 0x05, 0x01, 0x00, 0x04
 	copy(buf[4:], bys)
 	binary.BigEndian.PutUint16(buf[8:], port)
 	_, err = conn.Write(buf[:10])

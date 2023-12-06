@@ -56,7 +56,7 @@ func (f *Forward) StartForward(name string, listen *url.URL, router string) (lis
 		sp := socks.NewServer()
 		sp.BufferSize = f.BufferSize
 		sp.Dialer = &RouterPiperDialer{Router: router, Next: f.Dialer}
-		listener, err = sp.Start(listen.Host)
+		listener, err = sp.Start("tcp", listen.Host)
 		if err == nil {
 			f.forwardAll[name] = []interface{}{listen.Scheme, listener, listen}
 			InfoLog("Forward(%v) start socket forward on %v success by %v->%v", f.Name, listener.Addr(), listen, router)
@@ -66,7 +66,7 @@ func (f *Forward) StartForward(name string, listen *url.URL, router string) (lis
 		sp := NewServer(dialer)
 		sp.SOCKS.BufferSize = f.BufferSize
 		sp.HTTP.BufferSize = f.BufferSize
-		listener, err = sp.Start(listen.Host)
+		listener, err = sp.Start("tcp", listen.Host)
 		if err == nil {
 			f.forwardAll[name] = []interface{}{listen.Scheme, listener, listen, router}
 			InfoLog("Forward(%v) start proxy forward on %v success by %v->%v", f.Name, listener.Addr(), listen, router)

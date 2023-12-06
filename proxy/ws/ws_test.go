@@ -44,7 +44,7 @@ func TestProxy(t *testing.T) {
 	go func() {
 		server.Run(":0")
 	}()
-	listener, _ := server.Start(":0")
+	listener, _ := server.Start("tcp", ":0")
 	defer server.Stop()
 	proxyServer := fmt.Sprintf("ws://%v", listener.Addr())
 	testEcho(proxyServer, testListener.Addr().String())

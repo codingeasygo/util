@@ -35,14 +35,14 @@ func NewServer() (server *Server) {
 	return
 }
 
-//Run will listen tcp on address and accept to ProcConn
+// Run will listen tcp on address and accept to ProcConn
 func (s *Server) loopAccept(l net.Listener) (err error) {
 	defer s.waiter.Done()
 	http.Serve(l, s)
 	return
 }
 
-//Run will listen tcp on address and sync accept to ProcConn
+// Run will listen tcp on address and sync accept to ProcConn
 func (s *Server) Run(addr string) (err error) {
 	listener, err := net.Listen("tcp", addr)
 	if err == nil {
@@ -54,9 +54,9 @@ func (s *Server) Run(addr string) (err error) {
 	return
 }
 
-//Start will listen tcp on address and async accept to ProcConn
-func (s *Server) Start(addr string) (listener net.Listener, err error) {
-	listener, err = net.Listen("tcp", addr)
+// Start will listen tcp on address and async accept to ProcConn
+func (s *Server) Start(network, addr string) (listener net.Listener, err error) {
+	listener, err = net.Listen(network, addr)
 	if err == nil {
 		s.listners[listener] = addr
 		InfoLog("Server listen http proxy on %v", addr)
@@ -66,7 +66,7 @@ func (s *Server) Start(addr string) (listener net.Listener, err error) {
 	return
 }
 
-//Stop will stop listener and wait loop stop
+// Stop will stop listener and wait loop stop
 func (s *Server) Stop() (err error) {
 	for listener, addr := range s.listners {
 		err = listener.Close()
@@ -106,7 +106,7 @@ func (s *Server) handler(conn *websocket.Conn) {
 	DebugLog("Server forward %v to %v is done with %v", req.RemoteAddr, uri, err)
 }
 
-//Dial will dial connection by proxy server
+// Dial will dial connection by proxy server
 func Dial(proxy, uri string) (conn net.Conn, err error) {
 	dialer := xnet.NewWebsocketDialer()
 	targetURI := proxy
