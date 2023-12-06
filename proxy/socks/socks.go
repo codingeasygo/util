@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/codingeasygo/util/xdebug"
 	"github.com/codingeasygo/util/xio"
 )
 
@@ -87,6 +87,9 @@ func (s *Server) Stop() (err error) {
 func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 	// DebugLog("Server proxy socks connection on %v from %v", xio.LocalAddr(conn), xio.RemoteAddr(conn))
 	defer func() {
+		if perr := recover(); perr != nil {
+			ErrorLog("Server socks proxy conn on %v from %v is panic with %v, callstakc is \n%v", xio.LocalAddr(conn), xio.RemoteAddr(conn), perr, xdebug.CallStack())
+		}
 		if err != xio.ErrAsyncRunning {
 			DebugLog("Server socks proxy connection on %v from %v is done with %v", xio.LocalAddr(conn), xio.RemoteAddr(conn), err)
 			conn.Close()
@@ -189,18 +192,21 @@ func Dial(proxy, uri string) (conn net.Conn, err error) {
 
 // DialType wil dial connection by proxy server and uri type
 func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error) {
-	if !strings.Contains(proxy, "://") {
-		proxy = "socks5://" + proxy
-	}
-	proxyURL, err := url.Parse(proxy)
-	if err != nil {
-		return
-	}
-	proxyNetwork := proxyURL.Scheme
-	if proxyNetwork == "socks5" {
+	proxyNetwork, proxyAddr := "", ""
+	if strings.HasPrefix(proxy, "socks5://") {
 		proxyNetwork = "tcp"
+		proxyAddr = strings.TrimPrefix(proxy, "socks5://")
+	} else if strings.HasPrefix(proxy, "tcp://") {
+		proxyNetwork = "tcp"
+		proxyAddr = strings.TrimPrefix(proxy, "tcp://")
+	} else if strings.HasPrefix(proxy, "unix://") {
+		proxyNetwork = "unix"
+		proxyAddr = strings.TrimPrefix(proxy, "unix://")
+	} else {
+		proxyNetwork = "tcp"
+		proxyAddr = proxy
 	}
-	conn, err = net.Dial(proxyNetwork, proxyURL.Host)
+	conn, err = net.Dial(proxyNetwork, proxyAddr)
 	if err != nil {
 		return
 	}
