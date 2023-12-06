@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -188,8 +189,18 @@ func Dial(proxy, uri string) (conn net.Conn, err error) {
 
 // DialType wil dial connection by proxy server and uri type
 func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error) {
-	proxy = strings.TrimPrefix(proxy, "socks5://")
-	conn, err = net.Dial("tcp", proxy)
+	if !strings.Contains(proxy, "://") {
+		proxy = "socks5://" + proxy
+	}
+	proxyURL, err := url.Parse(proxy)
+	if err != nil {
+		return
+	}
+	proxyNetwork := proxyURL.Scheme
+	if proxyNetwork == "socks5" {
+		proxyNetwork = "tcp"
+	}
+	conn, err = net.Dial(proxyNetwork, proxyURL.Host)
 	if err != nil {
 		return
 	}
