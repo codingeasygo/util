@@ -3,6 +3,7 @@ package socks
 import (
 	"bufio"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -262,5 +263,35 @@ func TestDialType(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	proxy.Stop()
+}
+
+func TestDialError(t *testing.T) {
+	proxy := NewServer()
+	proxy.Start("tcp", ":2081")
+
+	///
+	proxy.Dialer = xio.PiperDialerF(func(uri string, bufferSize int) (raw xio.Piper, err error) {
+		err = fmt.Errorf("test error")
+		return
+	})
+	_, err := DialType("127.0.0.1:2081", 0x05, "xx://xxx")
+	if err == nil || err.Error() != "test error" {
+		t.Error(err)
+		return
+	}
+
+	//
+	proxy.Dialer = xio.PiperDialerF(func(uri string, bufferSize int) (raw xio.Piper, err error) {
+		err = fmt.Errorf("%v", hex.EncodeToString(make([]byte, 4096)))
+		return
+	})
+	_, err = DialType("127.0.0.1:2081", 0x05, "xx://xxx")
+	if err == nil {
+		t.Error(err)
+		return
+	}
+
+	//
 	proxy.Stop()
 }

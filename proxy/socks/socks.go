@@ -1,6 +1,7 @@
 package socks
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -147,10 +148,20 @@ func (s *Server) ProcConn(conn io.ReadWriteCloser) (err error) {
 		buf[0], buf[1], buf[2], buf[3] = 0x05, 0x04, 0x00, 0x01
 		buf[4], buf[5], buf[6], buf[7] = 0x00, 0x00, 0x00, 0x00
 		buf[8], buf[9] = 0x00, 0x00
+		n := 0
 		if cerr, ok := err.(Codable); ok {
 			buf[1] = cerr.Code()
+			n = 10
+		} else {
+			buf[1] = 0x10
+			message := err.Error()
+			if len(message) > 2048 {
+				message = message[:2048]
+			}
+			binary.BigEndian.PutUint16(buf[10:12], uint16(len(message)))
+			n = 12 + copy(buf[12:], []byte(message))
 		}
-		conn.Write(buf[:10])
+		conn.Write(buf[:n])
 		DebugLog("Server socks proxy dial to %v on %v fail with %v", uri, xio.RemoteAddr(conn), err)
 		return
 	}
@@ -215,18 +226,34 @@ func DialType(proxy string, uriType byte, uri string) (conn net.Conn, err error)
 		conn.Close()
 		return
 	}
+	n := 0
 	switch buf[3] {
 	case 0x01:
+		n = 10
 		err = xio.FullBuffer(conn, buf[5:], 5, nil)
 	case 0x03:
+		n = 5 + int(buf[4]) + 2
 		err = xio.FullBuffer(conn, buf[5:], uint32(buf[4])+2, nil)
 	case 0x04:
+		n = 5 + int(buf[4]) + 17
 		err = xio.FullBuffer(conn, buf[5:], 17, nil)
 	default:
 		err = fmt.Errorf("reply address type is not supported:%v", buf[3])
 	}
 	if err != nil {
 		conn.Close()
+		return
+	}
+	if buf[1] == 0x10 {
+		err = xio.FullBuffer(conn, buf[n:], 2, nil)
+		messageLen := 0
+		if err == nil {
+			messageLen = int(binary.BigEndian.Uint16(buf[n : n+2]))
+			err = xio.FullBuffer(conn, buf[n+2:], uint32(messageLen), nil)
+		}
+		if err == nil {
+			err = fmt.Errorf("%v", string(buf[n+2:n+2+messageLen]))
+		}
 		return
 	}
 	if buf[1] != 0x00 {
